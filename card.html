@@ -3,21 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Priestly Apartments — Welcome Card</title>
+<title>Priestly Apartments — Welcome Pass</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#15120D;
+    --ink:#1B1712;
     --crimson:#A11C24;
-    --crimson-deep:#7C1219;
+    --crimson-deep:#6E1017;
     --brass:#9C7A3C;
-    --parchment:#F6F1E6;
+    --brass-deep:#7A5E2A;
+    --parchment:#F6F0E2;
     --paper:#FFFFFF;
     --ash:#6B6459;
-    --ash-soft:#8B8377;
-    --line:rgba(21,18,13,0.15);
+    --ash-soft:#948B7B;
+    --line:rgba(27,23,18,0.16);
     color-scheme: light;
     box-sizing:border-box;
     padding-top: env(safe-area-inset-top, 0px);
@@ -26,7 +27,7 @@
   *{box-sizing:inherit;}
   body{
     margin:0;
-    background:#EDE6D6;
+    background:#EAE2CE;
     color:var(--ink);
     font-family:"Public Sans", sans-serif;
     min-height:100%;
@@ -81,54 +82,114 @@
     padding:36px 24px 60px;
     display:flex; justify-content:center;
     background:
-      radial-gradient(circle at 50% 0%, rgba(255,255,255,0.6), transparent 60%),
+      radial-gradient(circle at 50% 0%, rgba(255,255,255,0.5), transparent 60%),
       repeating-linear-gradient(135deg, rgba(0,0,0,0.02) 0 2px, transparent 2px 14px);
   }
 
-  /* ---- The printable card itself ---- */
+  /* ---- The printable pass itself ---- */
   #card{
+    position:relative;
     width:210mm; min-height:297mm; background:var(--paper);
     box-shadow:0 10px 40px rgba(0,0,0,0.18);
-    padding:16mm 16mm 12mm;
+    padding:15mm 16mm 12mm;
     display:flex; flex-direction:column;
+    overflow:hidden;
   }
-  .card-top{text-align:center;}
-  .card-top img.crest{height:58px; margin:0 auto 10px;}
-  .card-top .tagline{font-family:"Fraunces",serif; font-style:italic; color:var(--brass); font-size:13px; margin-top:2px;}
+
+  /* faint great-circle flight arc behind the header, single restrained bg device */
+  .arc-bg{position:absolute; top:-40px; left:0; width:100%; height:220px; pointer-events:none; opacity:0.55;}
+
+  .pass-no{
+    position:absolute; top:15mm; right:16mm; text-align:right;
+    font-size:10.5px; color:var(--ash-soft); letter-spacing:0.03em;
+  }
+  .pass-no b{color:var(--brass-deep); font-weight:700;}
+
+  .card-top{text-align:center; position:relative;}
+  .card-top img.crest{height:74px; margin:0 auto;}
+
+  .route{
+    display:flex; align-items:center; justify-content:center; gap:12px;
+    margin-top:16px; font-size:13.5px; color:var(--ink);
+  }
+  .route .city{font-weight:600;}
+  .route .city.dim{color:var(--ash-soft); font-weight:500; font-style:italic;}
+  .route .path{flex:0 0 auto; width:150px; height:14px; position:relative;}
+  .route .path svg{width:100%; height:100%; display:block;}
+
   .rule{height:1px; background:var(--line); margin:16px 0;}
-  .rule.thick{height:2px; background:var(--crimson);}
+  .rule.thick{height:2px; background:var(--crimson); margin:14px 0 20px;}
 
-  .guest-block{text-align:center; padding:6px 0 4px;}
-  .guest-block .prepared-for{font-size:12.5px; color:var(--ash-soft); letter-spacing:.02em;}
-  .guest-block .guest-name{font-family:"Fraunces",serif; font-size:29px; font-weight:600; margin-top:4px; min-height:36px;}
-  .guest-block .stay-meta{font-size:14px; color:var(--ash); margin-top:8px;}
-  .guest-block .stay-meta b{color:var(--ink);}
-  .guest-block .issued{font-size:11.5px; color:var(--ash-soft); margin-top:10px;}
+  .destination-row{display:flex; align-items:flex-start; justify-content:space-between; gap:18px;}
+  .destination-row .names{min-width:0;}
+  .destination-row .kind{font-size:12.5px; color:var(--ash); margin-top:2px;}
+  .dest-name{font-family:"Fraunces",serif; font-style:italic; font-weight:600; font-size:54px; line-height:1.0; letter-spacing:-0.01em; word-break:break-word;}
 
-  .qr-section{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-top:6px;}
-  .qr-card{
-    border:1px solid var(--line); padding:13px 10px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:7px;
+  .stamp{
+    flex:0 0 auto; width:84px; height:84px; border-radius:50%;
+    border:2px solid var(--brass); color:var(--brass-deep);
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    transform:rotate(-9deg); opacity:0.9; margin-top:4px;
   }
-  .qr-card h3{font-size:13px;}
-  .qr-card .qr-holder{width:118px; height:118px; display:flex; align-items:center; justify-content:center;}
+  .stamp::before{
+    content:""; position:absolute; inset:5px; border:1px solid var(--brass); border-radius:50%;
+  }
+  .stamp span{position:relative; font-size:11.5px; font-weight:700; letter-spacing:0.06em; line-height:1.3;}
+
+  .pass-fields{
+    display:grid; grid-template-columns:1.15fr 1.05fr 0.95fr; margin-top:26px;
+  }
+  .pass-fields .f{padding:0 16px; border-left:1px solid var(--line);}
+  .pass-fields .f:first-child{padding-left:0; border-left:none;}
+  .pass-fields .f .k{font-size:11px; color:var(--ash-soft);}
+  .pass-fields .f .v{font-family:"Fraunces",serif; font-weight:600; font-size:23px; margin-top:4px; min-height:27px;}
+  .pass-fields .f .v.small{font-family:"Public Sans",sans-serif; font-weight:600; font-size:15px; margin-top:7px; white-space:nowrap;}
+
+  .tear{
+    position:relative; margin:24px 0 22px; height:0; border-top:2px dashed var(--line);
+  }
+  .tear::before,.tear::after{
+    content:""; position:absolute; top:-10px; width:20px; height:20px; border-radius:50%; background:#EAE2CE;
+  }
+  .tear::before{left:-16mm;}
+  .tear::after{right:-16mm;}
+  @media print{ .tear::before,.tear::after{background:#fff;} }
+
+  .stub{background:var(--parchment); margin:0 -16mm; padding:6px 16mm 18px;}
+
+  .qr-section{display:grid; grid-template-columns:1fr 1fr 1fr; gap:0;}
+  .qr-card{
+    padding:20px 16px 16px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:9px;
+    border-left:1px dashed var(--line);
+  }
+  .qr-card:first-child{border-left:none;}
+  .qr-card h3{font-size:13px; font-weight:600;}
+  .qr-card .qr-holder{width:150px; height:150px; display:flex; align-items:center; justify-content:center; background:var(--paper); padding:6px; border-radius:2px;}
   .qr-card .qr-holder svg{width:100%; height:100%;}
-  .qr-card .desc{font-size:11px; color:var(--ash); max-width:150px; line-height:1.4;}
+  .qr-card .desc{font-size:11px; color:var(--ash); max-width:158px; line-height:1.4;}
   .qr-card .creds{font-size:11px; color:var(--ash-soft); margin-top:1px; line-height:1.5;}
   .qr-card .creds b{color:var(--ink);}
 
   .amenity-strip{
-    display:flex; justify-content:space-between; gap:6px; margin-top:18px; padding-top:14px; border-top:1px solid var(--line);
+    display:flex; justify-content:space-between; gap:6px; margin-top:26px; padding-top:20px; border-top:1px solid var(--line);
   }
-  .amenity-strip .a{display:flex; flex-direction:column; align-items:center; gap:5px; flex:1;}
-  .amenity-strip svg{width:20px; height:20px; color:var(--crimson-deep);}
-  .amenity-strip span{font-size:9.5px; color:var(--ash); text-align:center; line-height:1.25;}
+  .amenity-strip .a{display:flex; flex-direction:column; align-items:center; gap:6px; flex:1;}
+  .amenity-strip svg{width:25px; height:25px; color:var(--crimson-deep);}
+  .amenity-strip span{font-size:10.5px; color:var(--ash); text-align:center; line-height:1.3;}
 
-  .card-footer{margin-top:auto; padding-top:14px;}
+  .card-footer{margin-top:30px; padding-top:20px; border-top:1px solid var(--line);}
+
+  .collection{margin-top:26px; padding-top:18px; border-top:1px solid var(--line);}
+  .collection .label{font-size:11.5px; color:var(--ash-soft); margin-bottom:11px;}
+  .collection .pills{display:flex; flex-wrap:wrap; gap:9px;}
+  .collection .pill{font-size:12px; padding:6px 14px; border-radius:999px; border:1px solid var(--line); color:var(--ash);}
+  .collection .pill.current{background:var(--crimson); border-color:var(--crimson); color:#fff; font-weight:600;}
+
   .card-footer .addr{font-size:11.5px; color:var(--ash); text-align:center;}
   .card-footer .contact-row{
     display:flex; justify-content:center; gap:18px; font-size:11.5px; color:var(--ash); margin-top:6px; flex-wrap:wrap;
   }
-  .card-footer .signoff{text-align:center; font-family:"Fraunces",serif; font-style:italic; color:var(--brass); font-size:12.5px; margin-top:8px;}
+  .card-footer .signoff{text-align:center; font-family:"Fraunces",serif; font-style:italic; color:var(--brass-deep); font-size:13px; margin-top:10px;}
 
   /* ---- Print rules ---- */
   @media print{
@@ -148,7 +209,7 @@
 <div class="app">
   <!-- STAFF INPUT PANEL (hidden on print) -->
   <div class="panel">
-    <h1>Welcome card</h1>
+    <h1>Welcome pass</h1>
     <div class="sub">Fill in the guest's details, then print.</div>
 
     <div class="field">
@@ -218,47 +279,77 @@
     <small class="note">Copy these straight from the voucher theuserman generates for this guest. Nothing here is saved anywhere — it only lives on this printed card.</small>
 
     <div class="actions">
-      <button class="primary" id="btn-print">Print card</button>
+      <button class="primary" id="btn-print">Print pass</button>
       <button class="ghost" id="btn-reset">Reset</button>
     </div>
   </div>
 
-  <!-- PREVIEW / PRINTABLE CARD -->
+  <!-- PREVIEW / PRINTABLE PASS -->
   <div class="stage">
     <div id="card">
+      <svg class="arc-bg" viewBox="0 0 800 220" preserveAspectRatio="none">
+        <path d="M -20 210 Q 400 -60 820 210" fill="none" stroke="#9C7A3C" stroke-width="1.4" stroke-dasharray="1 9" stroke-linecap="round"/>
+      </svg>
+
+      <div class="pass-no">Priestly Pass<br><b id="pv-passno">PA·000000</b></div>
+
       <div class="card-top">
         <img class="crest" src="data:image/jpeg;base64,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88cIQ8oc8w8488w8w08ww08888888888soME88sc04wcEgwcYwQQ888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888//xAAoEQACAgIABAQHAAAAAAAAAAABAgARAxITISIyMDEzUhAgQEFCcID/2gAIAQIBAT8A/XzvqyiF6ZQ04h301gydehmR9NY7lAty2iuW2qAsfxiuWLARshQWVlmriZNm1Ms3Q+hy+pjhQs1mG+PyiUcvV3TP5rM/asAb7xlZDsnbEfdbmL1Mkz9qweUzCtWEUcvEcsO2cZlNN8jJsVPw4fXttGxhjcZNvNo6bijNT7prQraKoUUIqBSzR0D8jNTVbR0DijAKFeI6lmX2xcPJi0xhgKP8S//EADIRAAEEAQEGAgcJAAAAAAAAAAIAAQMEEhEFExQiMnIzUSEwMUFCUoIQFTRAYXBxgMH/2gAIAQMBAT8A/b6rSCzBLLvNN2o6LT15JYZPD6hJDRB6fFPIWnyo6D8NxMZ5AqVIbgyPni4KnTC2UgtJjinCHmZiLIVLWCvu96RamOXo9yeOEddZPi93krNGOvDDK8hOMiq0Y7chAMhcoZJxBpSFy5Va2e0FcZ45N4JJ4gGETIuYvh/I7K04K52qO8FetJFCJZH1ESicfuUs+nP/AFWxcNnR8OWsBdXmti+y12LYniWOxSFDzMIllmoLda4AV7Q4yNysSuVuFsFHlqtp/gaK2H483YpPEPvWyJHmGaqfMGCnd3lLyF8R9ZVasT6TCf0ptmVp4iOAj+pOziWj/bXvFXhkiEGcTT6aprxNV4bDkVa/JBCUWImBfMq156u8wDqVW69VyIA6lvgZydovSX8p5wIxkeLmU0xzylJJ7VYvFYhjicNBjVO4VMiIQ1yTzBkRNE2pKpcKoREIauXKjJjMix0y9ZSsxV4JejelpjkrW03YoWhLlHq/VXzgkl3sRdXV/SX/xAA+EAABAwMBBAYIBAUDBQAAAAABAAIDBBESIRMxQVEFECIyM3EUIzRSYXKBkSAwQEJQYoKhsRVzkENEU5Lh/9oA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" alt="Priestly Apartments">
-        <div class="tagline">…come home to happiness.</div>
+        <div class="route">
+          <span class="city">Awka</span>
+          <span class="path">
+            <svg viewBox="0 0 150 14"><line x1="2" y1="7" x2="148" y2="7" stroke="#9C7A3C" stroke-width="1.2" stroke-dasharray="1 5" stroke-linecap="round"/><path d="M75 3 L82 7 L75 11 L77 7 Z" fill="#9C7A3C"/></svg>
+          </span>
+          <span class="city dim" id="pv-dest">choose an apartment</span>
+        </div>
       </div>
 
       <div class="rule thick"></div>
 
-      <div class="guest-block">
-        <div class="prepared-for">Prepared for</div>
-        <div class="guest-name" id="pv-name">Our valued guest</div>
-        <div class="stay-meta" id="pv-stay"></div>
-        <div class="issued" id="pv-issued"></div>
+      <div class="destination-row">
+        <div class="names">
+          <h2 class="dest-name" id="pv-city">Your stay</h2>
+          <div class="kind" id="pv-kind">Prepared while you check in</div>
+        </div>
+        <div class="stamp" id="pv-stamp" style="display:none;"><span id="pv-tier">VIP</span></div>
       </div>
 
-      <div class="rule"></div>
+      <div class="pass-fields">
+        <div class="f">
+          <div class="k">Prepared for</div>
+          <div class="v" id="pv-name">Our valued guest</div>
+        </div>
+        <div class="f">
+          <div class="k">Stay dates</div>
+          <div class="v small" id="pv-dates">—</div>
+        </div>
+        <div class="f">
+          <div class="k">Prepared by</div>
+          <div class="v small" id="pv-staff">—</div>
+        </div>
+      </div>
 
-      <div class="qr-section">
-        <div class="qr-card">
-          <h3>Join the Wi-Fi</h3>
-          <div class="qr-holder" id="qr-wifi"></div>
-          <div class="desc">Point your camera here to connect to the network.</div>
-          <div class="creds" id="pv-wifi-creds">Network name will appear here</div>
-        </div>
-        <div class="qr-card">
-          <h3>Hotspot login</h3>
-          <div class="qr-holder" id="qr-hotspot"></div>
-          <div class="desc">Once connected, sign in with the details below.</div>
-          <div class="creds" id="pv-hotspot-creds">Username &amp; password will appear here</div>
-        </div>
-        <div class="qr-card">
-          <h3>Explore your stay</h3>
-          <div class="qr-holder" id="qr-hub"></div>
-          <div class="desc">Amenities, the food &amp; bar menu, and a video walkthrough.</div>
+      <div class="tear"></div>
+
+      <div class="stub">
+        <div class="qr-section">
+          <div class="qr-card">
+            <h3>Join the Wi-Fi</h3>
+            <div class="qr-holder" id="qr-wifi"></div>
+            <div class="desc">Point your camera here to connect to the network.</div>
+            <div class="creds" id="pv-wifi-creds">Network name will appear here</div>
+          </div>
+          <div class="qr-card">
+            <h3>Hotspot login</h3>
+            <div class="qr-holder" id="qr-hotspot"></div>
+            <div class="desc">Once connected, sign in with the details below.</div>
+            <div class="creds" id="pv-hotspot-creds">Username &amp; password will appear here</div>
+          </div>
+          <div class="qr-card">
+            <h3>Explore your stay</h3>
+            <div class="qr-holder" id="qr-hub"></div>
+            <div class="desc">Amenities, the food &amp; bar menu, and a video walkthrough.</div>
+          </div>
         </div>
       </div>
 
@@ -271,6 +362,11 @@
         <div class="a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg><span>Security</span></div>
       </div>
 
+      <div class="collection">
+        <div class="label">Also in the Priestly collection</div>
+        <div class="pills" id="pv-collection"></div>
+      </div>
+
       <div class="card-footer">
         <div class="addr">Chief Ikechukwu Udenka Memorial Lane, close to Government House, Awka</div>
         <div class="contact-row">
@@ -278,7 +374,7 @@
           <span>0913 844 6711</span>
           <span>Priestly Homes · PriestlyHoms · Priestlyapartmentawka</span>
         </div>
-        <div class="signoff">We're glad you're here.</div>
+        <div class="signoff">Your journey ends here — welcome home.</div>
       </div>
     </div>
   </div>
@@ -2580,7 +2676,8 @@ var qrcode = function() {
   }
 }(function () {
     return qrcode;
-}));</script>
+}));
+</script>
 <script>
 (function(){
   var HUB_URL = "https://jike2025-ai.github.io/priestly-guest-portal/";
@@ -2597,12 +2694,47 @@ var qrcode = function() {
     password: document.getElementById('in-password')
   };
 
+  // apartment metadata: city -> {kind, code} used for the route line, the pass number and the stamp
+  var APT_META = {
+    'New York (VIP)':            {kind:'Two-bedroom apartment', code:'NYC'},
+    'Moscow (VIP)':               {kind:'Two-bedroom apartment', code:'MOW'},
+    'Rio de Janeiro (Executive)': {kind:'Two-bedroom apartment', code:'RIO'},
+    'Paris (Executive)':          {kind:'Two-bedroom apartment', code:'PAR'},
+    'Dubai (Standard)':           {kind:'Two-bedroom apartment', code:'DXB'},
+    'Giza (Standard)':            {kind:'Two-bedroom apartment', code:'CAI'},
+    'Zanzibar (Standard)':        {kind:'Self-contained apartment', code:'ZNZ'},
+    'Kigali (Standard)':          {kind:'Self-contained apartment', code:'KGL'},
+    'Santorini (VIP)':            {kind:'Self-contained apartment', code:'JTR'},
+    'Abuja (VIP)':                {kind:'Self-contained apartment', code:'ABV'}
+  };
+
   function fmtDate(d){
     if(!d) return '';
     var parts = d.split('-');
     if(parts.length!==3) return d;
     var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return parseInt(parts[2],10) + ' ' + months[parseInt(parts[1],10)-1] + ' ' + parts[0];
+  }
+
+  function fmtRange(checkin, checkout){
+    if(!checkin && !checkout) return '—';
+    if(checkin && !checkout) return fmtDate(checkin);
+    if(!checkin && checkout) return fmtDate(checkout);
+    var yin = checkin.split('-')[0], yout = checkout.split('-')[0];
+    if(yin === yout){
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var pin = checkin.split('-');
+      var din = parseInt(pin[2],10) + ' ' + months[parseInt(pin[1],10)-1];
+      return din + ' → ' + fmtDate(checkout);
+    }
+    return fmtDate(checkin) + ' → ' + fmtDate(checkout);
+  }
+
+  function fmtDateShort(d){
+    if(!d) return '';
+    var parts = d.split('-');
+    if(parts.length!==3) return d;
+    return parts[2] + parts[1];
   }
 
   function escapeWifi(s){
@@ -2623,7 +2755,7 @@ var qrcode = function() {
 
   function render(){
     var name = els.name.value.trim();
-    var room = els.room.value.trim();
+    var roomFull = els.room.value.trim();
     var checkin = els.checkin.value;
     var checkout = els.checkout.value;
     var staff = els.staff.value.trim();
@@ -2632,15 +2764,54 @@ var qrcode = function() {
     var username = els.username.value.trim();
     var password = els.password.value.trim();
 
+    var meta = APT_META[roomFull];
+    var cityName = '';
+    var tier = '';
+    if(roomFull){
+      var m = roomFull.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+      cityName = m ? m[1] : roomFull;
+      tier = m ? m[2] : '';
+    }
+
+    // route line
+    document.getElementById('pv-dest').textContent = cityName || 'choose an apartment';
+    document.getElementById('pv-dest').classList.toggle('dim', !cityName);
+
+    // destination headline + kind
+    document.getElementById('pv-city').textContent = cityName || 'Your stay';
+    document.getElementById('pv-kind').textContent = meta ? meta.kind : 'Prepared while you check in';
+
+    // brass stamp with tier
+    var stampEl = document.getElementById('pv-stamp');
+    if(tier){
+      stampEl.style.display = 'flex';
+      document.getElementById('pv-tier').textContent = tier.toUpperCase();
+    } else {
+      stampEl.style.display = 'none';
+    }
+
+    // pass number: code + short check-in date, falls back gracefully
+    var code = meta ? meta.code : '';
+    var passBits = [code || '—', fmtDateShort(checkin) || '000000'];
+    document.getElementById('pv-passno').textContent = 'PA·' + passBits.join('·');
+
     document.getElementById('pv-name').textContent = name || 'Our valued guest';
 
-    var stayBits = [];
-    if(room) stayBits.push('<b>' + room + '</b>');
-    if(checkin) stayBits.push('Check-in ' + fmtDate(checkin));
-    if(checkout) stayBits.push('Check-out ' + fmtDate(checkout));
-    document.getElementById('pv-stay').innerHTML = stayBits.join(' &nbsp;·&nbsp; ');
+    document.getElementById('pv-dates').textContent = fmtRange(checkin, checkout);
 
-    document.getElementById('pv-issued').textContent = staff ? ('Prepared by ' + staff) : '';
+    document.getElementById('pv-staff').textContent = staff || '—';
+
+    // "also in the collection" pills — every apartment, current one highlighted
+    var collEl = document.getElementById('pv-collection');
+    collEl.innerHTML = '';
+    Object.keys(APT_META).forEach(function(full){
+      var mCity = full.match(/^(.*?)\s*\(/);
+      var city = mCity ? mCity[1] : full;
+      var pill = document.createElement('span');
+      pill.className = 'pill' + (full === roomFull ? ' current' : '');
+      pill.textContent = city;
+      collEl.appendChild(pill);
+    });
 
     // QR 1 — join the guest Wi-Fi network (assumed open, no password, ahead of the hotspot login)
     var wifiPayload = ssid ? ('WIFI:T:nopass;S:' + escapeWifi(ssid) + ';;') : '';
@@ -2663,7 +2834,7 @@ var qrcode = function() {
     // QR 3 — personalised link to the guest info hub
     var params = new URLSearchParams();
     if(name) params.set('name', name);
-    if(room) params.set('room', room);
+    if(cityName) params.set('room', roomFull);
     if(checkin) params.set('in', fmtDate(checkin));
     if(checkout) params.set('out', fmtDate(checkout));
     if(ssid) params.set('ssid', ssid);
