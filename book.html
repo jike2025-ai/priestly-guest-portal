@@ -1,0 +1,122 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Book online | Priestly Apartments Awka</title><meta name="theme-color" content="#08090d">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--red:#b71f28;--gold:#d4af37;--gold2:#ffe088;--tx:#f1f0f9;--mu:#a6a7b7;--gb:rgba(255,255,255,.17);--serif:"Playfair Display",Georgia,serif;--sans:"Plus Jakarta Sans","Segoe UI",Arial,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:#08090d;color:var(--tx);font:16px/1.6 var(--sans);min-height:100svh;padding:0 0 calc(40px + env(safe-area-inset-bottom,0px))}
+body::before{content:"";position:fixed;inset:-10%;z-index:-1;background:radial-gradient(42vmax 42vmax at 8% 6%,rgba(183,31,40,.46),transparent 62%),radial-gradient(38vmax 38vmax at 94% 30%,rgba(212,175,55,.26),transparent 60%),radial-gradient(46vmax 46vmax at 14% 70%,rgba(70,52,150,.4),transparent 62%),#08090d}
+h1,h2,h3{font-family:var(--serif);margin:0;line-height:1.15}a{color:inherit}.w{max-width:760px;margin:0 auto;padding:0 18px}
+header{padding:calc(18px + env(safe-area-inset-top,0px)) 0 8px;display:flex;justify-content:space-between;align-items:center}header b{font:700 19px var(--serif)}header a{font-size:14px;font-weight:600;color:var(--mu);text-decoration:none}
+h1{font-size:clamp(30px,6vw,46px);margin:14px 0 6px}h1 i{color:var(--gold2);font-weight:500}.lead{color:var(--mu);margin:0 0 20px}
+.glass{background:linear-gradient(145deg,rgba(255,255,255,.10),rgba(255,255,255,.035));border:1px solid var(--gb);border-radius:20px;box-shadow:0 18px 48px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.28);-webkit-backdrop-filter:blur(18px) saturate(165%);backdrop-filter:blur(18px) saturate(165%);padding:24px;margin-bottom:18px}
+label{display:block;font-size:13px;font-weight:700;color:#d5d3e2;margin:0 0 6px}.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.fld{margin-bottom:14px}
+input,select{width:100%;background:rgba(255,255,255,.07);border:1px solid var(--gb);border-radius:12px;color:var(--tx);padding:13px 14px;font:16px var(--sans);color-scheme:dark}
+select option{background:#171923;color:#f1f0f9}input:focus,select:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,.25)}
+.hp{position:absolute;left:-9999px;height:0;overflow:hidden}
+.sum{margin-top:6px}.ln{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px dashed rgba(255,255,255,.16);color:#d5d3e2}.ln.t{border:0;font:700 24px var(--serif);color:var(--gold2);padding-top:14px}
+.btn{display:block;width:100%;margin-top:16px;padding:15px;border-radius:12px;border:1px solid rgba(255,255,255,.3);background:linear-gradient(90deg,var(--red),#870213);color:#fff;font:700 16px var(--sans);cursor:pointer;box-shadow:0 10px 26px rgba(183,31,40,.42),inset 0 1px 0 rgba(255,255,255,.35);text-align:center;text-decoration:none}
+.btn:disabled{opacity:.5;cursor:not-allowed}.btn.gh{background:rgba(255,255,255,.08);box-shadow:none}
+.msg{padding:12px 14px;border-radius:12px;font-size:14.5px;margin:12px 0 0}.msg.err{background:rgba(183,31,40,.25);border:1px solid rgba(255,138,146,.5)}.msg.warn{background:rgba(212,175,55,.16);border:1px solid rgba(212,175,55,.45)}
+.note{font-size:13px;color:var(--mu);margin-top:12px}.bk{font-size:13.5px;color:#d5d3e2;margin:8px 0 0}.ok{font:700 13px var(--sans);color:#34d399;letter-spacing:.04em}
+.sp{width:34px;height:34px;border:3px solid rgba(255,255,255,.2);border-top-color:var(--gold);border-radius:50%;animation:s 1s linear infinite;margin:6px auto 14px}@keyframes s{to{transform:rotate(360deg)}}
+[hidden]{display:none!important}@media(max-width:560px){.g2{grid-template-columns:1fr}}
+@media(prefers-reduced-transparency:reduce){.glass{-webkit-backdrop-filter:none;backdrop-filter:none;background:#171923}}
+@media print{body{background:#fff;color:#000}body::before,header,.noprint{display:none!important}.glass{box-shadow:none;border:1px solid #bbb;background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none}.ln,.lead,.mu{color:#222}.ln.t{color:#6e1017}}
+</style></head><body><div class="w">
+<header><b>Priestly Apartments</b><a href="index.html">&larr; Back to site</a></header>
+<div id="banner"></div>
+
+<main id="form">
+<h1>Book your <i>stay</i></h1><p class="lead">Pick your apartment and dates, pay securely online, and your receipt arrives by email.</p>
+<div class="glass">
+ <div class="fld"><label for="room">Apartment</label><select id="room"><option value="">Loading apartments...</option></select><div class="bk" id="bk"></div></div>
+ <div class="g2"><div class="fld"><label for="ci">Check-in</label><input type="date" id="ci"></div><div class="fld"><label for="co">Check-out</label><input type="date" id="co"></div></div>
+ <div class="fld"><label for="gu">Guests</label><input type="number" id="gu" min="1" max="10" value="1" inputmode="numeric"></div>
+ <div class="sum" id="sum" hidden></div><div id="dmsg"></div>
+</div>
+<div class="glass">
+ <div class="fld"><label for="nm">Full name</label><input id="nm" autocomplete="name"></div>
+ <div class="g2"><div class="fld"><label for="em">Email (your receipt goes here)</label><input type="email" id="em" autocomplete="email"></div><div class="fld"><label for="ph">Phone / WhatsApp</label><input type="tel" id="ph" autocomplete="tel" placeholder="0801 234 5678"></div></div>
+ <input class="hp" id="web" tabindex="-1" autocomplete="off" aria-hidden="true">
+ <button class="btn" id="pay" disabled>Continue to payment</button><div id="fmsg"></div>
+ <p class="note">You will be taken to Paystack to pay by card, bank transfer or USSD. Your dates are held for 15 minutes while you pay. By paying you agree to our house rules; the caution fee is explained by the front desk.</p>
+</div>
+</main>
+
+<main id="result" hidden><div class="glass" id="rbox"></div><a class="btn gh noprint" href="index.html">Back to the site</a></main>
+</div>
+<script>
+const API="https://YOUR-PROJECT.vercel.app"; // <- set to your Vercel address after deploying (see SETUP.md)
+const TEST_MODE=true;                         // <- set to false when you go live
+const $=id=>document.getElementById(id),ng=n=>"\u20A6"+Number(n).toLocaleString("en-NG");
+const E=s=>{const d=document.createElement("div");d.textContent=s;return d.innerHTML};
+const fd=s=>new Date(s+"T00:00:00Z").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",year:"numeric",timeZone:"UTC"});
+const today=()=>new Date().toLocaleDateString("en-CA",{timeZone:"Africa/Lagos"});
+const addDays=(s,n)=>{const d=new Date(s+"T00:00:00Z");d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)};
+const nightsOf=(a,b)=>Math.round((Date.parse(b)-Date.parse(a))/864e5);
+const Q=new URLSearchParams(location.search);let ROOMS=[],booked=[],busy=false;
+async function api(p,o){let r;try{r=await fetch(API+p,o)}catch(e){throw new Error("Cannot reach the booking service right now. Please try again or call the front desk.")}const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||"Something went wrong");return j}
+function banner(){let h="";if(TEST_MODE)h+='<div class="msg warn"><b>Test mode.</b> No real money is charged. Do not use real card details.</div>';if(API.includes("YOUR-PROJECT"))h+='<div class="msg err">The booking service is not connected yet. See SETUP.md.</div>';$("banner").innerHTML=h}
+banner();
+
+async function init(){
+  if(Q.get("ref"))return showResult(Q.get("ref"));
+  const t=today();$("ci").min=t;$("co").min=addDays(t,1);
+  try{ROOMS=(await api("/api/availability")).rooms}catch(e){$("room").innerHTML='<option value="">Booking unavailable</option>';$("fmsg").innerHTML='<div class="msg err">'+E(e.message)+'</div>';return}
+  $("room").innerHTML='<option value="">Choose an apartment</option>'+ROOMS.map(r=>'<option value="'+r.id+'">'+E(r.name)+" \u2014 "+E(r.tier)+" \u2014 "+ng(r.rate)+" / night</option>").join("");
+  const want=(Q.get("room")||"").toLowerCase().replace(/\s+/g,"-");if(ROOMS.some(r=>r.id===want)){$("room").value=want}
+  await onRoom();
+}
+async function onRoom(){
+  booked=[];$("bk").textContent="";const id=$("room").value;
+  if(id){try{booked=(await api("/api/availability?room="+id)).booked}catch(e){$("bk").textContent=""}
+    if(booked.length)$("bk").innerHTML="Already booked: "+booked.map(b=>fd(b.from)+" to "+fd(b.to)).join(" &middot; ")}
+  calc();
+}
+function calc(){
+  const id=$("room").value,ci=$("ci").value,co=$("co").value,r=ROOMS.find(x=>x.id===id);
+  if(ci)$("co").min=addDays(ci,1);
+  $("dmsg").innerHTML="";$("sum").hidden=true;$("pay").disabled=true;
+  if(!r||!ci||!co)return;
+  const n=nightsOf(ci,co);
+  if(n<1)return($("dmsg").innerHTML='<div class="msg err">Check-out must be after check-in.</div>');
+  if(n>30)return($("dmsg").innerHTML='<div class="msg err">For stays over 30 nights, please contact the front desk.</div>');
+  if(booked.some(b=>ci<b.to&&co>b.from))return($("dmsg").innerHTML='<div class="msg err">Those dates overlap an existing booking. Please choose other dates.</div>');
+  const sub=n*r.rate,tot=sub+r.caution;
+  $("sum").hidden=false;$("sum").innerHTML='<div class="ln"><span>'+n+" night"+(n>1?"s":"")+" x "+ng(r.rate)+"</span><span>"+ng(sub)+'</span></div><div class="ln"><span>Caution fee</span><span>'+ng(r.caution)+'</span></div><div class="ln t"><span>Total</span><span>'+ng(tot)+"</span></div>";
+  $("pay").disabled=false;
+}
+["room"].forEach(i=>$(i).addEventListener("change",onRoom));["ci","co"].forEach(i=>$(i).addEventListener("change",calc));
+$("pay").onclick=async()=>{
+  if(busy)return;const f=$("fmsg");f.innerHTML="";
+  const d={room:$("room").value,checkIn:$("ci").value,checkOut:$("co").value,guests:$("gu").value,name:$("nm").value.trim(),email:$("em").value.trim(),phone:$("ph").value.trim(),website:$("web").value};
+  if(d.name.length<2)return(f.innerHTML='<div class="msg err">Please enter your full name.</div>');
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email))return(f.innerHTML='<div class="msg err">Please enter a valid email address.</div>');
+  if(!/^\+?[0-9]{10,15}$/.test(d.phone.replace(/[\s-]/g,"")))return(f.innerHTML='<div class="msg err">Please enter a valid phone number.</div>');
+  busy=true;$("pay").disabled=true;$("pay").textContent="Starting secure payment...";
+  try{const r=await api("/api/book",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)});location.href=r.authorization_url}
+  catch(e){f.innerHTML='<div class="msg err">'+E(e.message)+"</div>";busy=false;$("pay").textContent="Continue to payment";calc();onRoom()}
+};
+
+async function showResult(ref){
+  $("form").hidden=true;$("result").hidden=false;const box=$("rbox");
+  box.innerHTML='<div class="sp"></div><p style="text-align:center">Confirming your payment...</p>';
+  for(let i=0;i<8;i++){
+    let r;try{r=await api("/api/verify?ref="+encodeURIComponent(ref))}catch(e){box.innerHTML='<h2>We could not check your payment</h2><p class="lead">'+E(e.message)+" If you were charged, please call 0912 728 9246 and quote reference "+E(ref)+".</p>";return}
+    if(r.status==="confirmed")return receipt(r.booking);
+    if(r.status==="review")return(box.innerHTML='<h2>Payment received</h2><p class="lead">Your payment needs a quick check by our front desk. We will contact you shortly. Reference: <b>'+E(ref)+"</b>. Phone: 0912 728 9246.</p>");
+    if(r.status==="not_found")return(box.innerHTML='<h2>Booking not found</h2><p class="lead">We could not find that reference.</p>');
+    if(r.status==="abandoned"||r.status==="failed"||r.status==="reversed")return(box.innerHTML='<h2>Payment not completed</h2><p class="lead">No payment was taken. Your dates are only held for a short time, so please try again.</p><a class="btn" href="book.html">Book again</a>');
+    await new Promise(s=>setTimeout(s,3000));
+  }
+  box.innerHTML='<h2>Still waiting for confirmation</h2><p class="lead">Your bank has not confirmed the payment yet. If you were charged, your receipt will be emailed to you shortly. Reference: <b>'+E(ref)+"</b>.</p>";
+}
+function receipt(b){
+  const L=(a,v)=>'<div class="ln"><span>'+a+"</span><span>"+v+"</span></div>";
+  $("rbox").innerHTML='<div class="ok">PAYMENT CONFIRMED</div><h2 style="margin:6px 0 4px">Thank you, '+E(b.name.split(" ")[0])+'</h2><p class="lead">Your stay is booked. A receipt has been emailed to you.</p>'+
+   L("Reference",E(b.reference))+L("Apartment",E(b.room)+" ("+E(b.tier)+")")+L("Check-in",fd(b.checkIn))+L("Check-out",fd(b.checkOut))+L("Guests",b.guests)+
+   L(b.nights+" night"+(b.nights>1?"s":"")+" x "+ng(b.rate),ng(b.nights*b.rate))+L("Caution fee",ng(b.caution))+'<div class="ln t"><span>Total paid</span><span>'+ng(b.total)+'</span></div>'+
+   '<button class="btn gh noprint" onclick="print()">Print or save as PDF</button><p class="note">Priestly Apartments, Chief Ikechukwu Udenka Memorial Lane, close to Government House, Awka. 0912 728 9246 / 0913 844 6711.</p>';
+}
+init();
+</script></body></html>
