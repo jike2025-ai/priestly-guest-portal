@@ -1,0 +1,5 @@
+{
+  "name": "priestly-guest-portal",
+  "private": true,
+  "engines": { "node": ">=18" }
+}
