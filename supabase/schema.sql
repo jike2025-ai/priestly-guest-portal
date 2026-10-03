@@ -21,6 +21,16 @@ create table if not exists public.bookings (
   paid_at timestamptz,
   paystack_id bigint,
   channel text,
+  -- caution fee refund (requested by the guest after check-out, decided by the owners after inspection)
+  refund_status text not null default 'none'
+    check (refund_status in ('none','requested','processing','refunded','declined')),
+  refund_requested_at timestamptz,
+  refund_note text,
+  refund_bank text,
+  refund_amount int,
+  refund_method text,
+  refund_decided_at timestamptz,
+  refund_admin_note text,
   created_at timestamptz not null default now(),
   check (check_out > check_in),
   -- The database itself refuses overlapping stays for the same apartment.
