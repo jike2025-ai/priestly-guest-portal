@@ -1,0 +1,60 @@
+<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1,viewport-fit=cover'><meta name='robots' content='noindex,nofollow'><title>Refund review | Priestly Apartments</title><meta name='theme-color' content='#08090d'>
+<link href='https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap' rel='stylesheet'>
+<style>
+:root{--red:#b71f28;--gold:#d4af37;--gold2:#ffe088;--tx:#f1f0f9;--mu:#a6a7b7;--gb:rgba(255,255,255,.17);--serif:'Playfair Display',Georgia,serif;--sans:'Plus Jakarta Sans','Segoe UI',Arial,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:#08090d;color:var(--tx);font:16px/1.6 var(--sans);min-height:100svh;padding:0 0 40px}
+body::before{content:'';position:fixed;inset:-10%;z-index:-1;background:radial-gradient(42vmax 42vmax at 8% 6%,rgba(183,31,40,.46),transparent 62%),radial-gradient(46vmax 46vmax at 14% 70%,rgba(70,52,150,.4),transparent 62%),#08090d}
+h1,h2{font-family:var(--serif);margin:0}.w{max-width:680px;margin:0 auto;padding:0 18px}
+header{padding:calc(16px + env(safe-area-inset-top,0px)) 0 8px;display:flex;align-items:center;gap:10px}header img{height:42px}header b{display:block;font:700 18px var(--serif)}header i{display:block;font:italic 12.5px var(--serif);color:var(--gold)}
+.glass{background:linear-gradient(145deg,rgba(255,255,255,.10),rgba(255,255,255,.035));border:1px solid var(--gb);border-radius:20px;box-shadow:0 18px 48px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.28);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);padding:24px;margin:16px 0}
+.ln{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,.16);color:#d5d3e2}.ln span:last-child{text-align:right;word-break:break-word}
+label{display:block;font-size:13px;font-weight:700;color:#d5d3e2;margin:14px 0 6px}
+input,select,textarea{width:100%;background:rgba(255,255,255,.07);border:1px solid var(--gb);border-radius:12px;color:var(--tx);padding:12px 14px;font:16px var(--sans);color-scheme:dark}select option{background:#171923}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--gb);border-radius:12px;margin-top:8px;cursor:pointer}.opt input{width:auto;margin-top:5px}
+.btn{display:block;width:100%;margin-top:18px;padding:15px;border-radius:12px;border:1px solid rgba(255,255,255,.3);background:linear-gradient(90deg,var(--red),#870213);color:#fff;font:700 16px var(--sans);cursor:pointer}.btn:disabled{opacity:.5}
+.msg{padding:12px 14px;border-radius:12px;font-size:14.5px;margin:12px 0 0}.err{background:rgba(183,31,40,.25);border:1px solid rgba(255,138,146,.5)}.good{background:rgba(52,211,153,.14);border:1px solid rgba(52,211,153,.45)}.warn{background:rgba(212,175,55,.16);border:1px solid rgba(212,175,55,.45)}
+[hidden]{display:none!important}
+</style></head><body><div class='w'>
+<header><img src='images/img-01.png' alt=''><span><b>Priestly Apartments</b><i>Refund review (owners only)</i></span></header>
+<div id='banner'></div><div class='glass' id='box'><p>Loading...</p></div>
+</div>
+<script src='config.js'></script>
+<script>
+const CFG=window.PA_CONFIG||{},API=CFG.API||'',Q=new URLSearchParams(location.search),ref=Q.get('ref'),sig=Q.get('sig');
+const $=id=>document.getElementById(id),ng=n=>'\u20A6'+Number(n).toLocaleString('en-NG');
+const E=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML};
+const fd=s=>new Date(s+'T00:00:00Z').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
+async function api(p,o){let r;try{r=await fetch(API+p,o)}catch(e){throw new Error('Cannot reach the booking service.')}const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Something went wrong');return j}
+if(CFG.TEST_MODE)$('banner').innerHTML=`<div class='msg warn'><b>Test mode.</b> Refunds here are test refunds.</div>`;
+const L=(a,x)=>`<div class='ln'><span>${a}</span><span>${x}</span></div>`;
+async function load(){
+  const box=$('box');
+  try{
+    const {booking:b}=await api('/api/refund-admin?ref='+encodeURIComponent(ref)+'&sig='+encodeURIComponent(sig));
+    const info=L('Reference',E(b.reference))+L('Guest',E(b.name))+L('Phone',`<a href='tel:${E(b.phone)}' style='color:#ffe088'>${E(b.phone)}</a>`)+L('Email',E(b.email))+L('Apartment',E(b.room))+L('Check-out',fd(b.checkOut))+L('Caution fee paid',ng(b.caution))+L('Guest message',E(b.guestNote||'-'))+L('Bank details given',E(b.bank||'-'));
+    if(b.refundStatus==='refunded')return(box.innerHTML=`<h2>Already refunded</h2>${info}<div class='msg good'>Refunded ${ng(b.refundAmount)} (${E(b.refundMethod)}). ${E(b.adminNote||'')}</div>`);
+    if(b.refundStatus==='declined')return(box.innerHTML=`<h2>Refund declined</h2>${info}<div class='msg warn'>${E(b.adminNote||'')}</div>`);
+    if(b.refundStatus!=='requested')return(box.innerHTML=`<h2>No refund request</h2>${info}<div class='msg warn'>The guest has not requested a refund for this booking.</div>`);
+    box.innerHTML=`<h2>Caution fee refund request</h2><p style='color:#a6a7b7'>Inspect the apartment first. Then record the result below.</p>${info}`
+     +`<label>Decision</label><label class='opt'><input type='radio' name='d' value='full' checked> <span>Apartment is fine: refund the full ${ng(b.caution)}</span></label><label class='opt'><input type='radio' name='d' value='part'> <span>Damage found: refund part (deduct for repairs)</span></label><label class='opt'><input type='radio' name='d' value='no'> <span>Do not refund</span></label>`
+     +`<div id='amtw' hidden><label for='amt'>Amount to refund (naira, up to ${b.caution})</label><input id='amt' type='number' min='1' max='${b.caution}' inputmode='numeric'></div>`
+     +`<div id='mw'><label for='meth'>How is the refund paid?</label><select id='meth'><option value='paystack'>Through Paystack, back to the guest's original payment</option><option value='manual'>Already paid by bank transfer (just record it)</option></select></div>`
+     +`<label for='nt'>Note (required for deductions or refusals; the guest sees it)</label><textarea id='nt' rows='3' maxlength='500'></textarea>`
+     +`<label class='opt'><input type='checkbox' id='ck'> <span>I have physically inspected the apartment</span></label><button class='btn' id='go'>Confirm decision</button><div id='m'></div>`;
+    const sync=()=>{const d=document.querySelector('input[name=d]:checked').value;$('amtw').hidden=d!=='part';$('mw').hidden=d==='no'};
+    document.querySelectorAll('input[name=d]').forEach(x=>x.onchange=sync);sync();
+    $('go').onclick=async()=>{
+      const d=document.querySelector('input[name=d]:checked').value,m=$('m');m.innerHTML='';
+      const bad=t=>{m.innerHTML=`<div class='msg err'>${t}</div>`};
+      if(!$('ck').checked)return bad('Please confirm that you inspected the apartment.');
+      const body={ref,sig,note:$('nt').value,method:$('meth').value};
+      if(d==='no'){body.action='decline'}else{body.action='refund';body.amount=d==='full'?b.caution:parseInt($('amt').value,10);if(!(body.amount>=1&&body.amount<=b.caution))return bad('Enter a valid amount.')}
+      $('go').disabled=true;$('go').textContent='Saving...';
+      try{const r=await api('/api/refund-admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        box.innerHTML=`<h2>${r.status==='refunded'?'Refund recorded':'Decision recorded'}</h2><div class='msg good'>The guest has been emailed.</div>`}
+      catch(e){bad(E(e.message));$('go').disabled=false;$('go').textContent='Confirm decision'}
+    };
+  }catch(e){box.innerHTML=`<h2>Cannot open this page</h2><div class='msg err'>${E(e.message)}</div>`}
+}
+load();
+</script></body></html>
