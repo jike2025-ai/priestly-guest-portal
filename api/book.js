@@ -26,7 +26,7 @@ module.exports = async (req, res) => {
       body: { reference, room: b.room, check_in: b.checkIn, check_out: b.checkOut, nights: q.nights, guests, guest_name: name, guest_phone: phone, guest_email: email, rate: q.rate, caution: q.caution, total: q.total, status: 'pending', hold_expires_at: new Date(Date.now() + hold * 60000).toISOString() }
     });
     if (ins.status === 409) throw bad('Sorry, those dates were just taken. Please choose different dates.', 409);
-    if (!ins.ok) throw new Error('insert failed');
+    if (!ins.ok) throw Object.assign(new Error('insert failed'), { detail: 'SAVE step: Supabase said ' + ins.status + ' ' + JSON.stringify(ins.data).slice(0, 250) });
 
     const p = await paystack('/transaction/initialize', {
       email, amount: q.total * 100, currency: 'NGN', reference,
@@ -35,11 +35,14 @@ module.exports = async (req, res) => {
     });
     if (!p.ok || !p.data) {
       await sb(`bookings?reference=eq.${reference}`, { method: 'PATCH', body: { status: 'failed' } });
-      throw new Error('paystack init failed');
+      throw Object.assign(new Error('paystack init failed'), { detail: 'PAY step: Paystack said "' + (p.message || 'no reply') + '"' });
     }
     json(res, 200, { reference, authorization_url: p.data.authorization_url, total: q.total });
   } catch (e) {
-    console.error('book', e.message);
-    json(res, e.status || 500, { error: e.status ? e.message : 'Something went wrong. Please try again or contact the front desk.' });
+    console.error('book', e.message, e.detail || '');
+    // In test mode only (test Paystack key), show what failed so it can be fixed. Never shown with a live key.
+    const testMode = String(E.PAYSTACK_SECRET_KEY || '').startsWith('sk_test_');
+    const extra = !e.status && testMode ? ' [Test mode detail: ' + (e.detail || e.message) + ']' : '';
+    json(res, e.status || 500, { error: e.status ? e.message : 'Something went wrong. Please try again or contact the front desk.' + extra });
   }
 };
