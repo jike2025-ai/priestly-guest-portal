@@ -1,0 +1,5 @@
+{
+  "crons": [
+    { "path": "/api/availability?room=paris", "schedule": "0 6 * * *" }
+  ]
+}
