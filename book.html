@@ -42,7 +42,7 @@ select option{background:#171923;color:#f1f0f9}input:focus,select:focus{outline:
  <div class='g2'><div class='fld'><label for='em'>Email (your receipt goes here)</label><input type='email' id='em' autocomplete='email'></div><div class='fld'><label for='ph'>Phone / WhatsApp</label><input type='tel' id='ph' autocomplete='tel' placeholder='0801 234 5678'></div></div>
  <input class='hp' id='web' tabindex='-1' autocomplete='off' aria-hidden='true'>
  <button class='btn' id='pay' disabled>Continue to payment</button><div id='fmsg'></div>
- <p class='note'>You will be taken to Paystack to pay by card, bank transfer or USSD. Your dates are held for 15 minutes while you pay. The caution fee is part of your total and is refundable after check-out, once our team has inspected the apartment.</p>
+ <p class='note'>You will be taken to Paystack to pay by card, bank transfer or USSD. Your dates are held for 15 minutes while you pay. The caution fee is part of your total and is refundable after check-out, once our team has inspected the apartment. By paying you agree to our <a href='terms.html' target='_blank' rel='noopener' style='color:var(--gold2)'>Terms &amp; Refund Policy</a>.</p>
 </div>
 </main>
 
@@ -119,7 +119,7 @@ function receipt(v){
   $('rbox').innerHTML=`<div class='rh'><img src='images/img-01.png' alt=''><div><b>Priestly Apartments</b><i>&hellip;come home to happiness.</i></div></div><div class='ok'>PAYMENT CONFIRMED &middot; RECEIPT</div><h2 style='margin:6px 0 4px'>Thank you, ${E(b.name.split(' ')[0])}</h2><p class='lead'>Your stay is booked. A copy of this receipt has been emailed to you.</p>`
    +L('Reference',E(b.reference))+L('Apartment',E(b.room)+' ('+E(b.tier)+')')+L('Check-in',fd(b.checkIn)+' (any time on arrival)')+L('Check-out','By 12:00 noon, '+fd(b.checkOut))+L('Guests',b.guests)
    +L(b.nights+' night'+(b.nights>1?'s':'')+' x '+ng(b.rate),ng(b.nights*b.rate))+L('Caution fee (refundable)',ng(b.caution))+`<div class='ln t'><span>Total paid</span><span>${ng(b.total)}</span></div>`
-   +`<p class='note'>${paid?'Paid on '+paid+(b.channel?' via '+E(b.channel):'')+'.':''} The caution fee is refundable once our team has inspected the apartment after check-out.</p>`
+   +`<p class='note'>${paid?'Paid on '+paid+(b.channel?' via '+E(b.channel):'')+'.':''} The caution fee is refundable once our team has inspected the apartment after check-out. See our <a href='terms.html' target='_blank' rel='noopener' style='color:var(--gold2)'>Terms &amp; Refund Policy</a>.</p>`
    +`<button class='btn gh noprint' onclick='print()'>Print or save as PDF</button><p class='sign'>Warm regards,<br><b>The Priestly Apartments Team</b><br>Chief Ikechukwu Udenka Memorial Lane, close to Government House, Awka<br>0912 728 9246 &middot; 0913 844 6711</p>`;
   refundCard(v);
 }
