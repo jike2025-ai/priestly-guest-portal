@@ -22,11 +22,18 @@ select option{background:#171923;color:#f1f0f9}input:focus,select:focus{outline:
 .rh{display:flex;align-items:center;gap:12px;padding-bottom:14px;margin-bottom:14px;border-bottom:2px solid var(--red)}.rh img{height:52px}.rh b{display:block;font:700 22px var(--serif)}.rh i{font:italic 13px var(--serif);color:var(--gold)}
 .sign{margin-top:18px;color:#d5d3e2;font-size:14px}
 .sp{width:34px;height:34px;border:3px solid rgba(255,255,255,.2);border-top-color:var(--gold);border-radius:50%;animation:s 1s linear infinite;margin:6px auto 14px}@keyframes s{to{transform:rotate(360deg)}}
+textarea{width:100%;background:rgba(255,255,255,.07);border:1px solid var(--gb);border-radius:12px;color:var(--tx);padding:13px 14px;font:16px var(--sans);color-scheme:dark;resize:vertical;min-height:84px}
+textarea:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,.25)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{position:relative;display:inline-block;margin:0;cursor:pointer}.chip input{position:absolute;opacity:0;width:1px;height:1px;padding:0;border:0}
+.chip span{display:inline-block;padding:9px 14px;border:1px solid var(--gb);border-radius:99px;background:rgba(255,255,255,.07);font-size:14px;font-weight:600;color:#d5d3e2;transition:background .2s,color .2s,border-color .2s}
+.chip input:checked+span{background:linear-gradient(145deg,#f3d77a,#d4af37);color:#111;border-color:rgba(255,255,255,.5)}
+.chip input:focus-visible+span{outline:3px solid #d4af37;outline-offset:2px}
+.cnt{font-size:12px;color:var(--mu);text-align:right;margin-top:4px}.opt{font-weight:500;color:var(--mu)}
 [hidden]{display:none!important}@media(max-width:560px){.g2{grid-template-columns:1fr}}
 @media(prefers-reduced-transparency:reduce){.glass{-webkit-backdrop-filter:none;backdrop-filter:none;background:#171923}}
 @media print{body{background:#fff;color:#000}body::before,header,.noprint{display:none!important}.glass{box-shadow:none;border:1px solid #bbb;background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none}.ln,.lead,.sign,.note{color:#222}.ln.t,.rh i{color:#6e1017}.ok{color:#0a7a4f}}
-</style></head><body><div class='w'>
-<header><a class='brand' href='index.html'><img src='images/img-01.png' alt=''><span><b>Priestly Apartments</b><i>&hellip;come home to happiness.</i></span></a><a class='back' href='index.html'>&larr; Back to site</a></header>
+</style><link rel='stylesheet' href='theme.css'><script src='theme.js'></script></head><body><div class='w'>
+<header><a class='brand' href='index.html'><img src='images/img-01.png' alt=''><span><b>Priestly Apartments</b><i>&hellip;come home to happiness.</i></span></a><span class='hr'><a class='back' href='index.html'>&larr; Back to site</a><button class='tt' type='button' data-theme-toggle aria-label='Switch to light mode'></button></span></header>
 <div id='banner'></div>
 
 <main id='form'>
@@ -40,6 +47,9 @@ select option{background:#171923;color:#f1f0f9}input:focus,select:focus{outline:
 <div class='glass'>
  <div class='fld'><label for='nm'>Full name</label><input id='nm' autocomplete='name'></div>
  <div class='g2'><div class='fld'><label for='em'>Email (your receipt goes here)</label><input type='email' id='em' autocomplete='email'></div><div class='fld'><label for='ph'>Phone / WhatsApp</label><input type='tel' id='ph' autocomplete='tel' placeholder='0801 234 5678'></div></div>
+ <div class='fld'><label>Special requests <span class='opt'>(optional)</span></label><div class='chips' id='srs'><label class='chip'><input type='checkbox' value='Airport pickup'><span>Airport pickup</span></label><label class='chip'><input type='checkbox' value='Early check-in'><span>Early check-in</span></label><label class='chip'><input type='checkbox' value='Late check-out'><span>Late check-out</span></label><label class='chip'><input type='checkbox' value='Extra bedding / baby cot'><span>Extra bedding / baby cot</span></label><label class='chip'><input type='checkbox' value='Celebration setup (birthday, anniversary)'><span>Celebration setup (birthday, anniversary)</span></label><label class='chip'><input type='checkbox' value='Meal or groceries ready on arrival'><span>Meal or groceries ready on arrival</span></label></div><p class='note' style='margin-top:8px'>Requests are not part of your online payment. Our front desk will contact you to confirm them and any extra cost, such as airport pickup.</p></div>
+ <div class='fld' id='pkw' hidden><label for='pk'>Flight number and arrival time <span class='opt'>(for airport pickup)</span></label><input id='pk' maxlength='120' placeholder='e.g. Air Peace P47121, lands 4:30 pm'></div>
+ <div class='fld'><label for='sn'>Anything else we should know? <span class='opt'>(optional)</span></label><textarea id='sn' rows='3' maxlength='500' placeholder='e.g. arriving late at night, celebrating an anniversary...'></textarea><div class='cnt' id='snc'>0 / 500</div></div>
  <input class='hp' id='web' tabindex='-1' autocomplete='off' aria-hidden='true'>
  <button class='btn' id='pay' disabled>Continue to payment</button><div id='fmsg'></div>
  <p class='note'>You will be taken to Paystack to pay by card, bank transfer or USSD. Your dates are held for 15 minutes while you pay. The caution fee is part of your total and is refundable after check-out, once our team has inspected the apartment. By paying you agree to our <a href='terms.html' target='_blank' rel='noopener' style='color:var(--gold2)'>Terms &amp; Refund Policy</a>.</p>
@@ -88,10 +98,13 @@ function calc(){
   $('sum').hidden=false;$('sum').innerHTML=`<div class='ln'><span>${n} night${n>1?'s':''} x ${ng(r.rate)}</span><span>${ng(sub)}</span></div><div class='ln'><span>Caution fee (refundable after check-out inspection)</span><span>${ng(r.caution)}</span></div><div class='ln t'><span>Total</span><span>${ng(tot)}</span></div><p class='note'>Check-in any time on ${fd(ci)}. Check-out by 12:00 noon on ${fd(co)}.</p>`;
   $('pay').disabled=false;
 }
+$('srs').addEventListener('change',()=>{$('pkw').hidden=!document.querySelector('#srs input[value="Airport pickup"]').checked});
+$('sn').addEventListener('input',()=>{$('snc').textContent=$('sn').value.length+' / 500'});
 $('room').addEventListener('change',onRoom);['ci','co'].forEach(i=>$(i).addEventListener('change',calc));
 $('pay').onclick=async()=>{
   if(busy)return;const f=$('fmsg');f.innerHTML='';const bad=m=>{f.innerHTML=`<div class='msg err'>${m}</div>`};
   const d={room:$('room').value,checkIn:$('ci').value,checkOut:$('co').value,guests:$('gu').value,name:$('nm').value.trim(),email:$('em').value.trim(),phone:$('ph').value.trim(),website:$('web').value};
+  d.requests=[].map.call(document.querySelectorAll('#srs input:checked'),x=>x.value);d.pickup=d.requests.includes('Airport pickup')?$('pk').value.trim():'';d.note=$('sn').value.trim();
   if(d.name.length<2)return bad('Please enter your full name.');
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email))return bad('Please enter a valid email address.');
   if(!/^\+?[0-9]{10,15}$/.test(d.phone.replace(/[\s-]/g,'')))return bad('Please enter a valid phone number.');
@@ -117,7 +130,7 @@ function receipt(v){
   const b=v.booking,L=(a,x)=>`<div class='ln'><span>${a}</span><span>${x}</span></div>`;
   const paid=b.paidAt?new Date(b.paidAt).toLocaleString('en-GB',{timeZone:'Africa/Lagos',dateStyle:'medium',timeStyle:'short'}):'';
   $('rbox').innerHTML=`<div class='rh'><img src='images/img-01.png' alt=''><div><b>Priestly Apartments</b><i>&hellip;come home to happiness.</i></div></div><div class='ok'>PAYMENT CONFIRMED &middot; RECEIPT</div><h2 style='margin:6px 0 4px'>Thank you, ${E(b.name.split(' ')[0])}</h2><p class='lead'>Your stay is booked. A copy of this receipt has been emailed to you.</p>`
-   +L('Reference',E(b.reference))+L('Apartment',E(b.room)+' ('+E(b.tier)+')')+L('Check-in',fd(b.checkIn)+' (any time on arrival)')+L('Check-out','By 12:00 noon, '+fd(b.checkOut))+L('Guests',b.guests)
+   +L('Reference',E(b.reference))+L('Apartment',E(b.room)+' ('+E(b.tier)+')')+L('Check-in',fd(b.checkIn)+' (any time on arrival)')+L('Check-out','By 12:00 noon, '+fd(b.checkOut))+L('Guests',b.guests)+(b.requests?L('Special requests',E(b.requests)):'')
    +L(b.nights+' night'+(b.nights>1?'s':'')+' x '+ng(b.rate),ng(b.nights*b.rate))+L('Caution fee (refundable)',ng(b.caution))+`<div class='ln t'><span>Total paid</span><span>${ng(b.total)}</span></div>`
    +`<p class='note'>${paid?'Paid on '+paid+(b.channel?' via '+E(b.channel):'')+'.':''} The caution fee is refundable once our team has inspected the apartment after check-out. See our <a href='terms.html' target='_blank' rel='noopener' style='color:var(--gold2)'>Terms &amp; Refund Policy</a>.</p>`
    +`<button class='btn gh noprint' onclick='print()'>Print or save as PDF</button><p class='sign'>Warm regards,<br><b>The Priestly Apartments Team</b><br>Chief Ikechukwu Udenka Memorial Lane, close to Government House, Awka<br>0912 728 9246 &middot; 0913 844 6711</p>`;

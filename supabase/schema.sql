@@ -12,6 +12,7 @@ create table if not exists public.bookings (
   guest_name text not null,
   guest_phone text not null,
   guest_email text not null,
+  special_requests text, -- optional: airport pickup, early check-in, notes, etc.
   rate int not null,
   caution int not null,
   total int not null,

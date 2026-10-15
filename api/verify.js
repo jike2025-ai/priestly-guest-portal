@@ -11,7 +11,7 @@ module.exports = async (req, res) => {
     const room = b && (ROOMS[b.room] || { name: b.room, tier: '' });
     json(res, 200, {
       status: r.status,
-      booking: b && { reference: b.reference, room: room.name, tier: room.tier, checkIn: b.check_in, checkOut: b.check_out, nights: b.nights, guests: b.guests, rate: b.rate, caution: b.caution, total: b.total, name: b.guest_name, paidAt: b.paid_at, channel: b.channel },
+      booking: b && { reference: b.reference, room: room.name, tier: room.tier, checkIn: b.check_in, checkOut: b.check_out, nights: b.nights, guests: b.guests, rate: b.rate, caution: b.caution, total: b.total, name: b.guest_name, paidAt: b.paid_at, channel: b.channel, requests: b.special_requests || '' },
       refund: b && { status: b.refund_status, amount: b.refund_amount, canRequest: b.status === 'confirmed' && b.refund_status === 'none' && today() >= b.check_out }
     });
   } catch (e) { console.error('verify', e.message); json(res, 500, { error: 'Could not check the payment' }); }

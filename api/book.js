@@ -1,4 +1,4 @@
-const { cors, json, sb, paystack, SITE, E, bad, quote, crypto } = require('../lib/core');
+const { cors, json, sb, paystack, SITE, E, bad, quote, crypto, buildRequests } = require('../lib/core');
 
 // POST /api/book -> saves a 15-minute hold, starts a Paystack payment, returns the payment link
 module.exports = async (req, res) => {
@@ -16,22 +16,24 @@ module.exports = async (req, res) => {
     if (!/^\+?[0-9]{10,15}$/.test(phone)) throw bad('Please enter a valid phone number');
     if (guests < 1 || guests > 10) throw bad('Guests must be between 1 and 10');
 
+    const special = buildRequests(b); // only known options and trimmed text are kept
     const q = quote(b.room, b.checkIn, b.checkOut); // price is always worked out here, never trusted from the browser
     const hold = parseInt(E.HOLD_MINUTES, 10) || 15;
     await sb(`bookings?status=eq.pending&hold_expires_at=lt.${new Date().toISOString()}`, { method: 'PATCH', body: { status: 'expired' } });
 
     const reference = 'PA-' + crypto.randomBytes(8).toString('hex').toUpperCase();
-    const ins = await sb('bookings', {
-      method: 'POST', prefer: 'return=minimal',
-      body: { reference, room: b.room, check_in: b.checkIn, check_out: b.checkOut, nights: q.nights, guests, guest_name: name, guest_phone: phone, guest_email: email, rate: q.rate, caution: q.caution, total: q.total, status: 'pending', hold_expires_at: new Date(Date.now() + hold * 60000).toISOString() }
-    });
+    const row = { reference, room: b.room, check_in: b.checkIn, check_out: b.checkOut, nights: q.nights, guests, guest_name: name, guest_phone: phone, guest_email: email, rate: q.rate, caution: q.caution, total: q.total, status: 'pending', hold_expires_at: new Date(Date.now() + hold * 60000).toISOString() };
+    if (special) row.special_requests = special;
+    let ins = await sb('bookings', { method: 'POST', prefer: 'return=minimal', body: row });
+    // If the special_requests column has not been added to Supabase yet, save the booking without it (the requests still travel in the Paystack metadata).
+    if (special && ins.status === 400 && /special_requests/i.test(JSON.stringify(ins.data))) { delete row.special_requests; ins = await sb('bookings', { method: 'POST', prefer: 'return=minimal', body: row }); }
     if (ins.status === 409) throw bad('Sorry, those dates were just taken. Please choose different dates.', 409);
     if (!ins.ok) throw Object.assign(new Error('insert failed'), { detail: 'SAVE step: Supabase said ' + ins.status + ' ' + JSON.stringify(ins.data).slice(0, 250) });
 
     const p = await paystack('/transaction/initialize', {
       email, amount: q.total * 100, currency: 'NGN', reference,
       callback_url: `${SITE}/book.html?ref=${reference}`,
-      metadata: { room: q.room.name, check_in: b.checkIn, check_out: b.checkOut, guest: name, phone }
+      metadata: { room: q.room.name, check_in: b.checkIn, check_out: b.checkOut, guest: name, phone, ...(special ? { special_requests: special } : {}) }
     });
     if (!p.ok || !p.data) {
       await sb(`bookings?reference=eq.${reference}`, { method: 'PATCH', body: { status: 'failed' } });

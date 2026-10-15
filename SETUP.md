@@ -14,6 +14,11 @@ Live at **https://www.priestlyapartments.com** (the plain `priestlyapartments.co
 | Welcome-pass generator | `card.html` (staff tool) |
 
 Site settings are in `config.js`. Prices are in `lib/core.js` (`ROOMS`) and must match `index.html`.
+Guest reviews (after the Okonkwo family one) are added in `reviews.js`. Light and dark mode live in `theme.js` and `theme.css`.
+
+## Special requests (booking form)
+Guests can tick requests (airport pickup and so on) and add a note when they book. They are saved with the booking, shown on the receipt, and listed in the guest receipt email and in the owners' "PAID" email (subject ends with `[SPECIAL REQUESTS]`). They are not charged online: the front desk confirms the cost with the guest.
+**Before deploying, run `supabase/migration-special-requests.sql` once in Supabase** (SQL Editor). Until then bookings still work and the requests still reach the emails, but they are not stored in the database or shown on the receipt page. To change the options, edit `SR_OPTIONS` in `lib/core.js` and the matching tick boxes in `book.html`.
 
 ## House rules built in
 - Per night. Arrive any time on the check-in day. Check-out by 12:00 noon the next day.
