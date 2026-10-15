@@ -135,6 +135,7 @@
     content:""; position:absolute; inset:5px; border:1px solid var(--brass); border-radius:50%;
   }
   .stamp span{position:relative; font-size:11.5px; font-weight:700; letter-spacing:0.06em; line-height:1.3;}
+  .stamp span.long{font-size:9px; letter-spacing:0.04em;}
 
   .pass-fields{
     display:grid; grid-template-columns:1.15fr 1.05fr 0.95fr; margin-top:26px;
@@ -230,10 +231,10 @@
           <option>Giza (Standard)</option>
         </optgroup>
         <optgroup label="Self-contained">
-          <option>Zanzibar (Standard)</option>
-          <option>Kigali (Standard)</option>
-          <option>Santorini (VIP)</option>
-          <option>Abuja (VIP)</option>
+          <option>Zanzibar (Self-con Standard)</option>
+          <option>Kigali (Self-con VIP)</option>
+          <option>Santorini (Self-con VIP)</option>
+          <option>Abuja (Self-con VIP)</option>
         </optgroup>
       </select>
     </div>
@@ -2680,7 +2681,7 @@ var qrcode = function() {
 </script>
 <script>
 (function(){
-  var HUB_URL = "https://jike2025-ai.github.io/priestly-guest-portal/";
+  var HUB_URL = "https://www.priestlyapartments.com/";
 
   var els = {
     name: document.getElementById('in-name'),
@@ -2702,10 +2703,10 @@ var qrcode = function() {
     'Paris (Executive)':          {kind:'Two-bedroom apartment', code:'PAR'},
     'Dubai (Standard)':           {kind:'Two-bedroom apartment', code:'DXB'},
     'Giza (Standard)':            {kind:'Two-bedroom apartment', code:'CAI'},
-    'Zanzibar (Standard)':        {kind:'Self-contained apartment', code:'ZNZ'},
-    'Kigali (Standard)':          {kind:'Self-contained apartment', code:'KGL'},
-    'Santorini (VIP)':            {kind:'Self-contained apartment', code:'JTR'},
-    'Abuja (VIP)':                {kind:'Self-contained apartment', code:'ABV'}
+    'Zanzibar (Self-con Standard)':        {kind:'Self-contained apartment', code:'ZNZ'},
+    'Kigali (Self-con VIP)':          {kind:'Self-contained apartment', code:'KGL'},
+    'Santorini (Self-con VIP)':            {kind:'Self-contained apartment', code:'JTR'},
+    'Abuja (Self-con VIP)':                {kind:'Self-contained apartment', code:'ABV'}
   };
 
   function fmtDate(d){
@@ -2786,6 +2787,7 @@ var qrcode = function() {
     if(tier){
       stampEl.style.display = 'flex';
       document.getElementById('pv-tier').textContent = tier.toUpperCase();
+      document.getElementById('pv-tier').classList.toggle('long', tier.length > 9);
     } else {
       stampEl.style.display = 'none';
     }
