@@ -26,12 +26,12 @@ Guests can tick requests (airport pickup and so on) and add a note when they boo
 - Guests request the refund from their receipt page from check-out day. Owners review it from the secure link in the alert email, then refund in full or in part, or decline with a reason.
 
 ## Vercel environment variables
-`SUPABASE_URL`, `SUPABASE_SERVICE_KEY` (the `sb_secret_` key), `PAYSTACK_SECRET_KEY`, `RESEND_API_KEY`, `FROM_EMAIL`, `OWNER_EMAILS`, `ADMIN_SECRET`, `SITE_URL` (`https://www.priestlyapartments.com`), `ALLOWED_ORIGIN`. Optional: `HOLD_MINUTES` (default 15). After changing a variable, redeploy.
+`SUPABASE_URL`, `SUPABASE_SERVICE_KEY` (the `sb_secret_` key), `PAYSTACK_SECRET_KEY`, `RESEND_API_KEY`, `FROM_EMAIL`, `OWNER_EMAILS` (owner's private email), `OFFICE_EMAILS` (reception/office email), `ADMIN_SECRET`, `SITE_URL` (`https://www.priestlyapartments.com`), `ALLOWED_ORIGIN`. Optional: `HOLD_MINUTES` (default 15). After changing a variable, redeploy.
 
 ## Going live checklist
 1. Paystack account approved. Put the **live** secret key in `PAYSTACK_SECRET_KEY`; set the **live webhook URL** to `https://www.priestlyapartments.com/api/paystack-webhook`.
 2. In Paystack **Preferences**, keep "Pass fees to customers" **off**, and turn off Paystack's own customer receipts.
-3. Resend: verify `priestlyapartments.com`, then set `FROM_EMAIL` to `Priestly Apartments <bookings@priestlyapartments.com>`. Set `OWNER_EMAILS` to the business inbox(es).
+3. Resend: verify `priestlyapartments.com`, then set `FROM_EMAIL` to `Priestly Apartments <bookings@priestlyapartments.com>`. Set `OWNER_EMAILS` to the owner's private inbox and `OFFICE_EMAILS` to the reception inbox (comma-separate several). After each paid booking the guest, the owner and reception each get their own email.
 4. In Supabase, delete all test rows from the `bookings` table (test bookings block real dates). Check Supabase's current rules about free projects pausing when inactive.
 5. Vercel: move to a paid (Pro) plan, because the free Hobby plan is for non-commercial use.
 6. In `config.js` set `TEST_MODE` to `false`.

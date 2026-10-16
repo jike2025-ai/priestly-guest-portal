@@ -2804,6 +2804,7 @@ var qrcode = function() {
     document.getElementById('pv-staff').textContent = staff || '—';
 
     // "also in the collection" pills — every apartment, current one highlighted
+    var escH = function(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
     var collEl = document.getElementById('pv-collection');
     collEl.innerHTML = '';
     Object.keys(APT_META).forEach(function(full){
@@ -2821,7 +2822,7 @@ var qrcode = function() {
       ? makeQrSvg(wifiPayload, 4, 2)
       : '<div style="font-size:10.5px;color:#8B8377;padding:6px;">Enter a network name<br>to generate</div>';
     document.getElementById('pv-wifi-creds').innerHTML = ssid
-      ? ('Network: <b>' + ssid + '</b>')
+      ? ('Network: <b>' + escH(ssid) + '</b>')
       : 'Network name will appear here';
 
     // QR 2 — hotspot login: links to the portal URL if given, otherwise carries the credentials as text
@@ -2830,7 +2831,7 @@ var qrcode = function() {
       ? makeQrSvg(hotspotPayload, 4, 2)
       : '<div style="font-size:10.5px;color:#8B8377;padding:6px;">Enter login details<br>to generate</div>';
     document.getElementById('pv-hotspot-creds').innerHTML = username
-      ? ('Username: <b>' + username + '</b>' + (password ? '<br>Password: <b>' + password + '</b>' : ''))
+      ? ('Username: <b>' + escH(username) + '</b>' + (password ? '<br>Password: <b>' + escH(password) + '</b>' : ''))
       : 'Username &amp; password will appear here';
 
     // QR 3 — personalised link to the guest info hub
