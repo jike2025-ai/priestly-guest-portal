@@ -140,6 +140,8 @@
   .doorbox{margin-top:20px; padding:12px 16px; border:1.5px dashed var(--line); border-radius:10px; text-align:center;}
   .doorbox .k{font-size:11px; color:var(--ash-soft); letter-spacing:.14em; text-transform:uppercase;}
   .doorbox .v{font-family:"Fraunces",serif; font-weight:700; font-size:34px; letter-spacing:.22em; margin-top:4px;}
+  .doorbox .hk{display:inline-block; margin-left:10px; padding:0 11px; border:2px solid currentColor; border-radius:9px; font-style:normal; letter-spacing:0; font-size:26px; line-height:1.25; vertical-align:2px;}
+  .doorbox .hint{font-size:12px; color:var(--ash-soft); margin-top:6px;}
   .pass-fields{
     display:grid; grid-template-columns:1.15fr 1.05fr 0.95fr; margin-top:26px;
   }
@@ -341,7 +343,8 @@
 
       <div class="doorbox" id="pv-doorw" style="display:none;">
         <div class="k">Smart lock passcode</div>
-        <div class="v" id="pv-door">------</div>
+        <div class="v"><span id="pv-door">------</span><i class="hk">#</i></div>
+        <div class="hint">Type the code, then press <b>#</b> to unlock</div>
       </div>
 
       <div class="tear"></div>
