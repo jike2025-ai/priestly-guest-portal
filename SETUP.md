@@ -42,3 +42,10 @@ Guests can tick requests (airport pickup and so on) and add a note when they boo
 - The server works out prices itself and confirms every payment directly with Paystack before sending receipts.
 - Guest names, phones, emails and any bank details are personal data under Nigeria's data protection law.
 - Keep refund-review emails private: the button inside is the key to the refund decision.
+
+
+## Door passcodes (smart locks)
+Never put the codes in the website files (the repo is readable). Add two Vercel environment variables, then redeploy:
+- `DOOR_CODES` = JSON such as `{"giza":"......","dubai":"......","rio":"......","paris":"......","moscow":"......","new-york":"......","zanzibar":"......","kigali":"......","santorini":"......","abuja":"......"}`
+- `STAFF_PIN` = a PIN only staff know. Staff type it on card.html and the passcode then shows on the welcome card.
+Guests see their code on their receipt page from check-in day until 12:00 noon on check-out day.

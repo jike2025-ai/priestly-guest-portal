@@ -137,6 +137,9 @@
   .stamp span{position:relative; font-size:11.5px; font-weight:700; letter-spacing:0.06em; line-height:1.3;}
   .stamp span.long{font-size:9px; letter-spacing:0.04em;}
 
+  .doorbox{margin-top:20px; padding:12px 16px; border:1.5px dashed var(--line); border-radius:10px; text-align:center;}
+  .doorbox .k{font-size:11px; color:var(--ash-soft); letter-spacing:.14em; text-transform:uppercase;}
+  .doorbox .v{font-family:"Fraunces",serif; font-weight:700; font-size:34px; letter-spacing:.22em; margin-top:4px;}
   .pass-fields{
     display:grid; grid-template-columns:1.15fr 1.05fr 0.95fr; margin-top:26px;
   }
@@ -255,6 +258,12 @@
       <input id="in-staff" type="text" placeholder="e.g. Front desk — Chidi">
     </div>
 
+    <div class="field">
+      <label for="in-pin">Staff PIN <span style="opacity:.6">(shows the door passcode on the card)</span></label>
+      <input id="in-pin" type="password" autocomplete="off" placeholder="Ask the owner for the staff PIN">
+      <div id="pin-msg" style="font-size:12px;margin-top:6px;color:#a11c24;"></div>
+    </div>
+
     <div class="divider"></div>
 
     <div class="field">
@@ -328,6 +337,11 @@
           <div class="k">Prepared by</div>
           <div class="v small" id="pv-staff">—</div>
         </div>
+      </div>
+
+      <div class="doorbox" id="pv-doorw" style="display:none;">
+        <div class="k">Smart lock passcode</div>
+        <div class="v" id="pv-door">------</div>
       </div>
 
       <div class="tear"></div>
@@ -2692,8 +2706,30 @@ var qrcode = function() {
     ssid: document.getElementById('in-ssid'),
     hsurl: document.getElementById('in-hsurl'),
     username: document.getElementById('in-username'),
-    password: document.getElementById('in-password')
+    password: document.getElementById('in-password'),
+    pin: document.getElementById('in-pin')
   };
+  var ROOM_IDS = {'New York':'new-york','Moscow':'moscow','Rio de Janeiro':'rio','Paris':'paris','Dubai':'dubai','Giza':'giza','Zanzibar':'zanzibar','Kigali':'kigali','Santorini':'santorini','Abuja':'abuja'};
+  var doorKey = '', doorTimer = null;
+  // The passcodes are NOT in this page. They are fetched from the booking server with the staff PIN.
+  function loadDoor(city){
+    var pin = els.pin.value.trim(), id = ROOM_IDS[city], msg = document.getElementById('pin-msg');
+    var wrap = document.getElementById('pv-doorw'), out = document.getElementById('pv-door');
+    var key = id + '|' + pin;
+    if(!id || !pin){ doorKey = ''; wrap.style.display = 'none'; msg.textContent = ''; return; }
+    if(key === doorKey) return;
+    doorKey = key; clearTimeout(doorTimer);
+    doorTimer = setTimeout(function(){
+      fetch(HUB_URL.replace(/\/$/, '') + '/api/door-code', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({room:id, pin:pin})})
+        .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+        .then(function(x){
+          if(key !== doorKey) return;
+          if(x.ok && x.j.code){ out.textContent = x.j.code; wrap.style.display = 'block'; msg.textContent = ''; }
+          else { wrap.style.display = 'none'; msg.textContent = x.j.error || 'Could not get the passcode'; }
+        })
+        .catch(function(){ wrap.style.display = 'none'; msg.textContent = 'Could not reach the server. Open this page from priestlyapartments.com/card.html.'; });
+    }, 400);
+  }
 
   // apartment metadata: city -> {kind, code} used for the route line, the pass number and the stamp
   var APT_META = {
@@ -2798,6 +2834,7 @@ var qrcode = function() {
     document.getElementById('pv-passno').textContent = 'PA·' + passBits.join('·');
 
     document.getElementById('pv-name').textContent = name || 'Our valued guest';
+    loadDoor(cityName);
 
     document.getElementById('pv-dates').textContent = fmtRange(checkin, checkout);
 
