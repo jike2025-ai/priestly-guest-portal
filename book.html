@@ -47,6 +47,10 @@ textarea:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,
 <div class='glass'>
  <div class='fld'><label for='nm'>Full name</label><input id='nm' autocomplete='name'></div>
  <div class='g2'><div class='fld'><label for='em'>Email (your receipt goes here)</label><input type='email' id='em' autocomplete='email'></div><div class='fld'><label for='ph'>Phone / WhatsApp</label><input type='tel' id='ph' autocomplete='tel' placeholder='0801 234 5678'></div></div>
+ <div class='g2'><div class='fld'><label for='sx'>Sex</label><select id='sx' autocomplete='sex'><option value=''>Select...</option><option>Male</option><option>Female</option></select></div><div class='fld'><label for='nin'>NIN (National Identification Number)</label><input id='nin' inputmode='numeric' maxlength='11' autocomplete='off' placeholder='11 digits'></div></div>
+ <div class='fld'><label for='ad'>Home address</label><textarea id='ad' rows='2' maxlength='200' autocomplete='street-address' placeholder='House number, street, city, state'></textarea></div>
+ <p class='note' style='margin:-4px 0 14px'>Guest registration details are required for every stay. Your NIN and address are kept securely, seen only by Priestly Apartments management, and never shared on your receipt.</p>
+ <div class='g2'><div class='fld'><label for='kd'>Travelling with children? <span class='opt'>(optional)</span></label><select id='kd'><option value=''>No children</option><option>Toddler (under 3)</option><option>Children (3 to 17)</option><option>Toddler and older children</option></select></div><div class='fld' id='kdw' hidden><label for='kn'>How many, and their ages</label><input id='kn' maxlength='80' placeholder='e.g. 1 toddler (2 yrs), 2 children (6 and 9)'></div></div>
  <div class='fld'><label>Special requests <span class='opt'>(optional)</span></label><div class='chips' id='srs'><label class='chip'><input type='checkbox' value='Airport pickup'><span>Airport pickup</span></label><label class='chip'><input type='checkbox' value='Early check-in'><span>Early check-in</span></label><label class='chip'><input type='checkbox' value='Late check-out'><span>Late check-out</span></label><label class='chip'><input type='checkbox' value='Extra bedding / baby cot'><span>Extra bedding / baby cot</span></label><label class='chip'><input type='checkbox' value='Celebration setup (birthday, anniversary)'><span>Celebration setup (birthday, anniversary)</span></label><label class='chip'><input type='checkbox' value='Meal or groceries ready on arrival'><span>Meal or groceries ready on arrival</span></label></div><p class='note' style='margin-top:8px'>Requests are not part of your online payment. Our front desk will contact you to confirm them and any extra cost, such as airport pickup.</p></div>
  <div class='fld' id='pkw' hidden><label for='pk'>Flight number and arrival time <span class='opt'>(for airport pickup)</span></label><input id='pk' maxlength='120' placeholder='e.g. Air Peace P47121, lands 4:30 pm'></div>
  <div class='fld'><label for='sn'>Anything else we should know? <span class='opt'>(optional)</span></label><textarea id='sn' rows='3' maxlength='500' placeholder='e.g. arriving late at night, celebrating an anniversary...'></textarea><div class='cnt' id='snc'>0 / 500</div></div>
@@ -99,15 +103,20 @@ function calc(){
   $('pay').disabled=false;
 }
 $('srs').addEventListener('change',()=>{$('pkw').hidden=!document.querySelector('#srs input[value="Airport pickup"]').checked});
+$('kd').addEventListener('change',()=>{$('kdw').hidden=!$('kd').value});
 $('sn').addEventListener('input',()=>{$('snc').textContent=$('sn').value.length+' / 500'});
 $('room').addEventListener('change',onRoom);['ci','co'].forEach(i=>$(i).addEventListener('change',calc));
 $('pay').onclick=async()=>{
   if(busy)return;const f=$('fmsg');f.innerHTML='';const bad=m=>{f.innerHTML=`<div class='msg err'>${m}</div>`};
   const d={room:$('room').value,checkIn:$('ci').value,checkOut:$('co').value,guests:$('gu').value,name:$('nm').value.trim(),email:$('em').value.trim(),phone:$('ph').value.trim(),website:$('web').value};
   d.requests=[].map.call(document.querySelectorAll('#srs input:checked'),x=>x.value);d.pickup=d.requests.includes('Airport pickup')?$('pk').value.trim():'';d.note=$('sn').value.trim();
+  d.gender=$('sx').value;d.nin=$('nin').value.replace(/\s/g,'');d.address=$('ad').value.trim();d.children=$('kd').value;d.childrenNote=d.children?$('kn').value.trim():'';
   if(d.name.length<2)return bad('Please enter your full name.');
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email))return bad('Please enter a valid email address.');
   if(!/^\+?[0-9]{10,15}$/.test(d.phone.replace(/[\s-]/g,'')))return bad('Please enter a valid phone number.');
+  if(!d.gender)return bad('Please select your sex.');
+  if(!/^[0-9]{11}$/.test(d.nin))return bad('Please enter your 11-digit NIN.');
+  if(d.address.length<8)return bad('Please enter your home address.');
   busy=true;$('pay').disabled=true;$('pay').textContent='Starting secure payment...';
   try{const r=await api('/api/book',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});location.href=r.authorization_url}
   catch(e){bad(E(e.message));busy=false;$('pay').textContent='Continue to payment';calc();onRoom()}
