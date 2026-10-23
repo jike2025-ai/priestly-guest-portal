@@ -53,6 +53,7 @@ module.exports = async (req, res) => {
 
     return res.status(200).json({ username: row.out_username, password: row.out_password, expires: row.out_expires });
   } catch (e) {
-    return res.status(500).json({ error: 'Could not get a voucher: ' + (e && e.message ? e.message : 'unknown error') });
+    console.error('wifi-voucher', e && e.message);
+    return res.status(500).json({ error: 'Could not get a voucher. Please try again, or call the owner.' });
   }
 };

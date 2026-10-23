@@ -14,7 +14,7 @@ module.exports = async (req, res) => {
   cors(req, res);
 
   if (!process.env.ROUTER_SYNC_KEY) return res.status(500).json({ error: 'ROUTER_SYNC_KEY is not set on the server' });
-  if (!safeEqual(req.headers['x-sync-key'], process.env.ROUTER_SYNC_KEY)) return res.status(401).json({ error: 'Not allowed' });
+  if (!safeEqual(req.headers['x-sync-key'], process.env.ROUTER_SYNC_KEY)) { await new Promise((r) => setTimeout(r, 1000)); return res.status(401).json({ error: 'Not allowed' }); } // delay slows key guessing
 
   try {
     if (req.method === 'GET') {
@@ -70,6 +70,7 @@ module.exports = async (req, res) => {
 
     return res.status(405).json({ error: 'Use GET or POST' });
   } catch (e) {
-    return res.status(500).json({ error: e && e.message ? e.message : 'Server error' });
+    console.error('wifi-voucher-sync', e && e.message);
+    return res.status(500).json({ error: 'Server error' });
   }
 };
