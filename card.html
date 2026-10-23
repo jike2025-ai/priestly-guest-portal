@@ -290,6 +290,11 @@
     </div>
     <small class="note">Copy these straight from the voucher theuserman generates for this guest. Nothing here is saved anywhere — it only lives on this printed card.</small>
 
+    <div class="actions" style="margin-top:0;margin-bottom:10px;">
+      <button type="button" class="primary" id="btn-wifi-voucher">Get Wi-Fi voucher</button>
+    </div>
+    <small class="note" id="wifi-voucher-msg">Fill in guest name, apartment and dates, and enter the Staff PIN above. The username and password are then filled in automatically and last until check-out day.</small>
+
     <div class="actions">
       <button class="primary" id="btn-print">Print pass</button>
       <button class="ghost" id="btn-reset">Reset</button>
@@ -2902,6 +2907,65 @@ var qrcode = function() {
   });
 
   render();
+})();
+</script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var btn = $('btn-wifi-voucher'), msg = $('wifi-voucher-msg');
+  if (!btn) return;
+
+  function say(text, bad) {
+    msg.textContent = text;
+    msg.style.color = bad ? '#ff9aa2' : '#9fe0b4';
+  }
+
+  // Fill a field and fire the same events typing would, so the card preview updates
+  function setField(id, value) {
+    var el = $(id);
+    if (!el) return;
+    el.value = value;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  btn.addEventListener('click', async function () {
+    var name = $('in-name').value.trim();
+    var room = $('in-room').value.trim();
+    var checkIn = $('in-checkin').value;
+    var checkOut = $('in-checkout').value;
+    var pin = $('in-pin').value.trim();
+
+    if (!name || !room || !checkIn || !checkOut) return say('Fill in guest name, apartment, check-in and check-out first.', true);
+    if (!pin) return say('Enter the Staff PIN above first.', true);
+
+    btn.disabled = true;
+    var old = btn.textContent;
+    btn.textContent = 'Getting voucher...';
+
+    try {
+      var r = await fetch('/api/wifi-voucher', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: pin, name: name, room: room, checkIn: checkIn, checkOut: checkOut })
+      });
+      var j = await r.json().catch(function () { return {}; });
+      if (!r.ok) throw new Error(j.error || 'Could not get a voucher');
+
+      setField('in-username', j.username);
+      setField('in-password', j.password);
+
+      var until = new Date(j.expires).toLocaleString('en-GB', {
+        weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Lagos'
+      });
+      say('Voucher filled in. Works until ' + until + '.', false);
+    } catch (e) {
+      say(e.message || 'Something went wrong', true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = old;
+    }
+  });
 })();
 </script>
 </body>
