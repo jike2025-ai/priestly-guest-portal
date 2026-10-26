@@ -1,5 +1,9 @@
 const { cors, json, sb, paystack, SITE, E, bad, quote, crypto, buildRequests, buildGuestInfo, GUEST_COLS } = require('../lib/core');
 
+// Anti-abuse limits (stop someone blocking dates with fake, unpaid holds)
+const MAX_ACTIVE_HOLDS = 2;      // unpaid holds one email address or phone number may have at the same time
+const MAX_MONTHS_AHEAD = 12;     // how far ahead a check-in date may be
+
 // POST /api/book -> saves a 15-minute hold, starts a Paystack payment, returns the payment link
 module.exports = async (req, res) => {
   if (cors(req, res)) return;
@@ -19,8 +23,23 @@ module.exports = async (req, res) => {
     const info = buildGuestInfo(b); // sex, NIN, address and children: validated here, never trusted from the browser
     const special = buildRequests(b); // only known options and trimmed text are kept
     const q = quote(b.room, b.checkIn, b.checkOut); // price is always worked out here, never trusted from the browser
+
+    // Reject check-in dates too far in the future (typos like 2062, or someone parking dates for years)
+    const maxDay = new Date(Date.now() + MAX_MONTHS_AHEAD * 31 * 864e5).toLocaleDateString('en-CA', { timeZone: 'Africa/Lagos' });
+    if (b.checkIn > maxDay) throw bad(`Bookings can be made up to ${MAX_MONTHS_AHEAD} months ahead. For later dates please contact the front desk.`);
+
     const hold = parseInt(E.HOLD_MINUTES, 10) || 15;
     await sb(`bookings?status=eq.pending&hold_expires_at=lt.${new Date().toISOString()}`, { method: 'PATCH', body: { status: 'expired' } });
+
+    // Limit unpaid holds per email and per phone so nobody can block dates with fake bookings
+    const nowIso = new Date().toISOString();
+    const activeHolds = async (col, val) => {
+      const r = await sb(`bookings?select=id&status=eq.pending&hold_expires_at=gt.${nowIso}&${col}=eq.${encodeURIComponent(val)}`);
+      return r.ok && Array.isArray(r.data) ? r.data.length : 0;
+    };
+    if ((await activeHolds('guest_email', email)) >= MAX_ACTIVE_HOLDS || (await activeHolds('guest_phone', phone)) >= MAX_ACTIVE_HOLDS) {
+      throw bad('You already have bookings waiting for payment. Please finish paying for them, or wait about 15 minutes, before starting another.', 429);
+    }
 
     const reference = 'PA-' + crypto.randomBytes(8).toString('hex').toUpperCase();
     const row = { reference, room: b.room, check_in: b.checkIn, check_out: b.checkOut, nights: q.nights, guests, guest_name: name, guest_phone: phone, guest_email: email, rate: q.rate, caution: q.caution, total: q.total, status: 'pending', hold_expires_at: new Date(Date.now() + hold * 60000).toISOString() };
