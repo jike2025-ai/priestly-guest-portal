@@ -29,6 +29,10 @@ textarea:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,
 .chip input:checked+span{background:linear-gradient(145deg,#f3d77a,#d4af37);color:#111;border-color:rgba(255,255,255,.5)}
 .chip input:focus-visible+span{outline:3px solid #d4af37;outline-offset:2px}
 .cnt{font-size:12px;color:var(--mu);text-align:right;margin-top:4px}.opt{font-weight:500;color:var(--mu)}
+.cal{border:1px solid var(--gb);border-radius:14px;padding:12px;background:rgba(255,255,255,.05)}.cal .ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.cal .ch b{font:700 17px var(--serif)}.cal .nv{width:40px;height:40px;border-radius:50%;border:1px solid var(--gb);background:rgba(255,255,255,.07);color:inherit;font-size:20px;cursor:pointer}.cal .nv:disabled{opacity:.3;cursor:not-allowed}
+.cal .gr{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.cal .wd{font-size:11.5px;text-align:center;color:var(--mu);font-weight:700;padding:4px 0}.cal .dy{height:44px;border-radius:10px;border:1px solid transparent;background:rgba(255,255,255,.06);color:inherit;font:600 14.5px var(--sans);cursor:pointer;padding:0}
+.cal .dy:hover:not(:disabled){border-color:var(--gold)}.cal .dy:disabled{cursor:not-allowed}.cal .dy.past{opacity:.28;background:transparent}.cal .dy.bkd{background:rgba(183,31,40,.22);color:#ff9aa1;text-decoration:line-through;opacity:.85}.cal .dy.na{opacity:.35}.cal .dy.rg{background:rgba(212,175,55,.28)}.cal .dy.sel{background:linear-gradient(145deg,#f3d77a,#d4af37);color:#111;border-color:rgba(255,255,255,.5)}.cal .em{visibility:hidden}
+.cal .lg{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:12px;color:var(--mu)}.cal .lg i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-1px}
 [hidden]{display:none!important}@media(max-width:560px){.g2{grid-template-columns:1fr}}
 @media(prefers-reduced-transparency:reduce){.glass{-webkit-backdrop-filter:none;backdrop-filter:none;background:#171923}}
 @media print{body{background:#fff;color:#000}body::before,header,.noprint{display:none!important}.glass{box-shadow:none;border:1px solid #bbb;background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none}.ln,.lead,.sign,.note{color:#222}.ln.t,.rh i{color:#6e1017}.ok{color:#0a7a4f}}
@@ -40,7 +44,7 @@ textarea:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,
 <h1>Book your <i>stay</i></h1><p class='lead'>Pick your apartment and dates, pay securely online, and your receipt arrives by email. Rates are per night: arrive any time on your check-in day, and every night ends with check-out by 12:00 noon the next day.</p>
 <div class='glass'>
  <div class='fld'><label for='room'>Apartment</label><select id='room'><option value=''>Loading apartments...</option></select><div class='bk' id='bk'></div></div>
- <div class='g2'><div class='fld'><label for='ci'>Check-in date</label><input type='date' id='ci'></div><div class='fld'><label for='co'>Check-out date (by 12:00 noon)</label><input type='date' id='co'></div></div>
+ <div class='fld'><label>Choose your dates</label><div id='cal' class='cal'></div><div class='bk' id='sel'></div><input type='hidden' id='ci'><input type='hidden' id='co'><p class='note' style='margin:8px 0 0'>Dates that are already booked are crossed out and cannot be chosen. Check-out is by 12:00 noon.</p></div>
  <div class='fld'><label for='gu'>Guests</label><input type='number' id='gu' min='1' max='10' value='1' inputmode='numeric'></div>
  <div id='sum' hidden></div><div id='dmsg'></div>
 </div>
@@ -77,17 +81,54 @@ async function api(p,o){let r;try{r=await fetch(API+p,o)}catch(e){throw new Erro
 
 async function init(){
   if(Q.get('ref'))return showResult(Q.get('ref'));
-  const t=today();$('ci').min=t;$('co').min=addDays(t,1);
-  try{ROOMS=(await api('/api/availability')).rooms}catch(e){$('room').innerHTML=`<option value=''>Booking unavailable</option>`;$('fmsg').innerHTML=`<div class='msg err'>${E(e.message)}</div>`;return}
+    try{ROOMS=(await api('/api/availability')).rooms}catch(e){$('room').innerHTML=`<option value=''>Booking unavailable</option>`;$('fmsg').innerHTML=`<div class='msg err'>${E(e.message)}</div>`;return}
   $('room').innerHTML=`<option value=''>Choose an apartment</option>`+ROOMS.map(r=>`<option value='${r.id}'>${E(r.name)} \u2014 ${E(r.tier)} \u2014 ${ng(r.rate)} / night</option>`).join('');
   const want=(Q.get('room')||'').toLowerCase().replace(/\s+/g,'-');if(ROOMS.some(r=>r.id===want))$('room').value=want;
   await onRoom();
 }
+
+/* ---- availability calendar: booked nights can never be picked ---- */
+let vm='';
+const isBooked=d=>booked.some(b=>d>=b.from&&d<b.to);
+const maxOut=ci=>{let m=addDays(ci,30);booked.forEach(b=>{if(b.from>=ci&&b.from<m)m=b.from});return m};
+const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function renderCal(){
+  const c=$('cal');
+  if(!$('room').value){c.innerHTML="<p class='note' style='margin:0'>Choose an apartment first to see its free dates.</p>";return}
+  const t=today();if(!vm)vm=($('ci').value||t).slice(0,7);
+  const y=+vm.slice(0,4),m=+vm.slice(5,7),lead=(new Date(Date.UTC(y,m-1,1)).getUTCDay()+6)%7,days=new Date(Date.UTC(y,m,0)).getUTCDate();
+  const ci=$('ci').value,co=$('co').value,limit=addDays(t,548).slice(0,7);
+  let h=`<div class='ch'><button type='button' class='nv' data-nav='-1' aria-label='Previous month' ${vm<=t.slice(0,7)?'disabled':''}>&lsaquo;</button><b>${MN[m-1]} ${y}</b><button type='button' class='nv' data-nav='1' aria-label='Next month' ${vm>=limit?'disabled':''}>&rsaquo;</button></div><div class='gr'>`+['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(w=>`<div class='wd'>${w}</div>`).join('');
+  for(let i=0;i<lead;i++)h+="<div class='em'></div>";
+  for(let d=1;d<=days;d++){
+    const ds=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`,past=ds<t,bk=isBooked(ds);
+    let ok=!past&&!bk,cls='dy';
+    if(ci&&!co){ok=ds>ci?ds<=maxOut(ci):(!past&&!bk)}
+    if(past)cls+=' past';else if(bk)cls+=' bkd';else if(!ok)cls+=' na';
+    if(ds===ci||ds===co)cls+=' sel';else if(ci&&co&&ds>ci&&ds<co)cls+=' rg';
+    h+=`<button type='button' class='${cls}' data-d='${ds}' ${ok?'':'disabled'} aria-label='${fd(ds)}${bk?' booked':''}'>${d}</button>`;
+  }
+  h+=`</div><div class='lg'><span><i style='background:rgba(255,255,255,.2)'></i>Available</span><span><i style='background:rgba(183,31,40,.5)'></i>Booked</span><span><i style='background:#d4af37'></i>Your dates</span></div>`;
+  c.innerHTML=h;
+}
+function updateSel(){
+  const ci=$('ci').value,co=$('co').value;
+  $('sel').textContent=!$('room').value?'':!ci?'Tap your check-in day.':!co?'Check-in: '+fd(ci)+'. Now tap your check-out day.':fd(ci)+' to '+fd(co)+' ('+nightsOf(ci,co)+' night'+(nightsOf(ci,co)>1?'s':'')+')';
+}
+$('cal').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b||b.disabled)return;
+  if(b.dataset.nav){const [y,m]=vm.split('-').map(Number),d=new Date(Date.UTC(y,m-1+ +b.dataset.nav,1));vm=d.toISOString().slice(0,7);return renderCal()}
+  const ds=b.dataset.d,ci=$('ci').value,co=$('co').value;
+  if(!ci||co||ds<=ci){$('ci').value=ds;$('co').value=''}else $('co').value=ds;
+  renderCal();updateSel();calc();
+});
+function dropTaken(){const ci=$('ci').value,co=$('co').value;if(ci&&(isBooked(ci)||(co&&booked.some(b=>ci<b.to&&co>b.from)))){$('ci').value='';$('co').value=''}}
+setInterval(async()=>{const id=$('room').value;if(!id||busy||document.hidden)return;try{booked=(await api('/api/availability?room='+id)).booked;dropTaken();renderCal();updateSel();calc()}catch(e){}},45000);
 async function onRoom(){
   booked=[];$('bk').textContent='';const id=$('room').value;
   if(id){try{booked=(await api('/api/availability?room='+id)).booked}catch(e){}
     if(booked.length)$('bk').innerHTML='Already booked: '+booked.map(b=>fd(b.from)+' to '+fd(b.to)).join(' &middot; ')}
-  calc();
+  dropTaken();renderCal();updateSel();calc();
 }
 function calc(){
   const id=$('room').value,ci=$('ci').value,co=$('co').value,r=ROOMS.find(x=>x.id===id);
