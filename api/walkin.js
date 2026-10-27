@@ -2,6 +2,7 @@ const { cors, json, bad, sb, ROOMS, today, quote, crypto, alertOwner, fd, naira 
 
 // POST /api/walkin  (reception only, protected by STAFF_PIN)
 //   {pin, action:'list'}
+//   {pin, action:'overview'}                    (staff dashboard: all apartments + bookings)
 //   {pin, action:'create', room, checkIn, checkOut, name, phone, guests, note, paid}
 //   {pin, action:'cancel', reference}          (walk-in bookings only)
 // A walk-in is saved in the SAME bookings table as online bookings, so the database's no_double_booking
@@ -23,6 +24,15 @@ module.exports = async (req, res) => {
       const r = await sb(`bookings?select=reference,room,check_in,check_out,nights,guest_name,guest_phone,total,status,channel&check_out=gte.${today()}&or=(status.eq.confirmed,and(status.eq.pending,hold_expires_at.gt.${now}))&order=check_in&limit=200`);
       if (!r.ok) throw new Error('list failed');
       return json(res, 200, { bookings: r.data });
+    }
+
+    if (b.action === 'overview') {
+      // everything the staff dashboard needs in one call: all apartments + bookings from 60 days ago onwards
+      const now = new Date().toISOString();
+      const from = new Date(Date.now() - 60 * 864e5).toISOString().slice(0, 10);
+      const r = await sb(`bookings?select=reference,room,check_in,check_out,nights,guests,guest_name,guest_phone,guest_email,rate,caution,total,status,channel,special_requests,created_at,paid_at,hold_expires_at&check_out=gte.${from}&or=(status.eq.confirmed,and(status.eq.pending,hold_expires_at.gt.${now}))&order=check_in&limit=1000`);
+      if (!r.ok) throw new Error('overview failed');
+      return json(res, 200, { today: today(), rooms: Object.entries(ROOMS).map(([id, v]) => ({ id, ...v })), bookings: r.data });
     }
 
     if (b.action === 'create') {

@@ -1,45 +1,319 @@
-<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1,viewport-fit=cover'><meta name='robots' content='noindex,nofollow'><title>Reception walk-in booking | Priestly Apartments</title><meta name='theme-color' content='#08090d'>
+<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1,viewport-fit=cover'><meta name='robots' content='noindex,nofollow'><title>Staff Booking System | Priestly Apartments</title><meta name='theme-color' content='#f97316'>
 <style>
-:root{--red:#b71f28;--gold:#d4af37;--gold2:#ffe088;--tx:#f1f0f9;--mu:#a6a7b7;--gb:rgba(255,255,255,.17);--sans:'Segoe UI',system-ui,Arial,sans-serif}
-*{box-sizing:border-box}body{margin:0;background:#08090d;color:var(--tx);font:16px/1.55 var(--sans);padding:0 0 40px}
-.w{max-width:680px;margin:0 auto;padding:0 16px}h1{font:700 26px Georgia,serif;margin:22px 0 4px}h1 i{color:var(--gold2);font-weight:500}.lead{color:var(--mu);margin:0 0 14px;font-size:14.5px}
-.g{background:rgba(255,255,255,.06);border:1px solid var(--gb);border-radius:16px;padding:18px;margin:14px 0}
-label{display:block;font-size:13px;font-weight:700;color:#d5d3e2;margin:12px 0 5px}
-input,select,textarea{width:100%;background:rgba(255,255,255,.08);border:1px solid var(--gb);border-radius:10px;color:var(--tx);padding:12px;font:16px var(--sans);color-scheme:dark}select option{background:#171923}
-.r2{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:520px){.r2{grid-template-columns:1fr}}
-button{width:100%;margin-top:16px;padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,.3);background:linear-gradient(90deg,var(--red),#870213);color:#fff;font:700 16px var(--sans);cursor:pointer}button:disabled{opacity:.5}
-.sm{width:auto;margin:0;padding:7px 12px;font-size:13px;background:rgba(255,255,255,.1)}
-.m{padding:12px;border-radius:10px;margin-top:12px;font-size:14.5px}.e{background:rgba(183,31,40,.28);border:1px solid rgba(255,138,146,.5)}.k{background:rgba(52,211,153,.18);border:1px solid rgba(52,211,153,.5)}
-.bk{font-size:13px;color:#d5d3e2;margin-top:6px}.it{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px dashed rgba(255,255,255,.16);font-size:14px}.it small{color:var(--mu);display:block}
-.tg{font-size:11px;font-weight:800;letter-spacing:.06em;padding:2px 8px;border-radius:99px;background:rgba(212,175,55,.25);color:var(--gold2);margin-left:6px}
-</style></head><body><div class='w'>
-<h1>Reception <i>walk-in booking</i></h1><p class='lead'>Use this when a guest books in person. The dates are blocked on the website straight away, so nobody can book them online.</p>
-<div class='g'><label for='pin'>Staff PIN</label><input id='pin' type='password' autocomplete='off' inputmode='numeric'>
-<label for='room'>Apartment</label><select id='room'><option value=''>Enter the PIN, then choose</option></select><div class='bk' id='bk'></div>
-<div class='r2'><div><label for='ci'>Check-in</label><input id='ci' type='date'></div><div><label for='co'>Check-out (by 12:00 noon)</label><input id='co' type='date'></div></div>
-<div class='r2'><div><label for='nm'>Guest full name</label><input id='nm' autocomplete='off'></div><div><label for='ph'>Guest phone</label><input id='ph' inputmode='tel' autocomplete='off'></div></div>
-<div class='r2'><div><label for='gu'>Guests</label><input id='gu' type='number' min='1' max='10' value='1'></div><div><label for='pd'>Payment received</label><select id='pd'><option value='cash'>Cash</option><option value='transfer'>Bank transfer</option><option value='pos'>POS</option><option value='unpaid'>Not yet paid</option></select></div></div>
-<label for='nt'>Note (optional)</label><input id='nt' maxlength='200'>
-<button id='go'>Save walk-in booking</button><div id='msg'></div></div>
-<div class='g'><b>Upcoming bookings (online and walk-in)</b><div id='ls' class='bk'>Enter the PIN to load.</div><button class='sm' id='rf' style='margin-top:10px'>Refresh</button></div>
-</div>
-<script src='config.js'></script><script>
-const API=(window.PA_CONFIG||{}).API||'',$=id=>document.getElementById(id),E=s=>{const d=document.createElement('div');d.textContent=s;return d.innerHTML};
+:root{--or:#f97316;--or2:#fb923c;--bg:#f4f6fb;--card:#fff;--ink:#1e2433;--mu:#6b7385;--ln:#e6e9f2;--gr:#16a34a;--am:#f59e0b;--sk:#0ea5e9;--ro:#f97316;--bl:#3b82f6;--vi:#8b5cf6;--sl:#94a3b8;--rd:#dc2626;--sans:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;--sw:268px}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
+button,input,select,textarea{font:inherit;color:inherit}a{color:inherit}
+svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+/* shell */
+#side{position:fixed;inset:0 auto 0 0;width:var(--sw);background:#fff;border-right:1px solid var(--ln);z-index:30;display:flex;flex-direction:column;transition:transform .25s}
+.lg{height:74px;display:flex;align-items:center;gap:10px;padding:0 20px;border-bottom:1px solid var(--ln)}.lg img{height:40px;width:40px;object-fit:contain;border-radius:8px}.lg b{font-size:16px;line-height:1.15}.lg small{display:block;color:var(--mu);font-weight:500;font-size:11.5px}
+.nvg{padding:18px 14px;overflow:auto;flex:1}.nvg h6{margin:14px 10px 6px;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--mu)}
+.nv{display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;border:0;background:none;border-radius:10px;cursor:pointer;color:#3a4256;text-align:left;text-decoration:none;font-size:15px}.nv:hover{background:#fff4ea}.nv.on{background:linear-gradient(90deg,#fff1e4,#fff8f1);color:var(--or);font-weight:700;box-shadow:inset 3px 0 0 var(--or)}
+.nv .ct{margin-left:auto;background:var(--or);color:#fff;border-radius:99px;font-size:11.5px;font-weight:700;padding:1px 8px}
+#top{position:fixed;top:0;left:var(--sw);right:0;height:74px;background:#fff;border-bottom:1px solid var(--ln);z-index:20;display:flex;align-items:center;gap:14px;padding:0 24px}
+.hb{display:none;width:40px;height:40px;border-radius:50%;border:0;background:var(--or);color:#fff;cursor:pointer;align-items:center;justify-content:center}
+.sr{flex:1;max-width:560px;display:flex;align-items:center;gap:10px;border:1px solid var(--ln);border-radius:12px;padding:0 14px;height:44px;background:#fff}.sr input{border:0;outline:0;flex:1;background:none;min-width:0}.sr svg{color:var(--mu)}
+.av{margin-left:auto;display:flex;align-items:center;gap:10px}.av .c{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--or),var(--or2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px}.lo{border:1px solid var(--ln);background:#fff;border-radius:10px;padding:8px 12px;cursor:pointer;display:flex;gap:6px;align-items:center;color:var(--mu);font-size:13.5px}.lo:hover{color:var(--rd);border-color:#f3c0c0}
+main{margin-left:var(--sw);padding:98px 26px 50px}.pg{display:none}.pg.on{display:block}
+h2.t{font-size:23px;margin:0 0 4px}.sub{color:var(--mu);margin:0 0 18px}
+/* banner + stats */
+.bn{border-radius:14px;padding:26px 30px;color:#fff;background:linear-gradient(100deg,#667eea,#764ba2);display:flex;justify-content:space-between;gap:20px;align-items:center;flex-wrap:wrap;box-shadow:0 10px 30px rgba(118,75,162,.25)}
+.bn h1{margin:0;font-size:27px;line-height:1.25}.bn p{margin:6px 0 0;opacity:.92}.bn .k{display:flex;gap:34px;text-align:center}.bn .k b{display:block;font-size:30px;line-height:1.1}.bn .k span{font-size:13.5px;opacity:.92}
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;margin:30px 0}
+.sc{border-radius:16px;padding:22px 24px;color:#fff;position:relative;overflow:hidden;min-height:128px;box-shadow:0 10px 24px rgba(0,0,0,.12)}.sc small{display:block;opacity:.92;font-weight:600}.sc b{display:block;font-size:30px;margin:4px 0 8px;line-height:1.1}.sc em{font-style:normal;font-size:13.5px;opacity:.92}.sc svg.big{position:absolute;right:20px;top:22px;width:48px;height:48px;opacity:.55;stroke-width:1.5}
+.s1{background:linear-gradient(120deg,#fb923c,#a78bfa)}.s2{background:linear-gradient(120deg,#16a34a,#5eead4)}.s3{background:linear-gradient(120deg,#f59e0b,#fcd34d);color:#3b2a00}.s4{background:linear-gradient(120deg,#2563eb,#06b6d4)}
+.pn{background:var(--card);border:1px solid var(--ln);border-radius:16px;margin-bottom:24px;overflow:hidden}.ph{display:flex;align-items:center;gap:12px;padding:18px 24px;border-bottom:1px solid var(--ln);flex-wrap:wrap}.ph h3{margin:0;font-size:19px}.ph .sp{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}.pb{padding:22px 24px}
+.btn{border:1px solid var(--ln);background:#fff;border-radius:9px;padding:8px 14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px;color:#3a4256;font-size:14px}.btn:hover{border-color:var(--or);color:var(--or)}.btn.p{background:linear-gradient(90deg,var(--or),var(--or2));border-color:var(--or);color:#fff;box-shadow:0 6px 14px rgba(249,115,22,.3)}.btn.p:hover{color:#fff;filter:brightness(1.05)}.btn.sm{padding:5px 10px;font-size:13px}.btn.dg{color:var(--rd)}.btn:disabled{opacity:.5;cursor:default}
+/* status tiles */
+.tl{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.tile{display:flex;align-items:center;gap:16px;padding:20px 22px;border-radius:14px;border:2px solid;cursor:pointer;background:var(--tb)}.tile .ib{width:62px;height:62px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff;background:var(--tc);flex:none}.tile .ib svg{width:28px;height:28px}.tile b{display:block;font-size:26px;line-height:1.1}.tile span{color:var(--tc);font-weight:600}
+.t-av{--tc:#16a34a;--tb:#ecfdf5;border-color:#16a34a}.t-oc{--tc:#f59e0b;--tb:#fff8e8;border-color:#f59e0b}.t-ar{--tc:#0ea5e9;--tb:#eef9ff;border-color:#0ea5e9}.t-de{--tc:#f97316;--tb:#fff3ea;border-color:#f97316}.t-re{--tc:#3b82f6;--tb:#eff5ff;border-color:#3b82f6}.t-ho{--tc:#8b5cf6;--tb:#f5f0ff;border-color:#8b5cf6}
+/* legend */
+.lgd{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--mu);margin-top:4px}.lgd span{display:flex;align-items:center;gap:7px}.lgd i{width:14px;height:14px;border-radius:4px;display:inline-block}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 11px;border-radius:99px;font-size:12.5px;font-weight:700;background:var(--cb);color:var(--cc);white-space:nowrap}.chip:before{content:'';width:7px;height:7px;border-radius:50%;background:var(--cc)}
+.c-available{--cc:#15803d;--cb:#dcfce7}.c-inhouse{--cc:#b45309;--cb:#fef3c7}.c-arriving{--cc:#0369a1;--cb:#e0f2fe}.c-departing{--cc:#c2410c;--cb:#ffedd5}.c-upcoming{--cc:#1d4ed8;--cb:#dbeafe}.c-hold{--cc:#6d28d9;--cb:#ede9fe}.c-past{--cc:#475569;--cb:#e2e8f0}
+.tg{font-size:11px;font-weight:800;letter-spacing:.05em;padding:2px 8px;border-radius:6px;background:#ccfbf1;color:#0f766e;margin-left:6px}.tg.o{background:#e0e7ff;color:#3730a3}
+/* apartment cards */
+.ag{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px}
+.ac{background:#fff;border:1px solid var(--ln);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;border-top:5px solid var(--sc)}.ac .im{height:150px;background:#e9edf5 center/cover;position:relative}.ac .im .chip{position:absolute;left:12px;top:12px;box-shadow:0 2px 8px rgba(0,0,0,.15)}.ac .im .tr{position:absolute;right:12px;top:12px;background:rgba(20,24,38,.78);color:#fff;border-radius:8px;padding:3px 10px;font-size:12px;font-weight:700}
+.ac .bd{padding:16px 18px;flex:1;display:flex;flex-direction:column;gap:9px}.ac h4{margin:0;font-size:19px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}.ac h4 small{font-size:14px;color:var(--or);font-weight:800;white-space:nowrap}
+.am{display:flex;flex-wrap:wrap;gap:6px}.am span{font-size:12px;background:#f1f4fa;border-radius:6px;padding:2px 8px;color:#4a5368}
+.ac .nt{font-size:13.5px;color:#3a4256;background:#f8f9fd;border-radius:10px;padding:10px 12px;min-height:58px}.ac .nt b{display:block}.ac .nt small{color:var(--mu)}
+.ac .ft{display:flex;gap:8px;padding:0 18px 16px}.ac .ft .btn{flex:1;justify-content:center}
+/* calendar */
+.cw{overflow:auto;border:1px solid var(--ln);border-radius:12px;background:#fff}.cg{position:relative;min-width:max-content}
+.cr{display:flex;height:54px;border-bottom:1px solid var(--ln);position:relative}.cr.h{height:56px;background:#fafbfe;position:sticky;top:0;z-index:4}
+.cl{width:178px;flex:none;position:sticky;left:0;z-index:3;background:#fff;border-right:1px solid var(--ln);padding:8px 14px;display:flex;flex-direction:column;justify-content:center;line-height:1.25}.cr.h .cl{background:#fafbfe;color:var(--mu);font-weight:700;font-size:13px}.cl b{font-size:14.5px}.cl small{color:var(--mu);font-size:12px}
+.cd{width:46px;flex:none;border-right:1px solid #eef0f6;text-align:center;font-size:12px;color:var(--mu);padding-top:7px;line-height:1.25}.cd b{display:block;color:var(--ink);font-size:15px}.cd.we{background:#fbfcfe}.cd.td{background:#fff3e6;color:var(--or)}.cd.td b{color:var(--or)}.cr:not(.h) .cd{cursor:pointer}.cr:not(.h) .cd:hover{background:#fff7ef}
+.bar{position:absolute;top:8px;height:38px;border-radius:9px;padding:3px 9px;color:#fff;font-size:12.5px;line-height:1.2;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;z-index:2;box-shadow:0 2px 6px rgba(0,0,0,.15);border-left:4px solid rgba(255,255,255,.5)}.bar b{display:block;font-size:13px;overflow:hidden;text-overflow:ellipsis}.bar.hold{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.22) 0 8px,transparent 8px 16px)}.bar.wk{border-left-color:#14b8a6}
+.tm{position:absolute;top:0;bottom:0;width:2px;background:var(--or);z-index:1;opacity:.55;pointer-events:none}
+/* table */
+.fl{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}.fl input,.fl select{border:1px solid var(--ln);border-radius:9px;padding:9px 12px;background:#fff;min-width:0}.fl input{flex:1;min-width:190px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.tabs button{border:1px solid var(--ln);background:#fff;border-radius:99px;padding:6px 14px;cursor:pointer;font-weight:600;color:#4a5368;font-size:13.5px}.tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}.tabs button em{font-style:normal;opacity:.65;margin-left:5px}
+.tw{overflow:auto}table{width:100%;border-collapse:collapse;min-width:860px}th{text-align:left;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--mu);padding:10px 12px;border-bottom:1px solid var(--ln);background:#fafbfe;position:sticky;top:0}td{padding:13px 12px;border-bottom:1px solid #eff1f7;vertical-align:middle;font-size:14.5px}tr.r{cursor:pointer}tr.r:hover td{background:#fff9f3}td small{display:block;color:var(--mu);font-size:12.5px}.em{text-align:center;color:var(--mu);padding:34px 0}
+/* forms */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:16px}.fg .f{display:flex;flex-direction:column;gap:5px}.fg .w{grid-column:1/-1}label{font-size:13px;font-weight:700;color:#3a4256}.fg input,.fg select,.fg textarea{border:1px solid var(--ln);border-radius:10px;padding:11px 12px;background:#fff;width:100%;outline:0}.fg input:focus,.fg select:focus{border-color:var(--or);box-shadow:0 0 0 3px rgba(249,115,22,.15)}
+.two{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:24px;align-items:start}.sm2{background:#fff8f1;border:1px solid #fde1c8;border-radius:14px;padding:20px}.sm2 h4{margin:0 0 10px}.sm2 .rw{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed #f3d9bf;font-size:14.5px}.sm2 .rw.tt{border:0;font-weight:800;font-size:18px;color:var(--or);padding-top:12px}
+.mg{padding:12px 14px;border-radius:10px;margin-top:14px;font-size:14.5px}.mg.e{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}.mg.k{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}.mg.w{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+/* guide */
+.gd{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}.gd .pn{margin:0}.gd ol,.gd ul{margin:6px 0 0;padding-left:20px}.gd li{margin:7px 0}.gd h3{margin:0 0 4px;font-size:18px}.lk{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+/* drawer / modal */
+#ov{position:fixed;inset:0;background:rgba(20,24,38,.45);z-index:50;display:none}#ov.on{display:block}
+#dr{position:fixed;top:0;right:0;bottom:0;width:min(470px,100%);background:#fff;z-index:60;box-shadow:-10px 0 40px rgba(0,0,0,.2);transform:translateX(105%);transition:transform .25s;overflow:auto}#dr.on{transform:none}
+.dh{padding:20px 22px;color:#fff;background:linear-gradient(100deg,#667eea,#764ba2);display:flex;gap:10px;align-items:flex-start}.dh h3{margin:0;font-size:20px}.dh small{opacity:.9}.dh button{margin-left:auto;background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:20px}
+.db{padding:18px 22px}.kv{display:grid;grid-template-columns:130px 1fr;gap:9px 12px;font-size:14.5px}.kv dt{color:var(--mu)}.kv dd{margin:0;font-weight:600;word-break:break-word}.db h5{margin:20px 0 8px;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu)}
+#md{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border-radius:16px;z-index:70;padding:26px;width:min(400px,92%);display:none;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}#md.on{display:block}#md .cd2{font:800 40px/1.2 ui-monospace,Consolas,monospace;letter-spacing:.14em;margin:10px 0;color:var(--or)}
+/* login */
+#lg{position:fixed;inset:0;z-index:80;background:linear-gradient(120deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;padding:20px}#lg .bx{background:#fff;border-radius:18px;padding:32px;width:min(400px,100%);box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center}#lg img{height:62px;margin-bottom:8px}#lg h2{margin:4px 0 4px}#lg p{color:var(--mu);margin:0 0 18px}#lg input{width:100%;border:1px solid var(--ln);border-radius:10px;padding:13px;font-size:18px;text-align:center;letter-spacing:.3em;outline:0}#lg input:focus{border-color:var(--or)}#lg .btn{width:100%;justify-content:center;margin-top:14px;padding:12px}
+#ts{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1e2433;color:#fff;padding:12px 20px;border-radius:12px;z-index:90;display:none;max-width:92%;box-shadow:0 10px 30px rgba(0,0,0,.3)}#ts.on{display:block}
+@media(max-width:1180px){.sg{grid-template-columns:repeat(2,1fr)}.tl{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}}
+@media(max-width:900px){#side{transform:translateX(-105%)}#side.on{transform:none;box-shadow:10px 0 40px rgba(0,0,0,.25)}#top{left:0;padding:0 14px}.hb{display:flex}main{margin-left:0;padding:92px 14px 40px}.lo span{display:none}.bn{padding:20px}.bn h1{font-size:22px}.bn .k{gap:22px}}
+@media(max-width:560px){.sg,.tl{grid-template-columns:1fr}.fg{grid-template-columns:1fr}.kv{grid-template-columns:105px 1fr}}
+</style></head><body>
+
+<div id='lg'><div class='bx'><img src='images/img-01.png' alt=''><h2>Staff booking system</h2><p>Priestly Apartments, Awka. Staff only.</p><input id='pin' type='password' inputmode='numeric' autocomplete='off' placeholder='Staff PIN'><button class='btn p' id='lgo'>Sign in</button><div id='lge'></div></div></div>
+
+<aside id='side'><div class='lg'><img src='images/img-01.png' alt=''><b>Priestly Apartments<small>Booking System</small></b></div>
+<div class='nvg'><h6>Front desk</h6>
+<button class='nv on' data-p='dash'><svg class='i'><use href='#i-grid'/></svg>Dashboard</button>
+<button class='nv' data-p='apts'><svg class='i'><use href='#i-bld'/></svg>Apartments</button>
+<button class='nv' data-p='cal'><svg class='i'><use href='#i-cal'/></svg>Calendar</button>
+<button class='nv' data-p='res'><svg class='i'><use href='#i-list'/></svg>Reservations<span class='ct' id='nres'>0</span></button>
+<button class='nv' data-p='new'><svg class='i'><use href='#i-plus'/></svg>New walk-in booking</button>
+<h6>Help &amp; tools</h6>
+<button class='nv' data-p='guide'><svg class='i'><use href='#i-book'/></svg>Front desk guide</button>
+<a class='nv' href='card.html' target='_blank' rel='noopener'><svg class='i'><use href='#i-key'/></svg>Welcome card &amp; Wi-Fi</a>
+</div></aside>
+
+<header id='top'><button class='hb' id='hb' aria-label='Menu'><svg class='i'><use href='#i-menu'/></svg></button>
+<div class='sr'><svg class='i'><use href='#i-sr'/></svg><input id='gs' placeholder='Search guest, phone or reference' autocomplete='off'></div>
+<div class='av'><button class='lo' id='lo'><svg class='i'><use href='#i-out'/></svg><span>Sign out</span></button><div class='c'>F</div></div></header>
+
+<main>
+<section class='pg on' id='p-dash'>
+ <div class='bn'><div><h1 id='gr'>Good day, Front Desk!</h1><p id='gt'></p></div><div class='k'><div><b id='k1'>0</b><span>Check-ins today</span></div><div><b id='k2'>0</b><span>Check-outs today</span></div><div><b id='k3'>0%</b><span>Occupancy tonight</span></div></div></div>
+ <div class='sg'>
+  <div class='sc s1'><small>Booked this month</small><b id='c1'>-</b><em id='c1s'></em><svg class='i big'><use href='#i-naira'/></svg></div>
+  <div class='sc s2'><small>Available tonight</small><b id='c2'>-</b><em id='c2s'></em><svg class='i big'><use href='#i-bld'/></svg></div>
+  <div class='sc s3'><small>Occupied tonight</small><b id='c3'>-</b><em id='c3s'></em><svg class='i big'><use href='#i-bed'/></svg></div>
+  <div class='sc s4'><small>Awaiting payment</small><b id='c4'>-</b><em id='c4s'></em><svg class='i big'><use href='#i-list'/></svg></div>
+ </div>
+ <div class='pn'><div class='ph'><h3>Apartment status overview</h3><div class='sp'><button class='btn' data-go='apts'>View all apartments</button><button class='btn p' data-go='new'>+ Quick booking</button></div></div>
+  <div class='pb'><div class='tl' id='tiles'></div><div class='lgd' style='margin-top:18px' id='lgd'></div></div></div>
+ <div class='pn'><div class='ph'><h3>Today at the front desk</h3></div><div class='pb' id='today'></div></div>
+</section>
+
+<section class='pg' id='p-apts'><h2 class='t'>Apartments</h2><p class='sub'>Live status for tonight. Colour of the top edge shows the current state.</p><div class='ag' id='ag'></div></section>
+
+<section class='pg' id='p-cal'><div class='pn'><div class='ph'><h3>Booking calendar</h3><div class='sp'><button class='btn' id='cp'>&lsaquo; Earlier</button><button class='btn' id='ct'>Today</button><button class='btn' id='cn'>Later &rsaquo;</button><button class='btn p' data-go='new'>+ Walk-in</button></div></div>
+ <div class='pb'><div class='lgd' id='lgd2' style='margin:0 0 14px'></div><div class='cw' id='cw'></div><p class='sub' style='margin:12px 0 0;font-size:13px'>Tip: click a bar to see the guest. Click an empty day to start a walk-in booking for that apartment and date. Each bar starts at check-in and ends at check-out (12:00 noon).</p></div></div></section>
+
+<section class='pg' id='p-res'><div class='pn'><div class='ph'><h3>Reservations</h3><div class='sp'><button class='btn' id='rfr'>Refresh</button></div></div>
+ <div class='pb'><div class='tabs' id='rtabs'></div><div class='fl'><input id='rq' placeholder='Search name, phone, reference'><select id='rr'></select><select id='rc'><option value=''>Online + walk-in</option><option value='online'>Online only</option><option value='walk-in'>Walk-in only</option></select></div><div class='tw'><table><thead><tr><th>Guest</th><th>Apartment</th><th>Stay</th><th>Guests</th><th>Total</th><th>Source</th><th>Status</th></tr></thead><tbody id='rb'></tbody></table></div></div></div></section>
+
+<section class='pg' id='p-new'><h2 class='t'>New walk-in booking</h2><p class='sub'>Use this when a guest books in person. The dates are blocked on the website straight away, so nobody can book them online.</p>
+ <div class='two'><div class='pn' style='margin:0'><div class='pb'><div class='fg'>
+  <div class='f w'><label for='room'>Apartment</label><select id='room'></select><div id='rbk' class='sub' style='margin:4px 0 0;font-size:13px'></div></div>
+  <div class='f'><label for='ci'>Check-in</label><input id='ci' type='date'></div><div class='f'><label for='co'>Check-out (by 12:00 noon)</label><input id='co' type='date'></div>
+  <div class='f'><label for='nm'>Guest full name</label><input id='nm' autocomplete='off'></div><div class='f'><label for='ph'>Guest phone</label><input id='ph' inputmode='tel' autocomplete='off'></div>
+  <div class='f'><label for='gu'>Guests</label><input id='gu' type='number' min='1' max='10' value='1'></div><div class='f'><label for='pd'>Payment received</label><select id='pd'><option value='cash'>Cash</option><option value='transfer'>Bank transfer</option><option value='pos'>POS</option><option value='unpaid'>Not yet paid</option></select></div>
+  <div class='f w'><label for='nt'>Note (optional)</label><input id='nt' maxlength='200' placeholder='Anything the team should know'></div></div>
+  <div id='nmsg'></div><button class='btn p' id='go' style='margin-top:18px;padding:12px 22px'>Save walk-in booking</button></div></div>
+  <div class='sm2'><h4>Booking summary</h4><div id='qs'><div class='em' style='padding:10px 0'>Choose an apartment and dates.</div></div></div></div></section>
+
+<section class='pg' id='p-guide'><h2 class='t'>Front desk guide</h2><p class='sub'>Quick reference for the team. Colours and steps used across this page.</p>
+ <div class='gd'>
+  <div class='pn'><div class='pb'><h3>Colour guide</h3><div id='gl'></div></div></div>
+  <div class='pn'><div class='pb'><h3>Checking a guest in</h3><ol><li>Find the booking in <b>Reservations</b> (search the name, phone or reference).</li><li>Confirm the guest's name and the number of guests with their ID.</li><li>Give the apartment door passcode from the apartment card (<b>Door code</b>).</li><li>Create their Wi-Fi voucher and welcome card with <b>Welcome card &amp; Wi-Fi</b>.</li><li>Check-in is any time on arrival day.</li></ol></div></div>
+  <div class='pn'><div class='pb'><h3>Checking a guest out</h3><ul><li>Check-out is by <b>12:00 noon</b> on the departure day. The apartment shows orange on that day.</li><li>Inspect the apartment, then release the caution fee as per house policy.</li><li>The apartment returns to green (Available) once the stay ends.</li></ul></div></div>
+  <div class='pn'><div class='pb'><h3>Walk-in guests</h3><ul><li>Use <b>New walk-in booking</b>. Dates are blocked on the website immediately.</li><li>Record how they paid (cash, transfer, POS) or choose <i>Not yet paid</i>.</li><li>The calendar shows walk-ins with a teal <b>WALK-IN</b> mark.</li><li>A walk-in can be cancelled from its details panel. Online bookings cannot be cancelled here.</li></ul></div></div>
+  <div class='pn'><div class='pb'><h3>Food and drink orders</h3><ul><li>Guests who are lodging order from the website menu. The order arrives on the front desk WhatsApp.</li><li>Confirm stock, reply with the total, then deliver to the apartment door.</li></ul><div class='lk'><a class='btn' href='https://wa.me/2349127289246' target='_blank' rel='noopener'>Open front desk WhatsApp</a><a class='btn' href='index.html#dine' target='_blank' rel='noopener'>View menu &amp; prices</a></div></div></div>
+  <div class='pn'><div class='pb'><h3>Online bookings</h3><ul><li>Guests pay online. <b>Confirmed</b> means payment was received.</li><li><b>Awaiting payment</b> (purple, striped) is a short hold while the guest is paying. It is released automatically if they do not finish.</li><li>Two bookings can never overlap on the same apartment. The system blocks it.</li></ul></div></div>
+ </div></section>
+</main>
+
+<div id='ov'></div><aside id='dr'><div class='dh'><div><h3 id='dt'></h3><small id='ds'></small></div><button id='dx' aria-label='Close'>&times;</button></div><div class='db' id='dbody'></div></aside>
+<div id='md'><div id='mdb'></div><button class='btn' id='mdx' style='margin-top:12px'>Close</button></div><div id='ts'></div>
+
+<svg width='0' height='0' style='position:absolute'><defs>
+<symbol id='i-grid' viewBox='0 0 24 24'><rect x='3' y='3' width='7' height='7' rx='1.5'/><rect x='14' y='3' width='7' height='7' rx='1.5'/><rect x='3' y='14' width='7' height='7' rx='1.5'/><rect x='14' y='14' width='7' height='7' rx='1.5'/></symbol>
+<symbol id='i-bld' viewBox='0 0 24 24'><rect x='5' y='3' width='14' height='18' rx='1.5'/><path d='M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2'/></symbol>
+<symbol id='i-cal' viewBox='0 0 24 24'><rect x='3' y='5' width='18' height='16' rx='2'/><path d='M3 10h18M8 3v4M16 3v4'/></symbol>
+<symbol id='i-list' viewBox='0 0 24 24'><path d='M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01'/></symbol>
+<symbol id='i-plus' viewBox='0 0 24 24'><circle cx='12' cy='12' r='9'/><path d='M12 8v8M8 12h8'/></symbol>
+<symbol id='i-book' viewBox='0 0 24 24'><path d='M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z'/><path d='M4 21V5'/></symbol>
+<symbol id='i-key' viewBox='0 0 24 24'><circle cx='8' cy='15' r='4'/><path d='M11 12l9-9M16 7l3 3'/></symbol>
+<symbol id='i-menu' viewBox='0 0 24 24'><path d='M4 7h16M4 12h16M4 17h16'/></symbol>
+<symbol id='i-sr' viewBox='0 0 24 24'><circle cx='11' cy='11' r='7'/><path d='M20 20l-4-4'/></symbol>
+<symbol id='i-out' viewBox='0 0 24 24'><path d='M9 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M16 8l4 4-4 4M20 12H9'/></symbol>
+<symbol id='i-bed' viewBox='0 0 24 24'><path d='M3 18V6M3 14h18v4M21 14v-2a3 3 0 0 0-3-3h-7v5'/><circle cx='7' cy='11' r='1.6'/></symbol>
+<symbol id='i-naira' viewBox='0 0 24 24'><path d='M7 20V4l10 16V4M4 9h16M4 15h16'/></symbol>
+<symbol id='i-ok' viewBox='0 0 24 24'><path d='M5 12l5 5 9-10'/></symbol>
+<symbol id='i-in' viewBox='0 0 24 24'><path d='M15 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 8l-4 4 4 4M6 12h11'/></symbol>
+<symbol id='i-ot' viewBox='0 0 24 24'><path d='M9 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M16 8l4 4-4 4M20 12H9'/></symbol>
+<symbol id='i-clk' viewBox='0 0 24 24'><circle cx='12' cy='12' r='9'/><path d='M12 7v5l3 2'/></symbol>
+</defs></svg>
+
+<script src='config.js'></script>
+<script>
+const API=(window.PA_CONFIG||{}).API||'',$=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const naira=n=>'₦'+Number(n||0).toLocaleString('en-NG');
+const dn=s=>Date.parse(s+'T00:00:00Z')/864e5,addD=(s,n)=>new Date((dn(s)+n)*864e5).toISOString().slice(0,10);
 const fd=s=>new Date(s+'T00:00:00Z').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
-const today=new Date().toLocaleDateString('en-CA',{timeZone:'Africa/Lagos'});$('ci').min=today;$('co').min=today;
-async function call(o){let r;try{r=await fetch(API+'/api/walkin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({pin:$('pin').value},o))})}catch(e){throw new Error('Cannot reach the server. Check the internet and try again.')}
- const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Something went wrong');return j}
-const show=(t,m)=>{$('msg').innerHTML=m?`<div class='m ${t}'>${E(m)}</div>`:''};
-let ROOMS=[];
-async function boot(){try{const r=await fetch(API+'/api/availability');ROOMS=(await r.json()).rooms||[];$('room').innerHTML=`<option value=''>Choose an apartment</option>`+ROOMS.map(x=>`<option value='${x.id}'>${E(x.name)} - ${E(x.tier)}</option>`).join('')}catch(e){}}
-async function roomInfo(){const id=$('room').value;$('bk').textContent='';if(!id)return;try{const r=await(await fetch(API+'/api/availability?room='+id)).json();$('bk').textContent=r.booked&&r.booked.length?'Already booked: '+r.booked.map(b=>fd(b.from)+' to '+fd(b.to)).join(' | '):'No upcoming bookings for this apartment.'}catch(e){}}
-async function load(){if(!$('pin').value)return;try{const r=await call({action:'list'});
- $('ls').innerHTML=r.bookings.length?r.bookings.map(b=>`<div class='it'><div><b>${E(b.room)}</b>${b.channel==='walk-in'?"<span class='tg'>WALK-IN</span>":''}<small>${fd(b.check_in)} to ${fd(b.check_out)} &middot; ${E(b.guest_name)} &middot; ${E(b.guest_phone)}</small></div>${b.channel==='walk-in'?`<button class='sm' data-c='${E(b.reference)}'>Cancel</button>`:''}</div>`).join(''):'No upcoming bookings.'}catch(e){$('ls').textContent=e.message}}
-$('room').addEventListener('change',roomInfo);$('rf').onclick=()=>{roomInfo();load()};$('pin').addEventListener('change',load);
-$('ls').addEventListener('click',async e=>{const c=e.target.dataset.c;if(!c||!confirm('Cancel this walk-in booking and free the dates?'))return;try{await call({action:'cancel',reference:c});show('k','Walk-in booking cancelled. The dates are free again.');load();roomInfo()}catch(x){show('e',x.message)}});
-$('go').onclick=async()=>{show('');const b=$('go');b.disabled=true;try{
+const fs=s=>new Date(s+'T00:00:00Z').toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'UTC'});
+const icon=n=>`<svg class='i'><use href='#i-${n}'/></svg>`;
+let PIN='';try{PIN=sessionStorage.getItem('pa_pin')||''}catch(e){}
+let D={today:'',rooms:[],bookings:[]},calStart='',tab='cur',roomName={};
+const ST={inhouse:['In-house','#f59e0b'],arriving:['Arriving today','#0ea5e9'],departing:['Departing today','#f97316'],upcoming:['Upcoming','#3b82f6'],hold:['Awaiting payment','#8b5cf6'],past:['Checked out','#94a3b8'],available:['Available','#16a34a']};
+const DESC={available:'No guest tonight. Ready to book.',inhouse:'Guest is staying tonight.',arriving:'Guest checks in today.',departing:'Guest checks out by 12:00 noon today.',upcoming:'Confirmed booking in the future.',hold:'Guest is paying online. Held for a short time.',past:'Stay completed.'};
+const AM=['24/7 power','Hotspot Wi-Fi','Smart TV','Full kitchen','Security & CCTV'];
+const PH={'VIP':'img-09','Executive':'img-10','Standard':'img-11','Self-con VIP':'img-09','Self-con Standard':'img-12'};
+const photo=r=>'images/'+(r.id==='kigali'?'img-30':PH[r.tier]||'img-09')+'.jpg';
+const chip=k=>`<span class='chip c-${k}'>${ST[k][0]}</span>`;
+const sess=()=>{try{sessionStorage.setItem('pa_pin',PIN)}catch(e){}};
+
+async function post(path,o){let r;try{r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({pin:PIN},o))})}catch(e){throw new Error('Cannot reach the server. Check the internet and try again.')}
+ const j=await r.json().catch(()=>({}));if(!r.ok){const er=new Error(j.error||'Something went wrong');er.status=r.status;throw er}return j}
+const call=o=>post('/api/walkin',o);
+function toast(m){const t=$('ts');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),3800)}
+
+/* ---------- state helpers ---------- */
+function bstate(b,T){if(b.status==='pending')return'hold';if(b.check_out<T)return'past';if(b.check_in>T)return'upcoming';if(b.check_in===T)return'arriving';if(b.check_out===T)return'departing';return'inhouse'}
+const isWalk=b=>b.channel==='walk-in';
+function roomState(id){const T=D.today,bs=D.bookings.filter(b=>b.room===id&&b.status!=='cancelled');
+ const by=k=>bs.find(b=>bstate(b,T)===k);
+ const cur=by('arriving')||by('inhouse'),dep=by('departing');
+ const nxt=bs.filter(b=>b.check_in>T&&b.status==='confirmed').sort((a,b)=>a.check_in<b.check_in?-1:1)[0]||bs.filter(b=>b.check_in>T).sort((a,b)=>a.check_in<b.check_in?-1:1)[0];
+ if(cur)return{k:bstate(cur,T),b:cur,next:nxt,dep};
+ if(dep)return{k:'departing',b:dep,next:nxt};
+ return{k:'available',next:nxt}}
+const pay=b=>{if(isWalk(b)){const m=/Payment: (\w+)/.exec(b.special_requests||'');const p=m&&m[1];return p==='unpaid'?'Not yet paid':p==='transfer'?'Bank transfer':p==='pos'?'POS':p==='cash'?'Cash':'Walk-in'}return b.status==='confirmed'?'Paid online':'Awaiting payment'};
+
+/* ---------- load ---------- */
+async function load(first){
+ try{const j=await call({action:'overview'});D=j;roomName={};D.rooms.forEach(r=>roomName[r.id]=r.name);D.bookings=D.bookings.filter(b=>b.status!=='cancelled');
+  if(!calStart)calStart=addD(D.today,-3);
+  $('lg').style.display='none';sess();renderAll();if(first)fillRooms()}
+ catch(e){if(e.status===403||first){PIN='';try{sessionStorage.removeItem('pa_pin')}catch(x){}$('lg').style.display='flex';$('lge').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}else toast(e.message)}}
+function renderAll(){head();stats();tiles();todayList();aptCards();calendar();resTable();summary()}
+
+function head(){const h=+new Date().toLocaleString('en-GB',{hour:'numeric',hour12:false,timeZone:'Africa/Lagos'});
+ $('gr').textContent=(h<12?'Good morning':h<17?'Good afternoon':'Good evening')+', Front Desk!';
+ $('gt').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'Africa/Lagos'})+' at '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Africa/Lagos'})}
+function counts(){const T=D.today,R=D.rooms.map(r=>roomState(r.id)),c={av:0,oc:0,ar:0,de:0,re:0,ho:0};
+ R.forEach(s=>{if(s.k==='inhouse'||s.k==='arriving')c.oc++;else c.av++;if(s.k==='arriving')c.ar++;if(s.k==='departing')c.de++;if(s.k!=='inhouse'&&s.k!=='arriving'&&s.next&&s.next.status==='confirmed')c.re++});
+ c.ho=D.bookings.filter(b=>b.status==='pending').length;return c}
+function stats(){const T=D.today,m=T.slice(0,7),c=counts(),n=D.rooms.length||10;
+ const mb=D.bookings.filter(b=>b.status==='confirmed'&&b.check_in.slice(0,7)===m);
+ $('c1').textContent=naira(mb.reduce((a,b)=>a+b.nights*b.rate,0));$('c1s').textContent=mb.length+' booking'+(mb.length===1?'':'s')+' starting this month, excl. caution fees';
+ $('c2').textContent=c.av;$('c2s').textContent='of '+n+' apartments are free tonight';
+ $('c3').textContent=c.oc;$('c3s').textContent=D.bookings.filter(b=>['inhouse','arriving'].includes(bstate(b,T))).reduce((a,b)=>a+(b.guests||1),0)+' guests in-house';
+ const hp=D.bookings.filter(b=>b.status==='pending');$('c4').textContent=naira(hp.reduce((a,b)=>a+b.total,0));$('c4s').textContent=hp.length+' online hold'+(hp.length===1?'':'s')+' in progress';
+ $('k1').textContent=c.ar;$('k2').textContent=c.de;$('k3').textContent=Math.round(c.oc/n*100)+'%';
+ const cur=D.bookings.filter(b=>bstate(b,T)!=='past').length;$('nres').textContent=cur}
+function tiles(){const c=counts();
+ const T=[['av','Available tonight',c.av,'ok','available'],['oc','Occupied',c.oc,'bed','inhouse'],['ar','Arriving today',c.ar,'in','arriving'],['de','Departing today',c.de,'ot','departing'],['re','Reserved ahead',c.re,'cal','upcoming'],['ho','Awaiting payment',c.ho,'clk','hold']];
+ $('tiles').innerHTML=T.map(t=>`<div class='tile t-${t[0]}' data-k='${t[4]}'><div class='ib'>${icon(t[3])}</div><div><b>${t[2]}</b><span>${t[1]}</span></div></div>`).join('');
+ const L=['available','inhouse','arriving','departing','upcoming','hold'].map(k=>`<span><i style='background:${ST[k][1]}'></i><b>${ST[k][0]}</b> - ${DESC[k]}</span>`).join('');
+ $('lgd').innerHTML=L;$('lgd2').innerHTML=['inhouse','arriving','departing','upcoming','hold'].map(k=>`<span><i style='background:${ST[k][1]}'></i>${ST[k][0]}</span>`).join('')+`<span><i style='background:#fff;border:2px solid #14b8a6'></i>WALK-IN (teal edge)</span>`;
+ $('gl').innerHTML=['available','inhouse','arriving','departing','upcoming','hold','past'].map(k=>`<p style='margin:9px 0'>${chip(k)} <span class='sub' style='margin:0 0 0 6px'>${DESC[k]}</span></p>`).join('')}
+function todayList(){const T=D.today,a=D.bookings.filter(b=>b.check_in===T&&b.status==='confirmed'),o=D.bookings.filter(b=>b.check_out===T&&b.status==='confirmed');
+ const row=(b,k)=>`<tr class='r' data-ref='${esc(b.reference)}'><td><b>${esc(b.guest_name)}</b>${isWalk(b)?"<span class='tg'>WALK-IN</span>":''}<small>${esc(b.guest_phone||'')}</small></td><td>${esc(roomName[b.room]||b.room)}</td><td>${fs(b.check_in)} &rarr; ${fs(b.check_out)}</td><td>${chip(k)}</td></tr>`;
+ const rows=a.map(b=>row(b,'arriving')).concat(o.map(b=>row(b,'departing')));
+ $('today').innerHTML=rows.length?`<div class='tw'><table style='min-width:560px'><tbody>${rows.join('')}</tbody></table></div>`:`<div class='em'>No check-ins or check-outs today.</div>`}
+
+function aptCards(){$('ag').innerHTML=D.rooms.map(r=>{const s=roomState(r.id),col=ST[s.k][1],b=s.b,n=s.next;
+ let note;if(b)note=`<b>${esc(b.guest_name)}${isWalk(b)?"<span class='tg'>WALK-IN</span>":''}</b><small>${fs(b.check_in)} &rarr; ${fs(b.check_out)} &middot; ${b.guests||1} guest${(b.guests||1)>1?'s':''}</small>`;else note=`<b>${s.k==='available'?'Free tonight':''}</b><small>${DESC[s.k]}</small>`;
+ const nx=n?`<small style='display:block;margin-top:4px;color:${ST[bstate(n,D.today)==='hold'?'hold':'upcoming'][1]}'>Next: ${fs(n.check_in)} &rarr; ${fs(n.check_out)} (${esc(n.guest_name)})</small>`:`<small style='display:block;margin-top:4px'>No further bookings.</small>`;
+ return `<div class='ac' style='--sc:${col}'><div class='im' style="background-image:url('${photo(r)}')">${chip(s.k)}<span class='tr'>${esc(r.tier)}</span></div><div class='bd'><h4>${esc(r.name)}<small>${naira(r.rate)}/night</small></h4>
+ <div class='am'><span>${/^Self/.test(r.tier)?'Self-contained':'2 bedrooms'}</span>${AM.map(a=>`<span>${a}</span>`).join('')}</div>
+ <div class='nt'>${note}${nx}</div><small style='color:var(--mu)'>Caution fee ${naira(r.caution)} (refundable)</small></div>
+ <div class='ft'><button class='btn p sm' data-bk='${r.id}'>Book walk-in</button><button class='btn sm' data-dc='${r.id}'>${icon('key')}Door code</button></div></div>`}).join('')}
+
+/* ---------- calendar ---------- */
+const DAYS=28,CW=46;
+function calendar(){const s=calStart,T=D.today,W=DAYS*CW;let h=`<div class='cg' style='width:${178+W}px'><div class='cr h'><div class='cl'>${fs(s)} &ndash; ${fs(addD(s,DAYS-1))}</div>`;
+ for(let i=0;i<DAYS;i++){const d=addD(s,i),dt=new Date(d+'T00:00:00Z'),wk=dt.getUTCDay();h+=`<div class='cd${wk===0||wk===6?' we':''}${d===T?' td':''}'>${dt.toLocaleDateString('en-GB',{weekday:'short',timeZone:'UTC'})}<b>${dt.getUTCDate()}</b>${dt.getUTCDate()===1||i===0?dt.toLocaleDateString('en-GB',{month:'short',timeZone:'UTC'}):'&nbsp;'}</div>`}
+ h+='</div>';
+ D.rooms.forEach(r=>{h+=`<div class='cr'><div class='cl'><b>${esc(r.name)}</b><small>${esc(r.tier)}</small></div>`;
+  for(let i=0;i<DAYS;i++){const d=addD(s,i);h+=`<div class='cd${d===T?' td':''}' data-r='${r.id}' data-d='${d}'></div>`}
+  D.bookings.filter(b=>b.room===r.id).forEach(b=>{const L=Math.max(0,(dn(b.check_in)-dn(s)+.5)*CW),R=Math.min(W,(dn(b.check_out)-dn(s)+.5)*CW);if(R<=0||L>=W||R<=L)return;
+   const k=bstate(b,T),col=ST[k==='past'?'past':k][1];
+   h+=`<div class='bar${k==='hold'?' hold':''}${isWalk(b)?' wk':''}' data-ref='${esc(b.reference)}' style='left:${178+L}px;width:${R-L-2}px;background:${col}' title='${esc(b.guest_name)} - ${ST[k][0]}'><b>${esc(b.guest_name)}</b>${fs(b.check_in)} - ${fs(b.check_out)}</div>`});
+  h+='</div>'});
+ const ti=dn(T)-dn(s);if(ti>=0&&ti<DAYS)h+=`<div class='tm' style='left:${178+(ti+.5)*CW}px'></div>`;
+ $('cw').innerHTML=h+'</div>'}
+
+/* ---------- reservations ---------- */
+function resList(){const T=D.today,q=$('rq').value.trim().toLowerCase(),rm=$('rr').value,ch=$('rc').value;
+ return D.bookings.map(b=>({b,k:bstate(b,T)})).filter(x=>{const b=x.b;
+  if(rm&&b.room!==rm)return false;if(ch==='walk-in'&&!isWalk(b))return false;if(ch==='online'&&isWalk(b))return false;
+  if(q&&!(`${b.guest_name} ${b.guest_phone} ${b.reference} ${b.guest_email}`.toLowerCase().includes(q)))return false;return true})
+  .sort((a,b)=>a.b.check_in<b.b.check_in?(a.k==='past'?1:-1):1)}
+function resTable(){const L=resList();
+ const cnt=k=>L.filter(x=>k==='cur'?x.k!=='past':k==='all'?true:x.k===k).length;
+ const T=[['cur','Current & upcoming'],['inhouse','In-house'],['arriving','Arriving today'],['departing','Departing today'],['upcoming','Upcoming'],['hold','Awaiting payment'],['past','Checked out'],['all','All']];
+ $('rtabs').innerHTML=T.map(t=>`<button class='${tab===t[0]?'on':''}' data-t='${t[0]}'>${t[1]}<em>${cnt(t[0])}</em></button>`).join('');
+ const rows=L.filter(x=>tab==='cur'?x.k!=='past':tab==='all'?true:x.k===tab);
+ const sorted=tab==='past'||tab==='all'?rows.slice().sort((a,b)=>a.b.check_in<b.b.check_in?1:-1):rows;
+ $('rb').innerHTML=sorted.length?sorted.map(x=>{const b=x.b;return `<tr class='r' data-ref='${esc(b.reference)}'><td><b>${esc(b.guest_name)}</b><small>${esc(b.guest_phone||'')}</small></td><td>${esc(roomName[b.room]||b.room)}</td><td>${fs(b.check_in)} &rarr; ${fs(b.check_out)}<small>${b.nights} night${b.nights>1?'s':''}</small></td><td>${b.guests||1}</td><td>${naira(b.total)}<small>${esc(pay(b))}</small></td><td>${isWalk(b)?"<span class='tg'>WALK-IN</span>":"<span class='tg o'>ONLINE</span>"}</td><td>${chip(x.k)}</td></tr>`}).join(''):`<tr><td colspan='7' class='em'>No reservations match.</td></tr>`}
+
+/* ---------- drawer ---------- */
+function openB(ref){const b=D.bookings.find(x=>x.reference===ref);if(!b)return;const k=bstate(b,D.today),r=D.rooms.find(x=>x.id===b.room)||{};
+ $('dt').textContent=b.guest_name;$('ds').textContent=(roomName[b.room]||b.room)+' - '+b.reference;
+ const ph=String(b.guest_phone||'').replace(/[^\d+]/g,''),wa=ph.replace(/^\+/,'').replace(/^0/,'234');
+ const em=b.guest_email&&!/walk-in@/.test(b.guest_email)?b.guest_email:'-';
+ $('dbody').innerHTML=`<p style='margin:0 0 6px'>${chip(k)} ${isWalk(b)?"<span class='tg'>WALK-IN</span>":"<span class='tg o'>ONLINE</span>"}</p>
+ <h5>Stay</h5><dl class='kv'><dt>Apartment</dt><dd>${esc(roomName[b.room]||b.room)} (${esc(r.tier||'')})</dd><dt>Check-in</dt><dd>${fd(b.check_in)}</dd><dt>Check-out</dt><dd>${fd(b.check_out)} by 12:00 noon</dd><dt>Nights</dt><dd>${b.nights}</dd><dt>Guests</dt><dd>${b.guests||1}</dd></dl>
+ <h5>Guest</h5><dl class='kv'><dt>Name</dt><dd>${esc(b.guest_name)}</dd><dt>Phone</dt><dd>${esc(b.guest_phone||'-')}</dd><dt>Email</dt><dd>${esc(em)}</dd></dl>
+ <div class='lk'>${ph?`<a class='btn sm' href='tel:${esc(ph)}'>Call</a><a class='btn sm' target='_blank' rel='noopener' href='https://wa.me/${esc(wa)}'>WhatsApp</a>`:''}</div>
+ <h5>Payment</h5><dl class='kv'><dt>Rate</dt><dd>${naira(b.rate)} x ${b.nights}</dd><dt>Caution fee</dt><dd>${naira(b.caution)} (refundable)</dd><dt>Total</dt><dd>${naira(b.total)}</dd><dt>Status</dt><dd>${esc(pay(b))}</dd></dl>
+ ${b.special_requests?`<h5>Notes &amp; requests</h5><p style='margin:0;white-space:pre-wrap;font-size:14.5px'>${esc(b.special_requests)}</p>`:''}
+ <h5>Actions</h5><div class='lk' style='margin-top:0'><button class='btn sm' data-dc='${esc(b.room)}'>${icon('key')}Door code</button><a class='btn sm' href='card.html' target='_blank' rel='noopener'>Welcome card &amp; Wi-Fi</a>${isWalk(b)&&b.status==='confirmed'&&k!=='past'?`<button class='btn sm dg' data-cx='${esc(b.reference)}'>Cancel walk-in</button>`:''}</div>
+ <p class='sub' style='margin:16px 0 0;font-size:12.5px'>Booked ${new Date(b.created_at).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short',timeZone:'Africa/Lagos'})}</p>`;
+ $('dr').classList.add('on');$('ov').classList.add('on')}
+function closeAll(){$('dr').classList.remove('on');$('ov').classList.remove('on');$('md').classList.remove('on');$('side').classList.remove('on')}
+
+/* ---------- walk-in form ---------- */
+function fillRooms(){$('room').innerHTML=`<option value=''>Choose an apartment</option>`+D.rooms.map(r=>`<option value='${r.id}'>${esc(r.name)} - ${esc(r.tier)} (${naira(r.rate)}/night)</option>`).join('');$('rr').innerHTML=`<option value=''>All apartments</option>`+D.rooms.map(r=>`<option value='${r.id}'>${esc(r.name)}</option>`).join('');$('ci').min=D.today;$('co').min=D.today}
+function conflict(){const id=$('room').value,ci=$('ci').value,co=$('co').value;if(!id||!ci||!co)return null;return D.bookings.find(b=>b.room===id&&b.check_in<co&&b.check_out>ci)}
+function summary(){const id=$('room').value,r=D.rooms.find(x=>x.id===id),ci=$('ci').value,co=$('co').value;
+ const bk=id?D.bookings.filter(b=>b.room===id&&b.check_out>=D.today).map(b=>fs(b.check_in)+' to '+fs(b.check_out)):[];$('rbk').innerHTML=id?(bk.length?'Already booked: '+bk.map(esc).join(' | '):'No upcoming bookings for this apartment.'):'';
+ if(!r||!ci||!co||co<=ci){$('qs').innerHTML=`<div class='em' style='padding:10px 0'>Choose an apartment and dates.</div>`;return}
+ const n=dn(co)-dn(ci),sub=n*r.rate,cf=conflict();
+ $('qs').innerHTML=`<div class='rw'><span>${esc(r.name)} (${esc(r.tier)})</span><b></b></div><div class='rw'><span>${fd(ci)} &rarr; ${fd(co)}</span><b>${n} night${n>1?'s':''}</b></div><div class='rw'><span>${n} x ${naira(r.rate)}</span><b>${naira(sub)}</b></div><div class='rw'><span>Caution fee (refundable)</span><b>${naira(r.caution)}</b></div><div class='rw tt'><span>Total</span><span>${naira(sub+r.caution)}</span></div>`+(cf?`<div class='mg e'>Not free: ${esc(cf.guest_name)} has this apartment ${fs(cf.check_in)} to ${fs(cf.check_out)}.</div>`:`<div class='mg k'>These dates are free.</div>`)}
+function prefill(room,d){go('new');$('room').value=room;$('ci').value=d;$('co').value=addD(d,1);summary();$('nm').focus()}
+
+/* ---------- nav ---------- */
+function go(p){document.querySelectorAll('.pg').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));document.querySelectorAll('.nv[data-p]').forEach(x=>x.classList.toggle('on',x.dataset.p===p));closeAll();window.scrollTo(0,0)}
+document.addEventListener('click',async e=>{const t=e.target;
+ const nv=t.closest('.nv[data-p]');if(nv){go(nv.dataset.p);return}
+ const g=t.closest('[data-go]');if(g){go(g.dataset.go);return}
+ const bk=t.closest('[data-bk]');if(bk){prefill(bk.dataset.bk,D.today);return}
+ const dc=t.closest('[data-dc]');if(dc){doorCode(dc.dataset.dc);return}
+ const cx=t.closest('[data-cx]');if(cx){if(!confirm('Cancel this walk-in booking and free the dates?'))return;try{await call({action:'cancel',reference:cx.dataset.cx});toast('Walk-in cancelled. The dates are free again.');closeAll();load()}catch(x){toast(x.message)}return}
+ const tl=t.closest('.tile');if(tl){const k=tl.dataset.k;if(k==='available'||k==='inhouse'||k==='arriving'||k==='departing'||k==='upcoming'||k==='hold'){if(k==='available'){go('apts')}else{tab=k;go('res');resTable()}}return}
+ const tb=t.closest('[data-t]');if(tb){tab=tb.dataset.t;resTable();return}
+ const bar=t.closest('.bar');if(bar){openB(bar.dataset.ref);return}
+ const cell=t.closest('.cd[data-r]');if(cell){const d=cell.dataset.d;if(d<D.today){toast('That date has passed.');return}prefill(cell.dataset.r,d);return}
+ const tr=t.closest('tr.r');if(tr){openB(tr.dataset.ref);return}
+});
+async function doorCode(room){$('mdb').innerHTML=`<h3 style='margin:0'>${esc(roomName[room]||room)} door code</h3><div class='cd2'>...</div>`;$('md').classList.add('on');$('ov').classList.add('on');
+ try{const j=await post('/api/door-code',{room});$('mdb').innerHTML=`<h3 style='margin:0'>${esc(roomName[room]||room)} door code</h3><div class='cd2'>${esc(j.code)}</div><p class='sub' style='margin:0'>Give this only to the registered guest.</p>`}catch(e){$('mdb').innerHTML=`<h3 style='margin:0'>${esc(roomName[room]||room)}</h3><div class='mg e'>${esc(e.message)}</div>`}}
+$('dx').onclick=$('mdx').onclick=$('ov').onclick=closeAll;$('hb').onclick=()=>{$('side').classList.toggle('on');$('ov').classList.toggle('on',$('side').classList.contains('on'))};
+$('cp').onclick=()=>{calStart=addD(calStart,-14);calendar()};$('cn').onclick=()=>{calStart=addD(calStart,14);calendar()};$('ct').onclick=()=>{calStart=addD(D.today,-3);calendar()};
+['rq','rr','rc'].forEach(i=>$(i).addEventListener('input',resTable));$('rfr').onclick=()=>load();
+$('gs').addEventListener('input',()=>{$('rq').value=$('gs').value;tab='all';if($('gs').value&&!$('p-res').classList.contains('on'))go('res');resTable()});
+['room','ci','co'].forEach(i=>$(i).addEventListener('input',summary));
+$('ci').addEventListener('change',()=>{if($('ci').value&&(!$('co').value||$('co').value<=$('ci').value)){$('co').value=addD($('ci').value,1);summary()}$('co').min=addD($('ci').value||D.today,1)});
+$('go').onclick=async()=>{$('nmsg').innerHTML='';const b=$('go');b.disabled=true;try{
  const r=await call({action:'create',room:$('room').value,checkIn:$('ci').value,checkOut:$('co').value,name:$('nm').value,phone:$('ph').value,guests:$('gu').value,paid:$('pd').value,note:$('nt').value});
- show('k','Saved. Reference '+r.reference+' ('+r.nights+' night'+(r.nights>1?'s':'')+'). These dates are now blocked on the website.');['nm','ph','nt'].forEach(i=>$(i).value='');roomInfo();load()}
- catch(e){show('e',e.message)}b.disabled=false};
-boot();
+ $('nmsg').innerHTML=`<div class='mg k'>Saved. Reference ${esc(r.reference)} (${r.nights} night${r.nights>1?'s':''}). These dates are now blocked on the website.</div>`;['nm','ph','nt'].forEach(i=>$(i).value='');await load();summary()}
+ catch(e){$('nmsg').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}b.disabled=false};
+function signin(){PIN=$('pin').value;$('lge').innerHTML='';if(!PIN)return;load(true)}
+$('lgo').onclick=signin;$('pin').addEventListener('keydown',e=>{if(e.key==='Enter')signin()});
+$('lo').onclick=()=>{PIN='';try{sessionStorage.removeItem('pa_pin')}catch(e){}location.reload()};
+setInterval(()=>{if(PIN&&!document.hidden&&!$('dr').classList.contains('on'))load()},60000);
+if(PIN)load(true);else $('lg').style.display='flex';
 </script></body></html>
