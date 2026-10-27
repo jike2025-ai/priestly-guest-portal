@@ -69,6 +69,25 @@ h2.t{font-size:23px;margin:0 0 4px}.sub{color:var(--mu);margin:0 0 18px}
 @media(max-width:1180px){.sg{grid-template-columns:repeat(2,1fr)}.tl{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}}
 @media(max-width:900px){#side{transform:translateX(-105%)}#side.on{transform:none;box-shadow:10px 0 40px rgba(0,0,0,.25)}#top{left:0;padding:0 14px}.hb{display:flex}main{margin-left:0;padding:92px 14px 40px}.lo span{display:none}.bn{padding:20px}.bn h1{font-size:22px}.bn .k{gap:22px}}
 @media(max-width:560px){.sg,.tl{grid-template-columns:1fr}.fg{grid-template-columns:1fr}.kv{grid-template-columns:105px 1fr}}
+
+/* roles, housekeeping, picker, admin */
+.rl{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:4px 10px;border-radius:99px;background:#ede9fe;color:#5b21b6;white-space:nowrap}.rl.st{background:#ffedd5;color:#c2410c}
+.c-hkclean{--cc:#15803d;--cb:#dcfce7}.c-hkdirty{--cc:#b91c1c;--cb:#fee2e2}.c-hkmaintenance{--cc:#475569;--cb:#e2e8f0}
+.t-hc{--tc:#16a34a;--tb:#f0fdf4;border-color:#86efac}.t-hd{--tc:#dc2626;--tb:#fef2f2;border-color:#fca5a5}.t-hm{--tc:#475569;--tb:#f1f5f9;border-color:#94a3b8}
+.hkr{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:2px}.hkr select{border:1px solid var(--ln);border-radius:8px;padding:5px 8px;background:#fff;font-size:13px;margin-left:auto}.hkr small{flex-basis:100%;color:var(--mu);font-size:12px}
+.pk{border:1px solid var(--ln);border-radius:12px;padding:12px;background:#fff;max-width:420px}.pkh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.pkh b{font-size:15.5px}
+.pkg{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}.pkg i{font-style:normal;font-size:11.5px;color:var(--mu);padding:3px 0}
+.pkg button{border:0;border-radius:8px;height:38px;background:#f6f8fc;cursor:pointer;font-weight:600;color:var(--ink)}.pkg button:hover:not(:disabled){background:#ffedd5}
+.pkg button:disabled{cursor:not-allowed;background:transparent;color:#b8bfce}.pkg button.bk{background:repeating-linear-gradient(45deg,#fee2e2,#fee2e2 4px,#fff 4px,#fff 8px);color:#b91c1c;text-decoration:line-through}.pkg button.rg{background:#fed7aa}.pkg button.sl{background:var(--or);color:#fff}
+.psel{margin-top:8px;font-size:14px;color:var(--mu)}.psel b{color:var(--ink)}
+.two2{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:24px;align-items:start}.two2>.sm2{position:sticky;top:96px}
+.bars{display:flex;gap:14px;align-items:flex-end;height:210px;padding:10px 4px 0}.bars .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}.bars .st{width:100%;max-width:70px;display:flex;flex-direction:column;justify-content:flex-end;border-radius:8px 8px 0 0;overflow:hidden}.bars .st i{display:block}.bars em{font-style:normal;font-size:12.5px;margin-top:6px;color:var(--mu)}.bars small{font-size:11.5px;color:var(--mu);margin-bottom:4px;white-space:nowrap}
+.lk2{display:flex;gap:16px;font-size:13px;color:var(--mu);margin-top:10px}.lk2 i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.pg3{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:22px}.pg3 .pn{margin:0}.pg3 .pn:first-child{grid-column:1/-1}
+.af{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;align-items:end}.af .f{display:flex;flex-direction:column;gap:5px}.af input,.af select{border:1px solid var(--ln);border-radius:9px;padding:10px 12px;background:#fff;width:100%}
+.dim{opacity:.55}.on2{color:#15803d;font-weight:700}.sec{margin:6px 0 2px;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);grid-column:1/-1;font-weight:800}
+@media(max-width:1180px){.two2{grid-template-columns:1fr}.two2>.sm2{position:static}}
+@media(max-width:700px){.rl{display:none}.sr{max-width:none;min-width:0}.av{flex:none}}
 </style></head><body>
 
 <div id='lg'><div class='bx'><img src='images/img-01.png' alt=''><h2>Staff booking system</h2><p>Priestly Apartments, Awka. Staff only.</p><input id='pin' type='password' inputmode='numeric' autocomplete='off' placeholder='Staff PIN'><button class='btn p' id='lgo'>Sign in</button><div id='lge'></div></div></div>
@@ -83,11 +102,15 @@ h2.t{font-size:23px;margin:0 0 4px}.sub{color:var(--mu);margin:0 0 18px}
 <h6>Help &amp; tools</h6>
 <button class='nv' data-p='guide'><svg class='i'><use href='#i-book'/></svg>Front desk guide</button>
 <a class='nv' href='card.html' target='_blank' rel='noopener'><svg class='i'><use href='#i-key'/></svg>Welcome card &amp; Wi-Fi</a>
+<div id='adminNav' style='display:none'><h6>Admin only</h6>
+<button class='nv' data-p='ana'><svg class='i'><use href='#i-chart'/></svg>Analytics</button>
+<button class='nv' data-p='stf'><svg class='i'><use href='#i-users'/></svg>Staff accounts</button>
+<button class='nv' data-p='act'><svg class='i'><use href='#i-clk'/></svg>Shifts &amp; activity</button></div>
 </div></aside>
 
 <header id='top'><button class='hb' id='hb' aria-label='Menu'><svg class='i'><use href='#i-menu'/></svg></button>
 <div class='sr'><svg class='i'><use href='#i-sr'/></svg><input id='gs' placeholder='Search guest, phone or reference' autocomplete='off'></div>
-<div class='av'><button class='lo' id='lo'><svg class='i'><use href='#i-out'/></svg><span>Sign out</span></button><div class='c'>F</div></div></header>
+<div class='av'><span class='rl' id='rl'></span><button class='lo' id='lo'><svg class='i'><use href='#i-out'/></svg><span>Sign out</span></button><div class='c' id='avc'>F</div></div></header>
 
 <main>
 <section class='pg on' id='p-dash'>
@@ -111,15 +134,40 @@ h2.t{font-size:23px;margin:0 0 4px}.sub{color:var(--mu);margin:0 0 18px}
 <section class='pg' id='p-res'><div class='pn'><div class='ph'><h3>Reservations</h3><div class='sp'><button class='btn' id='rfr'>Refresh</button></div></div>
  <div class='pb'><div class='tabs' id='rtabs'></div><div class='fl'><input id='rq' placeholder='Search name, phone, reference'><select id='rr'></select><select id='rc'><option value=''>Online + walk-in</option><option value='online'>Online only</option><option value='walk-in'>Walk-in only</option></select></div><div class='tw'><table><thead><tr><th>Guest</th><th>Apartment</th><th>Stay</th><th>Guests</th><th>Total</th><th>Source</th><th>Status</th></tr></thead><tbody id='rb'></tbody></table></div></div></div></section>
 
-<section class='pg' id='p-new'><h2 class='t'>New walk-in booking</h2><p class='sub'>Use this when a guest books in person. The dates are blocked on the website straight away, so nobody can book them online.</p>
- <div class='two'><div class='pn' style='margin:0'><div class='pb'><div class='fg'>
-  <div class='f w'><label for='room'>Apartment</label><select id='room'></select><div id='rbk' class='sub' style='margin:4px 0 0;font-size:13px'></div></div>
-  <div class='f'><label for='ci'>Check-in</label><input id='ci' type='date'></div><div class='f'><label for='co'>Check-out (by 12:00 noon)</label><input id='co' type='date'></div>
-  <div class='f'><label for='nm'>Guest full name</label><input id='nm' autocomplete='off'></div><div class='f'><label for='ph'>Guest phone</label><input id='ph' inputmode='tel' autocomplete='off'></div>
-  <div class='f'><label for='gu'>Guests</label><input id='gu' type='number' min='1' max='10' value='1'></div><div class='f'><label for='pd'>Payment received</label><select id='pd'><option value='cash'>Cash</option><option value='transfer'>Bank transfer</option><option value='pos'>POS</option><option value='unpaid'>Not yet paid</option></select></div>
-  <div class='f w'><label for='nt'>Note (optional)</label><input id='nt' maxlength='200' placeholder='Anything the team should know'></div></div>
-  <div id='nmsg'></div><button class='btn p' id='go' style='margin-top:18px;padding:12px 22px'>Save walk-in booking</button></div></div>
+<section class='pg' id='p-new'><h2 class='t'>New walk-in booking</h2><p class='sub'>Same as the paper Customer's Information form. The dates are blocked on the website straight away, so nobody can book them online.</p>
+ <div class='two2'><div>
+  <div class='pn'><div class='ph'><h3>1. Apartment, dates and payment</h3></div><div class='pb'><div class='fg'>
+   <div class='f w'><label for='room'>Apartment (price per night)</label><select id='room'></select><div id='rbk' class='sub' style='margin:4px 0 0;font-size:13px'></div></div>
+   <div class='f w'><label>Stay dates</label><div class='pk' id='pk'></div><div class='psel' id='psel'></div><input id='ci' type='hidden'><input id='co' type='hidden'></div>
+   <div class='f'><label for='gu'>Number of guests</label><input id='gu' type='number' min='1' max='10' value='1'></div>
+   <div class='f'><label for='pd'>Payment received</label><select id='pd'><option value='cash'>Cash</option><option value='transfer'>Bank transfer</option><option value='pos'>POS</option><option value='unpaid'>Not yet paid</option></select></div>
+  </div></div></div>
+  <div class='pn'><div class='ph'><h3>2. Guest information</h3></div><div class='pb'><div class='fg'>
+   <div class='f'><label for='ln'>Last name</label><input id='ln' autocomplete='off'></div><div class='f'><label for='fn'>First name</label><input id='fn' autocomplete='off'></div>
+   <div class='f'><label for='bd'>Birth date</label><input id='bd' type='date'></div><div class='f'><label for='sx'>Sex</label><select id='sx'><option value=''>Select</option><option>Male</option><option>Female</option></select></div>
+   <div class='f w'><label for='ad'>Address</label><input id='ad' autocomplete='off'></div>
+   <div class='f'><label for='cy'>City</label><input id='cy' autocomplete='off'></div><div class='f'><label for='st'>State</label><input id='st' autocomplete='off'></div>
+   <div class='f'><label for='ph'>Phone number</label><input id='ph' inputmode='tel' autocomplete='off'></div><div class='f'><label for='em'>Email address (optional)</label><input id='em' type='email' autocomplete='off'></div>
+   <div class='f w'><label for='nin'>NIN (11 digits)</label><input id='nin' inputmode='numeric' maxlength='11' autocomplete='off' placeholder='National Identification Number'></div>
+   <div class='f w'><label for='nt'>Note (optional)</label><input id='nt' maxlength='200' placeholder='Anything the team should know'></div></div>
+   <div id='nmsg'></div><button class='btn p' id='go' style='margin-top:18px;padding:12px 22px'>Save walk-in booking</button></div></div>
+ </div>
   <div class='sm2'><h4>Booking summary</h4><div id='qs'><div class='em' style='padding:10px 0'>Choose an apartment and dates.</div></div></div></div></section>
+
+<section class='pg' id='p-ana'><h2 class='t'>Analytics</h2><p class='sub'>Admin overview: income, occupancy, apartment condition, payments and staff activity. Room income excludes the refundable caution fee.</p><div id='anab'><div class='em'>Loading...</div></div></section>
+
+<section class='pg' id='p-stf'><h2 class='t'>Staff accounts</h2><p class='sub'>Receptionists sign in with their own PIN only. Each login is recorded so you can see who worked and when.</p>
+ <div class='pn'><div class='ph'><h3>Add a receptionist</h3></div><div class='pb'><div class='af'>
+  <div class='f'><label for='sfn'>Full name</label><input id='sfn' autocomplete='off'></div><div class='f'><label for='sfu'>Username</label><input id='sfu' autocomplete='off'></div>
+  <div class='f'><label for='sfp'>Phone number</label><input id='sfp' inputmode='tel' autocomplete='off'></div><div class='f'><label for='sfe'>Email</label><input id='sfe' type='email' autocomplete='off'></div>
+  <div class='f'><label for='sfs'>Shift</label><select id='sfs'><option value='morning'>Morning</option><option value='night'>Night</option><option value='any'>Any</option></select></div>
+  <div class='f'><label for='sfi'>Login PIN (4 to 8 digits)</label><input id='sfi' inputmode='numeric' maxlength='8' autocomplete='off'></div>
+  <div class='f'><button class='btn p' id='sfa' style='padding:11px 18px;justify-content:center'>Add staff</button></div></div><div id='sfm'></div></div></div>
+ <div class='pn'><div class='ph'><h3>Team</h3></div><div class='pb tw' id='stl'><div class='em'>Loading...</div></div></div></section>
+
+<section class='pg' id='p-act'><h2 class='t'>Shifts &amp; activity</h2><p class='sub'>Every sign-in is a shift. Time is counted from sign-in to sign-out (or the last time the page was open).</p>
+ <div class='pn'><div class='ph'><h3>Who worked when</h3><div class='sp'><select id='shf' class='btn'><option value=''>Everyone</option></select><button class='btn' id='shr'>Refresh</button></div></div><div class='pb tw' id='shb'><div class='em'>Loading...</div></div></div>
+ <div class='pn'><div class='ph'><h3>Activity log</h3></div><div class='pb tw' id='lgb'><div class='em'>Loading...</div></div></div></section>
 
 <section class='pg' id='p-guide'><h2 class='t'>Front desk guide</h2><p class='sub'>Quick reference for the team. Colours and steps used across this page.</p>
  <div class='gd'>
@@ -129,6 +177,8 @@ h2.t{font-size:23px;margin:0 0 4px}.sub{color:var(--mu);margin:0 0 18px}
   <div class='pn'><div class='pb'><h3>Walk-in guests</h3><ul><li>Use <b>New walk-in booking</b>. Dates are blocked on the website immediately.</li><li>Record how they paid (cash, transfer, POS) or choose <i>Not yet paid</i>.</li><li>The calendar shows walk-ins with a teal <b>WALK-IN</b> mark.</li><li>A walk-in can be cancelled from its details panel. Online bookings cannot be cancelled here.</li></ul></div></div>
   <div class='pn'><div class='pb'><h3>Food and drink orders</h3><ul><li>Guests who are lodging order from the website menu. The order arrives on the front desk WhatsApp.</li><li>Confirm stock, reply with the total, then deliver to the apartment door.</li></ul><div class='lk'><a class='btn' href='https://wa.me/2349127289246' target='_blank' rel='noopener'>Open front desk WhatsApp</a><a class='btn' href='index.html#dine' target='_blank' rel='noopener'>View menu &amp; prices</a></div></div></div>
   <div class='pn'><div class='pb'><h3>Online bookings</h3><ul><li>Guests pay online. <b>Confirmed</b> means payment was received.</li><li><b>Awaiting payment</b> (purple, striped) is a short hold while the guest is paying. It is released automatically if they do not finish.</li><li>Two bookings can never overlap on the same apartment. The system blocks it.</li></ul></div></div>
+  <div class='pn'><div class='pb'><h3>Your login</h3><ul><li>Sign in with <b>your own PIN</b> only. Never share it. Every sign-in, booking and room update is recorded under your name.</li><li>Always press <b>Sign out</b> at the end of your shift.</li><li>You can cancel a walk-in only if you saved it yourself in the last hour. For anything else, call the admin.</li></ul></div></div>
+  <div class='pn'><div class='pb'><h3>Cleaning and maintenance</h3><ul><li>On <b>Apartments</b>, set each apartment to <b>Clean</b>, <b>Needs cleaning</b> or <b>Maintenance</b>.</li><li>After a guest checks out, mark it <b>Needs cleaning</b>. When housekeeping is done, mark it <b>Clean</b>.</li><li>For repairs, choose <b>Maintenance</b> and write what is wrong.</li></ul></div></div>
  </div></section>
 </main>
 
@@ -151,6 +201,11 @@ h2.t{font-size:23px;margin:0 0 4px}.sub{color:var(--mu);margin:0 0 18px}
 <symbol id='i-ok' viewBox='0 0 24 24'><path d='M5 12l5 5 9-10'/></symbol>
 <symbol id='i-in' viewBox='0 0 24 24'><path d='M15 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 8l-4 4 4 4M6 12h11'/></symbol>
 <symbol id='i-ot' viewBox='0 0 24 24'><path d='M9 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M16 8l4 4-4 4M20 12H9'/></symbol>
+<symbol id='i-chart' viewBox='0 0 24 24'><path d='M4 20V10M10 20V4M16 20v-7M22 20H2'/></symbol>
+<symbol id='i-users' viewBox='0 0 24 24'><circle cx='9' cy='8' r='3.5'/><path d='M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.4c2.2.7 3.5 2.7 3.5 5.6'/></symbol>
+<symbol id='i-spark' viewBox='0 0 24 24'><path d='M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z'/></symbol>
+<symbol id='i-warn' viewBox='0 0 24 24'><path d='M12 3l10 18H2zM12 10v5M12 18h.01'/></symbol>
+<symbol id='i-tool' viewBox='0 0 24 24'><path d='M14.7 6.3a4 4 0 0 0 5 5L21 12.6 12.6 21a2.1 2.1 0 0 1-3-3L18 9.6M6 6l3 3'/></symbol>
 <symbol id='i-clk' viewBox='0 0 24 24'><circle cx='12' cy='12' r='9'/><path d='M12 7v5l3 2'/></symbol>
 </defs></svg>
 
@@ -164,7 +219,15 @@ const fd=s=>new Date(s+'T00:00:00Z').toLocaleDateString('en-GB',{day:'numeric',m
 const fs=s=>new Date(s+'T00:00:00Z').toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'UTC'});
 const icon=n=>`<svg class='i'><use href='#i-${n}'/></svg>`;
 let PIN='';try{PIN=sessionStorage.getItem('pa_pin')||''}catch(e){}
-let D={today:'',rooms:[],bookings:[]},calStart='',tab='cur',roomName={};
+let D={today:'',rooms:[],bookings:[],housekeeping:{}},calStart='',tab='cur',roomName={},pv='';
+let ME={role:'staff',name:'',shift:'',shiftId:''};try{ME=Object.assign(ME,JSON.parse(sessionStorage.getItem('pa_me')||'{}'))}catch(e){}
+const saveMe=()=>{try{sessionStorage.setItem('pa_me',JSON.stringify(ME))}catch(e){}};
+const isAdmin=()=>ME.role==='admin';
+const HK={clean:['Clean','#16a34a'],dirty:['Needs cleaning','#dc2626'],maintenance:['Maintenance','#64748b']};
+const hk=id=>(D.housekeeping&&D.housekeeping[id])||{status:'clean'};
+const hkChip=st=>`<span class='chip c-hk${st}'>${HK[st][0]}</span>`;
+const hm=m=>m>=60?Math.floor(m/60)+'h '+(m%60)+'m':m+'m';
+const ft=t=>new Date(t).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Africa/Lagos'});
 const ST={inhouse:['In-house','#f59e0b'],arriving:['Arriving today','#0ea5e9'],departing:['Departing today','#f97316'],upcoming:['Upcoming','#3b82f6'],hold:['Awaiting payment','#8b5cf6'],past:['Checked out','#94a3b8'],available:['Available','#16a34a']};
 const DESC={available:'No guest tonight. Ready to book.',inhouse:'Guest is staying tonight.',arriving:'Guest checks in today.',departing:'Guest checks out by 12:00 noon today.',upcoming:'Confirmed booking in the future.',hold:'Guest is paying online. Held for a short time.',past:'Stay completed.'};
 const AM=['24/7 power','Hotspot Wi-Fi','Smart TV','Full kitchen','Security & CCTV'];
@@ -173,9 +236,9 @@ const photo=r=>'images/'+(r.id==='kigali'?'img-30':PH[r.tier]||'img-09')+'.jpg';
 const chip=k=>`<span class='chip c-${k}'>${ST[k][0]}</span>`;
 const sess=()=>{try{sessionStorage.setItem('pa_pin',PIN)}catch(e){}};
 
-async function post(path,o){let r;try{r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({pin:PIN},o))})}catch(e){throw new Error('Cannot reach the server. Check the internet and try again.')}
+async function post(path,o){let r;try{r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({pin:PIN,shiftId:ME.shiftId},o))})}catch(e){throw new Error('Cannot reach the server. Check the internet and try again.')}
  const j=await r.json().catch(()=>({}));if(!r.ok){const er=new Error(j.error||'Something went wrong');er.status=r.status;throw er}return j}
-const call=o=>post('/api/walkin',o);
+const call=o=>post('/api/walkin',o),acall=o=>post('/api/admin',o);
 function toast(m){const t=$('ts');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),3800)}
 
 /* ---------- state helpers ---------- */
@@ -188,22 +251,23 @@ function roomState(id){const T=D.today,bs=D.bookings.filter(b=>b.room===id&&b.st
  if(cur)return{k:bstate(cur,T),b:cur,next:nxt,dep};
  if(dep)return{k:'departing',b:dep,next:nxt};
  return{k:'available',next:nxt}}
-const pay=b=>{if(isWalk(b)){const m=/Payment: (\w+)/.exec(b.special_requests||'');const p=m&&m[1];return p==='unpaid'?'Not yet paid':p==='transfer'?'Bank transfer':p==='pos'?'POS':p==='cash'?'Cash':'Walk-in'}return b.status==='confirmed'?'Paid online':'Awaiting payment'};
+const pay=b=>{if(isWalk(b)){const m=/Payment: (\w+)/.exec(b.special_requests||'');const p=b.payment_method||(m&&m[1]);return p==='unpaid'?'Not yet paid':p==='transfer'?'Bank transfer':p==='pos'?'POS':p==='cash'?'Cash':'Walk-in'}return b.status==='confirmed'?'Paid online':'Awaiting payment'};
 
 /* ---------- load ---------- */
 async function load(first){
- try{const j=await call({action:'overview'});D=j;roomName={};D.rooms.forEach(r=>roomName[r.id]=r.name);D.bookings=D.bookings.filter(b=>b.status!=='cancelled');
+ try{const j=await call({action:'overview'});D=j;if(j.me){ME.role=j.me.role;ME.name=j.me.name;saveMe()}roomName={};D.rooms.forEach(r=>roomName[r.id]=r.name);D.bookings=D.bookings.filter(b=>b.status!=='cancelled');
   if(!calStart)calStart=addD(D.today,-3);
-  $('lg').style.display='none';sess();renderAll();if(first)fillRooms()}
+  $('lg').style.display='none';sess();applyRole();renderAll();if(first)fillRooms()}
  catch(e){if(e.status===403||first){PIN='';try{sessionStorage.removeItem('pa_pin')}catch(x){}$('lg').style.display='flex';$('lge').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}else toast(e.message)}}
-function renderAll(){head();stats();tiles();todayList();aptCards();calendar();resTable();summary()}
+function applyRole(){$('adminNav').style.display=isAdmin()?'block':'none';const r=$('rl');r.textContent=isAdmin()?'Admin':'Receptionist'+(ME.shift&&ME.shift!=='any'?' - '+ME.shift:'');r.className='rl'+(isAdmin()?'':' st');$('avc').textContent=(ME.name||'F').trim().charAt(0).toUpperCase()}
+function renderAll(){head();stats();tiles();todayList();aptCards();calendar();resTable();summary();renderPk()}
 
 function head(){const h=+new Date().toLocaleString('en-GB',{hour:'numeric',hour12:false,timeZone:'Africa/Lagos'});
- $('gr').textContent=(h<12?'Good morning':h<17?'Good afternoon':'Good evening')+', Front Desk!';
+ $('gr').textContent=(h<12?'Good morning':h<17?'Good afternoon':'Good evening')+', '+((ME.name||'Front Desk').split(' ')[0])+'!';
  $('gt').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'Africa/Lagos'})+' at '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Africa/Lagos'})}
 function counts(){const T=D.today,R=D.rooms.map(r=>roomState(r.id)),c={av:0,oc:0,ar:0,de:0,re:0,ho:0};
  R.forEach(s=>{if(s.k==='inhouse'||s.k==='arriving')c.oc++;else c.av++;if(s.k==='arriving')c.ar++;if(s.k==='departing')c.de++;if(s.k!=='inhouse'&&s.k!=='arriving'&&s.next&&s.next.status==='confirmed')c.re++});
- c.ho=D.bookings.filter(b=>b.status==='pending').length;return c}
+ c.ho=D.bookings.filter(b=>b.status==='pending').length;c.hc=D.rooms.filter(r=>hk(r.id).status==='clean').length;c.hd=D.rooms.filter(r=>hk(r.id).status==='dirty').length;c.hm=D.rooms.filter(r=>hk(r.id).status==='maintenance').length;return c}
 function stats(){const T=D.today,m=T.slice(0,7),c=counts(),n=D.rooms.length||10;
  const mb=D.bookings.filter(b=>b.status==='confirmed'&&b.check_in.slice(0,7)===m);
  $('c1').textContent=naira(mb.reduce((a,b)=>a+b.nights*b.rate,0));$('c1s').textContent=mb.length+' booking'+(mb.length===1?'':'s')+' starting this month, excl. caution fees';
@@ -213,22 +277,23 @@ function stats(){const T=D.today,m=T.slice(0,7),c=counts(),n=D.rooms.length||10;
  $('k1').textContent=c.ar;$('k2').textContent=c.de;$('k3').textContent=Math.round(c.oc/n*100)+'%';
  const cur=D.bookings.filter(b=>bstate(b,T)!=='past').length;$('nres').textContent=cur}
 function tiles(){const c=counts();
- const T=[['av','Available tonight',c.av,'ok','available'],['oc','Occupied',c.oc,'bed','inhouse'],['ar','Arriving today',c.ar,'in','arriving'],['de','Departing today',c.de,'ot','departing'],['re','Reserved ahead',c.re,'cal','upcoming'],['ho','Awaiting payment',c.ho,'clk','hold']];
+ const T=[['av','Available tonight',c.av,'ok','available'],['oc','Occupied',c.oc,'bed','inhouse'],['ar','Arriving today',c.ar,'in','arriving'],['de','Departing today',c.de,'ot','departing'],['re','Reserved ahead',c.re,'cal','upcoming'],['ho','Awaiting payment',c.ho,'clk','hold'],['hc','Clean',c.hc,'spark','hk'],['hd','Needs cleaning',c.hd,'warn','hk'],['hm','Maintenance',c.hm,'tool','hk']];
  $('tiles').innerHTML=T.map(t=>`<div class='tile t-${t[0]}' data-k='${t[4]}'><div class='ib'>${icon(t[3])}</div><div><b>${t[2]}</b><span>${t[1]}</span></div></div>`).join('');
  const L=['available','inhouse','arriving','departing','upcoming','hold'].map(k=>`<span><i style='background:${ST[k][1]}'></i><b>${ST[k][0]}</b> - ${DESC[k]}</span>`).join('');
  $('lgd').innerHTML=L;$('lgd2').innerHTML=['inhouse','arriving','departing','upcoming','hold'].map(k=>`<span><i style='background:${ST[k][1]}'></i>${ST[k][0]}</span>`).join('')+`<span><i style='background:#fff;border:2px solid #14b8a6'></i>WALK-IN (teal edge)</span>`;
- $('gl').innerHTML=['available','inhouse','arriving','departing','upcoming','hold','past'].map(k=>`<p style='margin:9px 0'>${chip(k)} <span class='sub' style='margin:0 0 0 6px'>${DESC[k]}</span></p>`).join('')}
+ $('gl').innerHTML=['clean','dirty','maintenance'].map(k=>`<p style='margin:9px 0'>${hkChip(k)} <span class='sub' style='margin:0 0 0 6px'>${{clean:'Ready for the next guest.',dirty:'Guest has left. Housekeeping needed.',maintenance:'Something needs repair. Do not give to a guest until fixed.'}[k]}</span></p>`).join('')+['available','inhouse','arriving','departing','upcoming','hold','past'].map(k=>`<p style='margin:9px 0'>${chip(k)} <span class='sub' style='margin:0 0 0 6px'>${DESC[k]}</span></p>`).join('')}
 function todayList(){const T=D.today,a=D.bookings.filter(b=>b.check_in===T&&b.status==='confirmed'),o=D.bookings.filter(b=>b.check_out===T&&b.status==='confirmed');
  const row=(b,k)=>`<tr class='r' data-ref='${esc(b.reference)}'><td><b>${esc(b.guest_name)}</b>${isWalk(b)?"<span class='tg'>WALK-IN</span>":''}<small>${esc(b.guest_phone||'')}</small></td><td>${esc(roomName[b.room]||b.room)}</td><td>${fs(b.check_in)} &rarr; ${fs(b.check_out)}</td><td>${chip(k)}</td></tr>`;
  const rows=a.map(b=>row(b,'arriving')).concat(o.map(b=>row(b,'departing')));
  $('today').innerHTML=rows.length?`<div class='tw'><table style='min-width:560px'><tbody>${rows.join('')}</tbody></table></div>`:`<div class='em'>No check-ins or check-outs today.</div>`}
 
+function hkRow(r){const h=hk(r.id);return `<div class='hkr'>${hkChip(h.status)}<select data-hk='${r.id}' aria-label='Cleaning status'>${Object.keys(HK).map(k=>`<option value='${k}'${k===h.status?' selected':''}>${HK[k][0]}</option>`).join('')}</select>${h.note?`<small>${esc(h.note)}</small>`:''}${h.updated_by?`<small>Updated by ${esc(h.updated_by)}, ${ft(h.updated_at)}</small>`:''}</div>`}
 function aptCards(){$('ag').innerHTML=D.rooms.map(r=>{const s=roomState(r.id),col=ST[s.k][1],b=s.b,n=s.next;
  let note;if(b)note=`<b>${esc(b.guest_name)}${isWalk(b)?"<span class='tg'>WALK-IN</span>":''}</b><small>${fs(b.check_in)} &rarr; ${fs(b.check_out)} &middot; ${b.guests||1} guest${(b.guests||1)>1?'s':''}</small>`;else note=`<b>${s.k==='available'?'Free tonight':''}</b><small>${DESC[s.k]}</small>`;
  const nx=n?`<small style='display:block;margin-top:4px;color:${ST[bstate(n,D.today)==='hold'?'hold':'upcoming'][1]}'>Next: ${fs(n.check_in)} &rarr; ${fs(n.check_out)} (${esc(n.guest_name)})</small>`:`<small style='display:block;margin-top:4px'>No further bookings.</small>`;
  return `<div class='ac' style='--sc:${col}'><div class='im' style="background-image:url('${photo(r)}')">${chip(s.k)}<span class='tr'>${esc(r.tier)}</span></div><div class='bd'><h4>${esc(r.name)}<small>${naira(r.rate)}/night</small></h4>
  <div class='am'><span>${/^Self/.test(r.tier)?'Self-contained':'2 bedrooms'}</span>${AM.map(a=>`<span>${a}</span>`).join('')}</div>
- <div class='nt'>${note}${nx}</div><small style='color:var(--mu)'>Caution fee ${naira(r.caution)} (refundable)</small></div>
+ <div class='nt'>${note}${nx}</div><small style='color:var(--mu)'>Caution fee ${naira(r.caution)} (refundable)</small>${hkRow(r)}</div>
  <div class='ft'><button class='btn p sm' data-bk='${r.id}'>Book walk-in</button><button class='btn sm' data-dc='${r.id}'>${icon('key')}Door code</button></div></div>`}).join('')}
 
 /* ---------- calendar ---------- */
@@ -266,36 +331,109 @@ function openB(ref){const b=D.bookings.find(x=>x.reference===ref);if(!b)return;c
  const em=b.guest_email&&!/walk-in@/.test(b.guest_email)?b.guest_email:'-';
  $('dbody').innerHTML=`<p style='margin:0 0 6px'>${chip(k)} ${isWalk(b)?"<span class='tg'>WALK-IN</span>":"<span class='tg o'>ONLINE</span>"}</p>
  <h5>Stay</h5><dl class='kv'><dt>Apartment</dt><dd>${esc(roomName[b.room]||b.room)} (${esc(r.tier||'')})</dd><dt>Check-in</dt><dd>${fd(b.check_in)}</dd><dt>Check-out</dt><dd>${fd(b.check_out)} by 12:00 noon</dd><dt>Nights</dt><dd>${b.nights}</dd><dt>Guests</dt><dd>${b.guests||1}</dd></dl>
- <h5>Guest</h5><dl class='kv'><dt>Name</dt><dd>${esc(b.guest_name)}</dd><dt>Phone</dt><dd>${esc(b.guest_phone||'-')}</dd><dt>Email</dt><dd>${esc(em)}</dd></dl>
+ <h5>Guest</h5><dl class='kv'><dt>Name</dt><dd>${esc(b.guest_name)}</dd><dt>Phone</dt><dd>${esc(b.guest_phone||'-')}</dd><dt>Email</dt><dd>${esc(em)}</dd>${b.gender?`<dt>Sex</dt><dd>${esc(b.gender)}</dd>`:''}${b.birth_date?`<dt>Date of birth</dt><dd>${fd(b.birth_date)}</dd>`:''}${b.home_address?`<dt>Address</dt><dd>${esc(b.home_address)}${b.city?', '+esc(b.city):''}${b.state?', '+esc(b.state):''}</dd>`:''}${b.nin_last4?`<dt>NIN</dt><dd><span id='ninv'>&bull;&bull;&bull;&bull;&bull;&bull;&bull;${esc(b.nin_last4)}</span>${isAdmin()?` <button class='btn sm' data-nin='${esc(b.reference)}'>Show</button>`:''}</dd>`:''}${b.recorded_by?`<dt>Recorded by</dt><dd>${esc(b.recorded_by)}</dd>`:''}</dl>
  <div class='lk'>${ph?`<a class='btn sm' href='tel:${esc(ph)}'>Call</a><a class='btn sm' target='_blank' rel='noopener' href='https://wa.me/${esc(wa)}'>WhatsApp</a>`:''}</div>
  <h5>Payment</h5><dl class='kv'><dt>Rate</dt><dd>${naira(b.rate)} x ${b.nights}</dd><dt>Caution fee</dt><dd>${naira(b.caution)} (refundable)</dd><dt>Total</dt><dd>${naira(b.total)}</dd><dt>Status</dt><dd>${esc(pay(b))}</dd></dl>
  ${b.special_requests?`<h5>Notes &amp; requests</h5><p style='margin:0;white-space:pre-wrap;font-size:14.5px'>${esc(b.special_requests)}</p>`:''}
- <h5>Actions</h5><div class='lk' style='margin-top:0'><button class='btn sm' data-dc='${esc(b.room)}'>${icon('key')}Door code</button><a class='btn sm' href='card.html' target='_blank' rel='noopener'>Welcome card &amp; Wi-Fi</a>${isWalk(b)&&b.status==='confirmed'&&k!=='past'?`<button class='btn sm dg' data-cx='${esc(b.reference)}'>Cancel walk-in</button>`:''}</div>
+ <h5>Actions</h5><div class='lk' style='margin-top:0'><button class='btn sm' data-dc='${esc(b.room)}'>${icon('key')}Door code</button><a class='btn sm' href='card.html' target='_blank' rel='noopener'>Welcome card &amp; Wi-Fi</a>${isWalk(b)&&b.status==='confirmed'&&k!=='past'&&(isAdmin()||(b.recorded_by===ME.name&&Date.now()-Date.parse(b.created_at)<3600e3))?`<button class='btn sm dg' data-cx='${esc(b.reference)}'>Cancel walk-in</button>`:''}</div>
  <p class='sub' style='margin:16px 0 0;font-size:12.5px'>Booked ${new Date(b.created_at).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short',timeZone:'Africa/Lagos'})}</p>`;
  $('dr').classList.add('on');$('ov').classList.add('on')}
 function closeAll(){$('dr').classList.remove('on');$('ov').classList.remove('on');$('md').classList.remove('on');$('side').classList.remove('on')}
 
 /* ---------- walk-in form ---------- */
-function fillRooms(){$('room').innerHTML=`<option value=''>Choose an apartment</option>`+D.rooms.map(r=>`<option value='${r.id}'>${esc(r.name)} - ${esc(r.tier)} (${naira(r.rate)}/night)</option>`).join('');$('rr').innerHTML=`<option value=''>All apartments</option>`+D.rooms.map(r=>`<option value='${r.id}'>${esc(r.name)}</option>`).join('');$('ci').min=D.today;$('co').min=D.today}
-function conflict(){const id=$('room').value,ci=$('ci').value,co=$('co').value;if(!id||!ci||!co)return null;return D.bookings.find(b=>b.room===id&&b.check_in<co&&b.check_out>ci)}
+function fillRooms(){$('room').innerHTML=`<option value=''>Choose an apartment</option>`+D.rooms.map(r=>`<option value='${r.id}'>${esc(r.name)} - ${esc(r.tier)} - ${naira(r.rate)} per night</option>`).join('');$('rr').innerHTML=`<option value=''>All apartments</option>`+D.rooms.map(r=>`<option value='${r.id}'>${esc(r.name)}</option>`).join('')}
+const rbk=id=>D.bookings.filter(b=>b.room===id&&b.status!=='cancelled'&&b.check_out>D.today);
+const nightTaken=(id,d)=>rbk(id).some(b=>d>=b.check_in&&d<b.check_out);
+const maxOut=(id,ci)=>{let m=addD(ci,30);rbk(id).forEach(b=>{if(b.check_in>=ci&&b.check_in<m)m=b.check_in});return m};
+function conflict(){const id=$('room').value,ci=$('ci').value,co=$('co').value;if(!id||!ci||!co)return null;return D.bookings.find(b=>b.room===id&&b.status!=='cancelled'&&b.check_in<co&&b.check_out>ci)}
+function renderPk(){const id=$('room').value;
+ if(!id){$('pk').innerHTML=`<div class='em' style='padding:20px 0'>Choose an apartment first to see its free dates.</div>`;$('psel').innerHTML='';return}
+ if(!pv)pv=D.today.slice(0,7);const [y,m]=pv.split('-').map(Number),f=new Date(Date.UTC(y,m-1,1)),sw=(f.getUTCDay()+6)%7,dim=new Date(Date.UTC(y,m,0)).getUTCDate();
+ const ci=$('ci').value,co=$('co').value,T=D.today,lim=ci&&!co?maxOut(id,ci):'';
+ let h=`<div class='pkh'><button type='button' class='btn sm' data-pm='-1'>&lsaquo;</button><b>${f.toLocaleDateString('en-GB',{month:'long',year:'numeric',timeZone:'UTC'})}</b><button type='button' class='btn sm' data-pm='1'>&rsaquo;</button></div><div class='pkg'>`+['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(x=>`<i>${x}</i>`).join('');
+ for(let i=0;i<sw;i++)h+='<span></span>';
+ for(let n=1;n<=dim;n++){const d=pv+'-'+String(n).padStart(2,'0'),tk=nightTaken(id,d),past=d<T;let c='',dis=false;
+  if(ci&&!co){dis=!(d<=ci?(!past&&!tk):(d<=lim))}else dis=past||tk;
+  if(tk)c='bk';else if(d===ci||d===co)c='sl';else if(ci&&co&&d>ci&&d<co)c='rg';
+  h+=`<button type='button' class='${c}' data-pd='${d}'${dis?' disabled':''}>${n}</button>`}
+ $('pk').innerHTML=h+'</div>';
+ $('psel').innerHTML=!ci?'Tap the <b>check-in</b> date.':!co?`Check-in <b>${fd(ci)}</b>. Now tap the <b>check-out</b> date.`:`Check-in <b>${fd(ci)}</b> &rarr; check-out <b>${fd(co)}</b> (${dn(co)-dn(ci)} night${dn(co)-dn(ci)>1?'s':''})`}
+function pickDate(d){const id=$('room').value,ci=$('ci').value,co=$('co').value;
+ if(!ci||co||d<=ci){$('ci').value=d;$('co').value=''}else{$('co').value=d}
+ renderPk();summary()}
+function onRoom(){const c=conflict();if($('ci').value&&(c||!$('room').value)){$('ci').value='';$('co').value=''}renderPk();summary()}
 function summary(){const id=$('room').value,r=D.rooms.find(x=>x.id===id),ci=$('ci').value,co=$('co').value;
- const bk=id?D.bookings.filter(b=>b.room===id&&b.check_out>=D.today).map(b=>fs(b.check_in)+' to '+fs(b.check_out)):[];$('rbk').innerHTML=id?(bk.length?'Already booked: '+bk.map(esc).join(' | '):'No upcoming bookings for this apartment.'):'';
+ const bk=id?rbk(id).map(b=>fs(b.check_in)+' to '+fs(b.check_out)):[];$('rbk').innerHTML=id?(bk.length?'Booked (crossed out below): '+bk.map(esc).join(' | '):'No upcoming bookings for this apartment.'):'';
  if(!r||!ci||!co||co<=ci){$('qs').innerHTML=`<div class='em' style='padding:10px 0'>Choose an apartment and dates.</div>`;return}
  const n=dn(co)-dn(ci),sub=n*r.rate,cf=conflict();
- $('qs').innerHTML=`<div class='rw'><span>${esc(r.name)} (${esc(r.tier)})</span><b></b></div><div class='rw'><span>${fd(ci)} &rarr; ${fd(co)}</span><b>${n} night${n>1?'s':''}</b></div><div class='rw'><span>${n} x ${naira(r.rate)}</span><b>${naira(sub)}</b></div><div class='rw'><span>Caution fee (refundable)</span><b>${naira(r.caution)}</b></div><div class='rw tt'><span>Total</span><span>${naira(sub+r.caution)}</span></div>`+(cf?`<div class='mg e'>Not free: ${esc(cf.guest_name)} has this apartment ${fs(cf.check_in)} to ${fs(cf.check_out)}.</div>`:`<div class='mg k'>These dates are free.</div>`)}
-function prefill(room,d){go('new');$('room').value=room;$('ci').value=d;$('co').value=addD(d,1);summary();$('nm').focus()}
+ $('qs').innerHTML=`<div class='rw'><span>${esc(r.name)} (${esc(r.tier)})</span><b></b></div><div class='rw'><span>${fd(ci)} &rarr; ${fd(co)}</span><b>${n} night${n>1?'s':''}</b></div><div class='rw'><span>${n} x ${naira(r.rate)}</span><b>${naira(sub)}</b></div><div class='rw'><span>Caution fee (refundable)</span><b>${naira(r.caution)}</b></div><div class='rw tt'><span>Total to collect</span><span>${naira(sub+r.caution)}</span></div>`+(cf?`<div class='mg e'>Not free: ${esc(cf.guest_name)} has this apartment ${fs(cf.check_in)} to ${fs(cf.check_out)}.</div>`:`<div class='mg k'>These dates are free.</div>`)}
+function prefill(room,d){go('new');$('room').value=room;let c=d,n=0;while((c<D.today||nightTaken(room,c))&&n++<90)c=addD(c,1);$('ci').value=c;$('co').value=addD(c,1);pv=c.slice(0,7);renderPk();summary();$('ln').focus()}
+
+
+/* ---------- admin pages ---------- */
+const money=n=>naira(Math.round(n));
+async function loadAna(){if(!isAdmin())return;$('anab').innerHTML=`<div class='em'>Loading...</div>`;
+ try{const a=await acall({action:'analytics'}),c=counts(),T=D.today,m=T.slice(0,7);
+  const cur=a.months.find(x=>x.key===m)||{online:0,walkin:0,count:0},mx=Math.max(1,...a.months.map(x=>x.online+x.walkin));
+  const walkShare=(()=>{const w=a.payments.cash.n+a.payments.transfer.n+a.payments.pos.n+a.payments.unpaid.n,t=w+a.payments.online.n;return t?Math.round(w/t*100):0})();
+  const owed=a.payments.unpaid;
+  const roomsRows=D.rooms.map(r=>{const st=roomState(r.id),h=hk(r.id),ra=a.rooms.find(x=>x.id===r.id)||{nights:0,revenue:0,bookings:0};return `<tr><td><b>${esc(r.name)}</b><small>${esc(r.tier)}</small></td><td>${chip(st.k)}</td><td>${hkChip(h.status)}${h.note?`<small>${esc(h.note)}</small>`:''}</td><td>${ra.nights}<small>${Math.round(ra.nights/90*100)}% of 90 days</small></td><td>${money(ra.revenue)}</td></tr>`}).join('');
+  const P=a.payments,pr=[['Paid online',P.online],['Cash',P.cash],['Bank transfer',P.transfer],['POS',P.pos],['Not yet paid',P.unpaid]];
+  $('anab').innerHTML=`<div class='sg'>
+   <div class='sc s1'><small>Room income this month</small><b>${money(cur.online+cur.walkin)}</b><em>${cur.count} booking${cur.count===1?'':'s'} starting this month</em><svg class='i big'><use href='#i-naira'/></svg></div>
+   <div class='sc s2'><small>Occupancy, last 30 days</small><b>${a.occupancy.last30}%</b><em>Booked nights across all apartments</em><svg class='i big'><use href='#i-chart'/></svg></div>
+   <div class='sc s3'><small>Occupancy, next 30 days</small><b>${a.occupancy.next30}%</b><em>Already booked ahead</em><svg class='i big'><use href='#i-cal'/></svg></div>
+   <div class='sc s4'><small>Walk-in share (30 days)</small><b>${walkShare}%</b><em>${owed.n?owed.n+' walk-in'+(owed.n>1?'s':'')+' not yet paid: '+money(owed.v):'All walk-ins paid'}</em><svg class='i big'><use href='#i-users'/></svg></div></div>
+  <div class='pn'><div class='ph'><h3>Right now</h3></div><div class='pb'><div class='tl'>${[['av','Available tonight',c.av,'ok'],['oc','Occupied',c.oc,'bed'],['re','Reserved ahead',c.re,'cal'],['ho','Awaiting payment',c.ho,'clk'],['hd','Needs cleaning',c.hd,'warn'],['hm','Under maintenance',c.hm,'tool']].map(t=>`<div class='tile t-${t[0]}'><div class='ib'>${icon(t[3])}</div><div><b>${t[2]}</b><span>${t[1]}</span></div></div>`).join('')}</div></div></div>
+  <div class='pn'><div class='ph'><h3>Room income, last 6 months</h3></div><div class='pb'><div class='bars'>${a.months.map(x=>{const t=x.online+x.walkin,H=Math.round(t/mx*150);return `<div class='c'><small>${t?money(t):''}</small><div class='st' style='height:${H}px'><i style='height:${t?Math.round(x.walkin/t*100):0}%;background:#14b8a6'></i><i style='flex:1;background:#6366f1'></i></div><em>${esc(x.label)}</em></div>`}).join('')}</div><div class='lk2'><span><i style='background:#6366f1'></i>Online</span><span><i style='background:#14b8a6'></i>Walk-in</span></div></div></div>
+  <div class='pg3'>
+   <div class='pn'><div class='ph'><h3>Apartments</h3></div><div class='pb tw'><table style='min-width:560px'><thead><tr><th>Apartment</th><th>Tonight</th><th>Condition</th><th>Nights (90d)</th><th>Income (90d)</th></tr></thead><tbody>${roomsRows}</tbody></table></div></div>
+   <div class='pn'><div class='ph'><h3>How guests paid (30 days)</h3></div><div class='pb tw'><table style='min-width:300px'><thead><tr><th>Method</th><th>Bookings</th><th>Amount</th></tr></thead><tbody>${pr.map(x=>`<tr><td>${x[0]}</td><td>${x[1].n}</td><td${x[0]==='Not yet paid'&&x[1].n?" style='color:var(--rd);font-weight:700'":''}>${money(x[1].v)}</td></tr>`).join('')}</tbody></table><p class='sub' style='margin:10px 0 0;font-size:12.5px'>Amounts include the refundable caution fee.</p></div></div>
+   <div class='pn'><div class='ph'><h3>Walk-ins by staff (30 days)</h3></div><div class='pb tw'>${a.staff.length?`<table style='min-width:300px'><thead><tr><th>Staff</th><th>Bookings</th><th>Value</th></tr></thead><tbody>${a.staff.map(x=>`<tr><td><b>${esc(x.name)}</b></td><td>${x.bookings}</td><td>${money(x.total)}</td></tr>`).join('')}</tbody></table>`:`<div class='em'>No walk-in bookings yet.</div>`}</div></div>
+  </div>`}
+ catch(e){$('anab').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}}
+
+async function loadStaff(){if(!isAdmin())return;
+ try{const j=await acall({action:'staff_list'});
+  $('stl').innerHTML=j.staff.length?`<table style='min-width:760px'><thead><tr><th>Name</th><th>Contact</th><th>Shift</th><th>Last sign-in</th><th>Status</th><th></th></tr></thead><tbody>${j.staff.map(x=>{const on=x.last&&!x.last.ended_at&&Date.now()-Date.parse(x.last.last_seen)<6*60000;return `<tr class='${x.active?'':'dim'}'><td><b>${esc(x.full_name)}</b><small>@${esc(x.username)}</small></td><td>${esc(x.phone||'-')}<small>${esc(x.email||'')}</small></td><td><select data-ss='${x.id}' style='border:1px solid var(--ln);border-radius:8px;padding:5px'>${['morning','night','any'].map(k=>`<option value='${k}'${k===x.shift?' selected':''}>${k[0].toUpperCase()+k.slice(1)}</option>`).join('')}</select></td><td>${x.last?ft(x.last.started_at):'Never'}${on?"<small class='on2'>Signed in now</small>":''}</td><td>${x.active?"<span class='chip c-available'>Active</span>":"<span class='chip c-hkmaintenance'>Disabled</span>"}</td><td style='white-space:nowrap'><button class='btn sm' data-sp='${x.id}'>Reset PIN</button> <button class='btn sm ${x.active?'dg':''}' data-st='${x.id}' data-on='${x.active?0:1}'>${x.active?'Disable':'Enable'}</button></td></tr>`}).join('')}</tbody></table>`:`<div class='em'>No receptionists yet. Add the first one above.</div>`}
+ catch(e){$('stl').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}}
+$('sfa').onclick=async()=>{const b=$('sfa');b.disabled=true;$('sfm').innerHTML='';
+ try{await acall({action:'staff_add',full_name:$('sfn').value,username:$('sfu').value,phone:$('sfp').value,email:$('sfe').value,shift:$('sfs').value,pin_new:$('sfi').value});
+  $('sfm').innerHTML=`<div class='mg k'>${esc($('sfn').value)} can now sign in with their PIN.</div>`;['sfn','sfu','sfp','sfe','sfi'].forEach(i=>$(i).value='');loadStaff()}
+ catch(e){$('sfm').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}b.disabled=false};
+document.addEventListener('click',async e=>{const t=e.target.closest('[data-sp],[data-st]');if(!t)return;
+ try{if(t.dataset.sp){const p=prompt('New PIN for this person (4 to 8 digits):');if(!p)return;await acall({action:'staff_update',id:t.dataset.sp,pin_new:p});toast('PIN changed')}
+  else{if(t.dataset.on==='0'&&!confirm('Disable this account? They will not be able to sign in.'))return;await acall({action:'staff_update',id:t.dataset.st,active:t.dataset.on==='1'});toast(t.dataset.on==='1'?'Account enabled':'Account disabled')}
+  loadStaff()}catch(x){toast(x.message)}});
+document.addEventListener('change',async e=>{const t=e.target;if(!t.dataset||!t.dataset.ss)return;try{await acall({action:'staff_update',id:t.dataset.ss,shift:t.value});toast('Shift updated')}catch(x){toast(x.message)}});
+
+let SH=[];
+async function loadAct(){if(!isAdmin())return;
+ try{const [a,b]=await Promise.all([acall({action:'shifts'}),acall({action:'log'})]);SH=a.shifts;
+  const names=[...new Set(SH.map(x=>x.staff_name))];$('shf').innerHTML=`<option value=''>Everyone</option>`+names.map(n=>`<option>${esc(n)}</option>`).join('');drawShifts();
+  $('lgb').innerHTML=b.log.length?`<table style='min-width:640px'><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead><tbody>${b.log.map(x=>`<tr><td style='white-space:nowrap'>${ft(x.created_at)}</td><td><b>${esc(x.staff_name)}</b></td><td>${esc(x.action)}</td><td>${esc(x.detail||'')}</td></tr>`).join('')}</tbody></table>`:`<div class='em'>Nothing recorded yet.</div>`}
+ catch(e){$('shb').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`;$('lgb').innerHTML=''}}
+function drawShifts(){const f=$('shf').value,L=SH.filter(x=>!f||x.staff_name===f);
+ $('shb').innerHTML=L.length?`<table style='min-width:620px'><thead><tr><th>Person</th><th>Signed in</th><th>Signed out</th><th>Time on duty</th></tr></thead><tbody>${L.map(x=>`<tr><td><b>${esc(x.staff_name)}</b><small>${x.role==='admin'?'Admin':'Receptionist'}</small></td><td>${ft(x.started_at)}</td><td>${x.online?"<span class='on2'>Signed in now</span>":x.ended_at?ft(x.ended_at):'<small>No sign-out (last seen '+ft(x.last_seen)+')</small>'}</td><td>${hm(x.minutes)}</td></tr>`).join('')}</tbody></table>`:`<div class='em'>No shifts recorded yet.</div>`}
+$('shf').onchange=drawShifts;$('shr').onclick=loadAct;
 
 /* ---------- nav ---------- */
-function go(p){document.querySelectorAll('.pg').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));document.querySelectorAll('.nv[data-p]').forEach(x=>x.classList.toggle('on',x.dataset.p===p));closeAll();window.scrollTo(0,0)}
+function go(p){document.querySelectorAll('.pg').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));document.querySelectorAll('.nv[data-p]').forEach(x=>x.classList.toggle('on',x.dataset.p===p));closeAll();window.scrollTo(0,0);if(p==='ana')loadAna();if(p==='stf')loadStaff();if(p==='act')loadAct()}
+document.addEventListener('change',async e=>{const t=e.target;if(!t.matches||!t.matches('[data-hk]'))return;const room=t.dataset.hk;let note='';
+ if(t.value==='maintenance'){note=prompt('What needs to be fixed? (short note)')||'';}
+ try{await call({action:'room_status',room,status:t.value,note});toast((roomName[room]||room)+': '+HK[t.value][0]);await load()}catch(x){toast(x.message);load()}});
 document.addEventListener('click',async e=>{const t=e.target;
  const nv=t.closest('.nv[data-p]');if(nv){go(nv.dataset.p);return}
  const g=t.closest('[data-go]');if(g){go(g.dataset.go);return}
  const bk=t.closest('[data-bk]');if(bk){prefill(bk.dataset.bk,D.today);return}
  const dc=t.closest('[data-dc]');if(dc){doorCode(dc.dataset.dc);return}
  const cx=t.closest('[data-cx]');if(cx){if(!confirm('Cancel this walk-in booking and free the dates?'))return;try{await call({action:'cancel',reference:cx.dataset.cx});toast('Walk-in cancelled. The dates are free again.');closeAll();load()}catch(x){toast(x.message)}return}
- const tl=t.closest('.tile');if(tl){const k=tl.dataset.k;if(k==='available'||k==='inhouse'||k==='arriving'||k==='departing'||k==='upcoming'||k==='hold'){if(k==='available'){go('apts')}else{tab=k;go('res');resTable()}}return}
+ const tl=t.closest('.tile');if(tl){const k=tl.dataset.k;if(k==='available'||k==='inhouse'||k==='arriving'||k==='departing'||k==='upcoming'||k==='hold'||k==='hk'){if(k==='available'||k==='hk'){go('apts')}else{tab=k;go('res');resTable()}}return}
  const tb=t.closest('[data-t]');if(tb){tab=tb.dataset.t;resTable();return}
  const bar=t.closest('.bar');if(bar){openB(bar.dataset.ref);return}
+ const pm=t.closest('[data-pm]');if(pm){const [y,m]=pv.split('-').map(Number),d=new Date(Date.UTC(y,m-1+(+pm.dataset.pm),1));pv=d.toISOString().slice(0,7);renderPk();return}
+ const pd=t.closest('[data-pd]');if(pd&&!pd.disabled){pickDate(pd.dataset.pd);return}
+ const nn=t.closest('[data-nin]');if(nn){try{const j=await call({action:'nin',reference:nn.dataset.nin});$('ninv').textContent=j.nin||'-';nn.remove()}catch(x){toast(x.message)}return}
  const cell=t.closest('.cd[data-r]');if(cell){const d=cell.dataset.d;if(d<D.today){toast('That date has passed.');return}prefill(cell.dataset.r,d);return}
  const tr=t.closest('tr.r');if(tr){openB(tr.dataset.ref);return}
 });
@@ -305,15 +443,16 @@ $('dx').onclick=$('mdx').onclick=$('ov').onclick=closeAll;$('hb').onclick=()=>{$
 $('cp').onclick=()=>{calStart=addD(calStart,-14);calendar()};$('cn').onclick=()=>{calStart=addD(calStart,14);calendar()};$('ct').onclick=()=>{calStart=addD(D.today,-3);calendar()};
 ['rq','rr','rc'].forEach(i=>$(i).addEventListener('input',resTable));$('rfr').onclick=()=>load();
 $('gs').addEventListener('input',()=>{$('rq').value=$('gs').value;tab='all';if($('gs').value&&!$('p-res').classList.contains('on'))go('res');resTable()});
-['room','ci','co'].forEach(i=>$(i).addEventListener('input',summary));
-$('ci').addEventListener('change',()=>{if($('ci').value&&(!$('co').value||$('co').value<=$('ci').value)){$('co').value=addD($('ci').value,1);summary()}$('co').min=addD($('ci').value||D.today,1)});
+$('room').addEventListener('change',onRoom);
 $('go').onclick=async()=>{$('nmsg').innerHTML='';const b=$('go');b.disabled=true;try{
- const r=await call({action:'create',room:$('room').value,checkIn:$('ci').value,checkOut:$('co').value,name:$('nm').value,phone:$('ph').value,guests:$('gu').value,paid:$('pd').value,note:$('nt').value});
- $('nmsg').innerHTML=`<div class='mg k'>Saved. Reference ${esc(r.reference)} (${r.nights} night${r.nights>1?'s':''}). These dates are now blocked on the website.</div>`;['nm','ph','nt'].forEach(i=>$(i).value='');await load();summary()}
+ const r=await call({action:'create',room:$('room').value,checkIn:$('ci').value,checkOut:$('co').value,lastName:$('ln').value,firstName:$('fn').value,birthDate:$('bd').value,sex:$('sx').value,address:$('ad').value,city:$('cy').value,state:$('st').value,phone:$('ph').value,email:$('em').value,nin:$('nin').value,guests:$('gu').value,paid:$('pd').value,note:$('nt').value});
+ $('nmsg').innerHTML=`<div class='mg k'>Saved. Reference ${esc(r.reference)} (${r.nights} night${r.nights>1?'s':''}, total ${naira(r.total)}). These dates are now blocked on the website.</div>`;['ln','fn','bd','sx','ad','cy','st','ph','em','nin','nt'].forEach(i=>$(i).value='');$('gu').value=1;$('ci').value='';$('co').value='';await load();renderPk();summary()}
  catch(e){$('nmsg').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}b.disabled=false};
-function signin(){PIN=$('pin').value;$('lge').innerHTML='';if(!PIN)return;load(true)}
+async function signin(){PIN=$('pin').value.trim();$('lge').innerHTML='';if(!PIN)return;$('lgo').disabled=true;
+ try{const j=await call({action:'login'});ME={role:j.role,name:j.name,shift:j.shift||'',shiftId:j.shiftId||''};saveMe();await load(true)}
+ catch(e){PIN='';$('lge').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}$('lgo').disabled=false}
 $('lgo').onclick=signin;$('pin').addEventListener('keydown',e=>{if(e.key==='Enter')signin()});
-$('lo').onclick=()=>{PIN='';try{sessionStorage.removeItem('pa_pin')}catch(e){}location.reload()};
+$('lo').onclick=async()=>{try{await call({action:'logout'})}catch(e){}PIN='';try{sessionStorage.removeItem('pa_pin');sessionStorage.removeItem('pa_me')}catch(e){}location.reload()};
 setInterval(()=>{if(PIN&&!document.hidden&&!$('dr').classList.contains('on'))load()},60000);
 if(PIN)load(true);else $('lg').style.display='flex';
 </script></body></html>

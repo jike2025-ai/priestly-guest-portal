@@ -5,6 +5,7 @@
 // Body: { pin, name, room, checkIn: "YYYY-MM-DD", checkOut: "YYYY-MM-DD" }
 // Reply: { username, password, expires }
 
+const { authenticate } = require('../lib/staff');
 const { supa, safeEqual, cors, readBody, validDate, daysBetween, expiryFor } = require('../lib/wifi');
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -17,11 +18,9 @@ module.exports = async (req, res) => {
   try {
     const b = readBody(req);
 
-    if (!process.env.STAFF_PIN) return res.status(500).json({ error: 'STAFF_PIN is not set on the server' });
-    if (!safeEqual(b.pin, process.env.STAFF_PIN)) {
-      await sleep(1000); // slows down PIN guessing
-      return res.status(401).json({ error: 'Wrong staff PIN' });
-    }
+    let user;
+    try { user = await authenticate(req, b.pin); }
+    catch (e) { return res.status(e.status === 403 ? 401 : (e.status || 500)).json({ error: e.status ? e.message : 'Something went wrong' }); }
 
     const name = String(b.name || '').trim().slice(0, 100);
     const room = String(b.room || '').trim().slice(0, 60);
