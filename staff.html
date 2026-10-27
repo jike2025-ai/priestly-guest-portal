@@ -1,0 +1,45 @@
+<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1,viewport-fit=cover'><meta name='robots' content='noindex,nofollow'><title>Reception walk-in booking | Priestly Apartments</title><meta name='theme-color' content='#08090d'>
+<style>
+:root{--red:#b71f28;--gold:#d4af37;--gold2:#ffe088;--tx:#f1f0f9;--mu:#a6a7b7;--gb:rgba(255,255,255,.17);--sans:'Segoe UI',system-ui,Arial,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:#08090d;color:var(--tx);font:16px/1.55 var(--sans);padding:0 0 40px}
+.w{max-width:680px;margin:0 auto;padding:0 16px}h1{font:700 26px Georgia,serif;margin:22px 0 4px}h1 i{color:var(--gold2);font-weight:500}.lead{color:var(--mu);margin:0 0 14px;font-size:14.5px}
+.g{background:rgba(255,255,255,.06);border:1px solid var(--gb);border-radius:16px;padding:18px;margin:14px 0}
+label{display:block;font-size:13px;font-weight:700;color:#d5d3e2;margin:12px 0 5px}
+input,select,textarea{width:100%;background:rgba(255,255,255,.08);border:1px solid var(--gb);border-radius:10px;color:var(--tx);padding:12px;font:16px var(--sans);color-scheme:dark}select option{background:#171923}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:520px){.r2{grid-template-columns:1fr}}
+button{width:100%;margin-top:16px;padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,.3);background:linear-gradient(90deg,var(--red),#870213);color:#fff;font:700 16px var(--sans);cursor:pointer}button:disabled{opacity:.5}
+.sm{width:auto;margin:0;padding:7px 12px;font-size:13px;background:rgba(255,255,255,.1)}
+.m{padding:12px;border-radius:10px;margin-top:12px;font-size:14.5px}.e{background:rgba(183,31,40,.28);border:1px solid rgba(255,138,146,.5)}.k{background:rgba(52,211,153,.18);border:1px solid rgba(52,211,153,.5)}
+.bk{font-size:13px;color:#d5d3e2;margin-top:6px}.it{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px dashed rgba(255,255,255,.16);font-size:14px}.it small{color:var(--mu);display:block}
+.tg{font-size:11px;font-weight:800;letter-spacing:.06em;padding:2px 8px;border-radius:99px;background:rgba(212,175,55,.25);color:var(--gold2);margin-left:6px}
+</style></head><body><div class='w'>
+<h1>Reception <i>walk-in booking</i></h1><p class='lead'>Use this when a guest books in person. The dates are blocked on the website straight away, so nobody can book them online.</p>
+<div class='g'><label for='pin'>Staff PIN</label><input id='pin' type='password' autocomplete='off' inputmode='numeric'>
+<label for='room'>Apartment</label><select id='room'><option value=''>Enter the PIN, then choose</option></select><div class='bk' id='bk'></div>
+<div class='r2'><div><label for='ci'>Check-in</label><input id='ci' type='date'></div><div><label for='co'>Check-out (by 12:00 noon)</label><input id='co' type='date'></div></div>
+<div class='r2'><div><label for='nm'>Guest full name</label><input id='nm' autocomplete='off'></div><div><label for='ph'>Guest phone</label><input id='ph' inputmode='tel' autocomplete='off'></div></div>
+<div class='r2'><div><label for='gu'>Guests</label><input id='gu' type='number' min='1' max='10' value='1'></div><div><label for='pd'>Payment received</label><select id='pd'><option value='cash'>Cash</option><option value='transfer'>Bank transfer</option><option value='pos'>POS</option><option value='unpaid'>Not yet paid</option></select></div></div>
+<label for='nt'>Note (optional)</label><input id='nt' maxlength='200'>
+<button id='go'>Save walk-in booking</button><div id='msg'></div></div>
+<div class='g'><b>Upcoming bookings (online and walk-in)</b><div id='ls' class='bk'>Enter the PIN to load.</div><button class='sm' id='rf' style='margin-top:10px'>Refresh</button></div>
+</div>
+<script src='config.js'></script><script>
+const API=(window.PA_CONFIG||{}).API||'',$=id=>document.getElementById(id),E=s=>{const d=document.createElement('div');d.textContent=s;return d.innerHTML};
+const fd=s=>new Date(s+'T00:00:00Z').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
+const today=new Date().toLocaleDateString('en-CA',{timeZone:'Africa/Lagos'});$('ci').min=today;$('co').min=today;
+async function call(o){let r;try{r=await fetch(API+'/api/walkin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({pin:$('pin').value},o))})}catch(e){throw new Error('Cannot reach the server. Check the internet and try again.')}
+ const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Something went wrong');return j}
+const show=(t,m)=>{$('msg').innerHTML=m?`<div class='m ${t}'>${E(m)}</div>`:''};
+let ROOMS=[];
+async function boot(){try{const r=await fetch(API+'/api/availability');ROOMS=(await r.json()).rooms||[];$('room').innerHTML=`<option value=''>Choose an apartment</option>`+ROOMS.map(x=>`<option value='${x.id}'>${E(x.name)} - ${E(x.tier)}</option>`).join('')}catch(e){}}
+async function roomInfo(){const id=$('room').value;$('bk').textContent='';if(!id)return;try{const r=await(await fetch(API+'/api/availability?room='+id)).json();$('bk').textContent=r.booked&&r.booked.length?'Already booked: '+r.booked.map(b=>fd(b.from)+' to '+fd(b.to)).join(' | '):'No upcoming bookings for this apartment.'}catch(e){}}
+async function load(){if(!$('pin').value)return;try{const r=await call({action:'list'});
+ $('ls').innerHTML=r.bookings.length?r.bookings.map(b=>`<div class='it'><div><b>${E(b.room)}</b>${b.channel==='walk-in'?"<span class='tg'>WALK-IN</span>":''}<small>${fd(b.check_in)} to ${fd(b.check_out)} &middot; ${E(b.guest_name)} &middot; ${E(b.guest_phone)}</small></div>${b.channel==='walk-in'?`<button class='sm' data-c='${E(b.reference)}'>Cancel</button>`:''}</div>`).join(''):'No upcoming bookings.'}catch(e){$('ls').textContent=e.message}}
+$('room').addEventListener('change',roomInfo);$('rf').onclick=()=>{roomInfo();load()};$('pin').addEventListener('change',load);
+$('ls').addEventListener('click',async e=>{const c=e.target.dataset.c;if(!c||!confirm('Cancel this walk-in booking and free the dates?'))return;try{await call({action:'cancel',reference:c});show('k','Walk-in booking cancelled. The dates are free again.');load();roomInfo()}catch(x){show('e',x.message)}});
+$('go').onclick=async()=>{show('');const b=$('go');b.disabled=true;try{
+ const r=await call({action:'create',room:$('room').value,checkIn:$('ci').value,checkOut:$('co').value,name:$('nm').value,phone:$('ph').value,guests:$('gu').value,paid:$('pd').value,note:$('nt').value});
+ show('k','Saved. Reference '+r.reference+' ('+r.nights+' night'+(r.nights>1?'s':'')+'). These dates are now blocked on the website.');['nm','ph','nt'].forEach(i=>$(i).value='');roomInfo();load()}
+ catch(e){show('e',e.message)}b.disabled=false};
+boot();
+</script></body></html>
