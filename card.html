@@ -262,38 +262,20 @@
 
     <div class="field">
       <label for="in-pin">Staff PIN <span style="opacity:.6">(shows the door passcode on the card)</span></label>
-      <input id="in-pin" type="password" autocomplete="off" placeholder="Ask the owner for the staff PIN">
+      <input id="in-pin" type="password" autocomplete="off" placeholder="Your staff PIN">
       <div id="pin-msg" style="font-size:12px;margin-top:6px;color:#a11c24;"></div>
     </div>
 
     <div class="divider"></div>
 
-    <div class="field">
-      <label for="in-ssid">Guest Wi-Fi network (SSID)</label>
-      <input id="in-ssid" type="text" placeholder="e.g. Priestly_Guest">
-    </div>
-    <small class="note">The network guests join before the hotspot login page appears. Usually open, with no password — set this once, it stays the same for every card.</small>
-
-    <div class="field">
-      <label for="in-hsurl">Hotspot login page URL (optional)</label>
-      <input id="in-hsurl" type="text" placeholder="e.g. http://192.168.88.1/login">
-    </div>
-    <small class="note">If a guest's browser doesn't auto-redirect to the login page, this QR jumps straight there. Leave blank if you're not sure — the username &amp; password below still work either way.</small>
-
-    <div class="field">
-      <label for="in-username">Hotspot username</label>
-      <input id="in-username" type="text" placeholder="From the voucher in theuserman">
-    </div>
-    <div class="field">
-      <label for="in-password">Hotspot password</label>
-      <input id="in-password" type="text" placeholder="From the voucher in theuserman">
-    </div>
-    <small class="note">Copy these straight from the voucher theuserman generates for this guest. Nothing here is saved anywhere — it only lives on this printed card.</small>
+    <!-- Wi-Fi network (Priestly Apartment) and hotspot page (10.5.50.1) are fixed on every pass. Staff only press the button below. -->
+    <input id="in-username" type="hidden">
+    <input id="in-password" type="hidden">
 
     <div class="actions" style="margin-top:0;margin-bottom:10px;">
       <button type="button" class="primary" id="btn-wifi-voucher">Get Wi-Fi voucher</button>
     </div>
-    <small class="note" id="wifi-voucher-msg">Fill in guest name, apartment and dates, and enter the Staff PIN above. The username and password are then filled in automatically and last until check-out day.</small>
+    <small class="note" id="wifi-voucher-msg">Fill in guest name, apartment and dates, enter your PIN above, then press the button. The guest's Wi-Fi login is added to the pass automatically and lasts until check-out day.</small>
 
     <div class="actions">
       <button class="primary" id="btn-print">Print pass</button>
@@ -365,7 +347,7 @@
           <div class="qr-card">
             <h3>Hotspot login</h3>
             <div class="qr-holder" id="qr-hotspot"></div>
-            <div class="desc">Once connected, sign in with the details below.</div>
+            <div class="desc">Once connected, scan to open the login page and sign in with the details below.</div>
             <div class="creds" id="pv-hotspot-creds">Username &amp; password will appear here</div>
           </div>
           <div class="qr-card">
@@ -2704,6 +2686,9 @@ var qrcode = function() {
 <script>
 (function(){
   var HUB_URL = "https://www.priestlyapartments.com/";
+  // Fixed for every pass: staff never type these.
+  var WIFI_SSID = 'Priestly Apartment';
+  var HOTSPOT_URL = 'http://10.5.50.1';
 
   var els = {
     name: document.getElementById('in-name'),
@@ -2711,8 +2696,6 @@ var qrcode = function() {
     checkin: document.getElementById('in-checkin'),
     checkout: document.getElementById('in-checkout'),
     staff: document.getElementById('in-staff'),
-    ssid: document.getElementById('in-ssid'),
-    hsurl: document.getElementById('in-hsurl'),
     username: document.getElementById('in-username'),
     password: document.getElementById('in-password'),
     pin: document.getElementById('in-pin')
@@ -2804,8 +2787,8 @@ var qrcode = function() {
     var checkin = els.checkin.value;
     var checkout = els.checkout.value;
     var staff = els.staff.value.trim();
-    var ssid = els.ssid.value.trim();
-    var hsurl = els.hsurl.value.trim();
+    var ssid = WIFI_SSID;
+    var hsurl = HOTSPOT_URL;
     var username = els.username.value.trim();
     var password = els.password.value.trim();
 
@@ -2862,22 +2845,16 @@ var qrcode = function() {
     });
 
     // QR 1 — join the guest Wi-Fi network (assumed open, no password, ahead of the hotspot login)
-    var wifiPayload = ssid ? ('WIFI:T:nopass;S:' + escapeWifi(ssid) + ';;') : '';
-    document.getElementById('qr-wifi').innerHTML = wifiPayload
-      ? makeQrSvg(wifiPayload, 4, 2)
-      : '<div style="font-size:10.5px;color:#8B8377;padding:6px;">Enter a network name<br>to generate</div>';
-    document.getElementById('pv-wifi-creds').innerHTML = ssid
-      ? ('Network: <b>' + escH(ssid) + '</b>')
-      : 'Network name will appear here';
+    var wifiPayload = 'WIFI:T:nopass;S:' + escapeWifi(ssid) + ';;';
+    document.getElementById('qr-wifi').innerHTML = makeQrSvg(wifiPayload, 4, 2);
+    document.getElementById('pv-wifi-creds').innerHTML = 'Network: <b>' + escH(ssid) + '</b>';
 
     // QR 2 — hotspot login: links to the portal URL if given, otherwise carries the credentials as text
-    var hotspotPayload = hsurl || (username ? ('Priestly Apartments hotspot login\nUsername: ' + username + '\nPassword: ' + password) : '');
-    document.getElementById('qr-hotspot').innerHTML = hotspotPayload
-      ? makeQrSvg(hotspotPayload, 4, 2)
-      : '<div style="font-size:10.5px;color:#8B8377;padding:6px;">Enter login details<br>to generate</div>';
+    var hotspotPayload = hsurl;
+    document.getElementById('qr-hotspot').innerHTML = makeQrSvg(hotspotPayload, 4, 2);
     document.getElementById('pv-hotspot-creds').innerHTML = username
-      ? ('Username: <b>' + escH(username) + '</b>' + (password ? '<br>Password: <b>' + escH(password) + '</b>' : ''))
-      : 'Username &amp; password will appear here';
+      ? ('Login page: <b>10.5.50.1</b><br>Username: <b>' + escH(username) + '</b>' + (password ? '<br>Password: <b>' + escH(password) + '</b>' : ''))
+      : 'Login page: <b>10.5.50.1</b><br>Username &amp; password will appear here';
 
     // QR 3 — personalised link to the guest info hub
     var params = new URLSearchParams();
