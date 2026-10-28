@@ -105,7 +105,7 @@ h2.t{font-size:23px;margin:0 0 4px}.sub{color:var(--mu);margin:0 0 18px}
  #prt .meta{display:flex;justify-content:space-between;font-size:12px;color:#444;margin:6px 0 14px}
  #prt h3{margin:11px 0 5px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#1e2433}
  #prt table{width:100%;border-collapse:collapse;min-width:0}
- #prt td{border:1px solid #666;padding:4px 10px;vertical-align:top}#prt td:first-child{width:32%;font-weight:700;background:#f3f3f3}
+ #prt td{border:1px solid #666;padding:4px 10px;height:26px;vertical-align:top}#prt td:first-child{width:32%;font-weight:700;background:#f3f3f3}
  #prt .tot td{font-weight:800;font-size:14px}
  #prt .sg2{display:flex;gap:40px;margin-top:38px}#prt .sg2 div{flex:1;border-top:1px solid #111;padding-top:5px;font-size:12px;text-align:center}
  #prt .ft{margin-top:18px;text-align:center;font-size:11px;color:#555;border-top:1px solid #bbb;padding-top:8px}
@@ -280,7 +280,7 @@ const pay=b=>{if(isWalk(b)){const m=/Payment: (\w+)/.exec(b.special_requests||''
 async function load(first){
  try{const j=await call({action:'overview'});D=j;if(j.me){ME.role=j.me.role;ME.name=j.me.name;saveMe()}roomName={};D.rooms.forEach(r=>roomName[r.id]=r.name);D.bookings=D.bookings.filter(b=>b.status!=='cancelled');
   if(!calStart)calStart=addD(D.today,-3);
-  $('lg').style.display='none';sess();applyRole();renderAll();if(first)fillRooms()}
+  $('lg').style.display='none';sess();applyRole();renderAll();if(first){fillRooms();const n=D.tracking?D.bookings.filter(b=>b.status==='confirmed'&&!b.printed_at&&b.check_out>=D.today).length:0;if(n)toast(n+' booking'+(n>1?'s need':' needs')+' a printed guest card. See Reservations, To print.')}}
  catch(e){if(e.status===403||first){PIN='';try{sessionStorage.removeItem('pa_pin')}catch(x){}$('lg').style.display='flex';$('lge').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}else toast(e.message)}}
 function applyRole(){$('adminNav').style.display=isAdmin()?'block':'none';const r=$('rl');r.textContent=isAdmin()?'Admin':'Receptionist'+(ME.shift&&ME.shift!=='any'?' - '+ME.shift:'');r.className='rl'+(isAdmin()?'':' st');$('avc').textContent=(ME.name||'F').trim().charAt(0).toUpperCase()}
 function renderAll(){head();stats();tiles();todayList();aptCards();calendar();resTable();summary();renderPk()}
@@ -340,12 +340,13 @@ function resList(){const T=D.today,q=$('rq').value.trim().toLowerCase(),rm=$('rr
   if(q&&!(`${b.guest_name} ${b.guest_phone} ${b.reference} ${b.guest_email}`.toLowerCase().includes(q)))return false;return true})
   .sort((a,b)=>a.b.check_in<b.b.check_in?(a.k==='past'?1:-1):1)}
 function resTable(){const L=resList();
- const cnt=k=>L.filter(x=>k==='cur'?x.k!=='past':k==='all'?true:x.k===k).length;
- const T=[['cur','Current & upcoming'],['inhouse','In-house'],['arriving','Arriving today'],['departing','Departing today'],['upcoming','Upcoming'],['hold','Awaiting payment'],['past','Checked out'],['all','All']];
+ const toPrint=x=>x.b.status==='confirmed'&&!x.b.printed_at&&x.b.check_out>=D.today;
+ const cnt=k=>L.filter(x=>k==='cur'?x.k!=='past':k==='all'?true:k==='print'?toPrint(x):x.k===k).length;
+ const T=[['cur','Current & upcoming'],...(D.tracking?[['print','To print']]:[]),['inhouse','In-house'],['arriving','Arriving today'],['departing','Departing today'],['upcoming','Upcoming'],['hold','Awaiting payment'],['past','Checked out'],['all','All']];
  $('rtabs').innerHTML=T.map(t=>`<button class='${tab===t[0]?'on':''}' data-t='${t[0]}'>${t[1]}<em>${cnt(t[0])}</em></button>`).join('');
- const rows=L.filter(x=>tab==='cur'?x.k!=='past':tab==='all'?true:x.k===tab);
+ const rows=L.filter(x=>tab==='cur'?x.k!=='past':tab==='all'?true:tab==='print'?toPrint(x):x.k===tab);
  const sorted=tab==='past'||tab==='all'?rows.slice().sort((a,b)=>a.b.check_in<b.b.check_in?1:-1):rows;
- $('rb').innerHTML=sorted.length?sorted.map(x=>{const b=x.b;return `<tr class='r' data-ref='${esc(b.reference)}'><td><b>${esc(b.guest_name)}</b><small>${esc(b.guest_phone||'')}</small></td><td>${esc(roomName[b.room]||b.room)}</td><td>${fs(b.check_in)} &rarr; ${fs(b.check_out)}<small>${b.nights} night${b.nights>1?'s':''}</small></td><td>${b.guests||1}</td><td>${naira(b.total)}<small>${esc(pay(b))}</small></td><td>${isWalk(b)?"<span class='tg'>WALK-IN</span>":"<span class='tg o'>ONLINE</span>"}</td><td>${chip(x.k)}</td></tr>`}).join(''):`<tr><td colspan='7' class='em'>No reservations match.</td></tr>`}
+ $('rb').innerHTML=sorted.length?sorted.map(x=>{const b=x.b;return `<tr class='r' data-ref='${esc(b.reference)}'><td><b>${esc(b.guest_name)}</b><small>${esc(b.guest_phone||'')}</small></td><td>${esc(roomName[b.room]||b.room)}</td><td>${fs(b.check_in)} &rarr; ${fs(b.check_out)}<small>${b.nights} night${b.nights>1?'s':''}</small></td><td>${b.guests||1}</td><td>${naira(b.total)}<small>${esc(pay(b))}</small></td><td>${isWalk(b)?"<span class='tg'>WALK-IN</span>":"<span class='tg o'>ONLINE</span>"}</td><td>${chip(x.k)}${D.tracking&&x.b.status==='confirmed'?(x.b.printed_at?"<span class='tg' style='background:#f1f5f9;color:#64748b'>PRINTED</span>":"<span class='tg' style='background:#ffedd5;color:#c2410c'>TO PRINT</span>"):''}</td></tr>`}).join(''):`<tr><td colspan='7' class='em'>No reservations match.</td></tr>`}
 
 /* ---------- drawer ---------- */
 function openB(ref){const b=D.bookings.find(x=>x.reference===ref);if(!b)return;const k=bstate(b,D.today),r=D.rooms.find(x=>x.id===b.room)||{};
@@ -358,7 +359,7 @@ function openB(ref){const b=D.bookings.find(x=>x.reference===ref);if(!b)return;c
  <div class='lk'>${ph?`<a class='btn sm' href='tel:${esc(ph)}'>Call</a><a class='btn sm' target='_blank' rel='noopener' href='https://wa.me/${esc(wa)}'>WhatsApp</a>`:''}</div>
  <h5>Payment</h5><dl class='kv'><dt>Rate</dt><dd>${naira(b.rate)} x ${b.nights}</dd><dt>Caution fee</dt><dd>${naira(b.caution)} (refundable)</dd><dt>Total</dt><dd>${naira(b.total)}</dd><dt>Status</dt><dd>${esc(pay(b))}</dd></dl>
  ${b.special_requests?`<h5>Notes &amp; requests</h5><p style='margin:0;white-space:pre-wrap;font-size:14.5px'>${esc(b.special_requests)}</p>`:''}
- <h5>Actions</h5><div class='lk' style='margin-top:0'><button class='btn sm' data-dc='${esc(b.room)}'>${icon('key')}Door code</button><a class='btn sm' href='card.html' target='_blank' rel='noopener'>Welcome card &amp; Wi-Fi</a>${isWalk(b)&&b.status==='confirmed'&&k!=='past'&&(isAdmin()||(b.recorded_by===ME.name&&Date.now()-Date.parse(b.created_at)<3600e3))?`<button class='btn sm dg' data-cx='${esc(b.reference)}'>Cancel walk-in</button>`:''}</div>
+ <h5>Actions</h5><div class='lk' style='margin-top:0'><button class='btn sm p' data-pr='${esc(b.reference)}'>Print registration card${b.printed_at?' (printed before)':''}</button><button class='btn sm' data-dc='${esc(b.room)}'>${icon('key')}Door code</button><a class='btn sm' href='card.html' target='_blank' rel='noopener'>Welcome card &amp; Wi-Fi</a>${isWalk(b)&&b.status==='confirmed'&&k!=='past'&&(isAdmin()||(b.recorded_by===ME.name&&Date.now()-Date.parse(b.created_at)<3600e3))?`<button class='btn sm dg' data-cx='${esc(b.reference)}'>Cancel walk-in</button>`:''}</div>
  <p class='sub' style='margin:16px 0 0;font-size:12.5px'>Booked ${new Date(b.created_at).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short',timeZone:'Africa/Lagos'})}</p>`;
  $('dr').classList.add('on');$('ov').classList.add('on')}
 function closeAll(){$('dr').classList.remove('on');$('ov').classList.remove('on');$('md').classList.remove('on');$('side').classList.remove('on')}
@@ -449,6 +450,7 @@ document.addEventListener('click',async e=>{const t=e.target;
  const nv=t.closest('.nv[data-p]');if(nv){go(nv.dataset.p);return}
  const g=t.closest('[data-go]');if(g){go(g.dataset.go);return}
  const bk=t.closest('[data-bk]');if(bk){prefill(bk.dataset.bk,D.today);return}
+ const pr=t.closest('[data-pr]');if(pr){printBooking(pr.dataset.pr);return}
  const dc=t.closest('[data-dc]');if(dc){doorCode(dc.dataset.dc);return}
  const cx=t.closest('[data-cx]');if(cx){if(!confirm('Cancel this walk-in booking and free the dates?'))return;try{await call({action:'cancel',reference:cx.dataset.cx});toast('Walk-in cancelled. The dates are free again.');closeAll();load()}catch(x){toast(x.message)}return}
  const tl=t.closest('.tile');if(tl){const k=tl.dataset.k;if(k==='available'||k==='inhouse'||k==='arriving'||k==='departing'||k==='upcoming'||k==='hold'||k==='hk'){if(k==='available'||k==='hk'){go('apts')}else{tab=k;go('res');resTable()}}return}
@@ -469,22 +471,27 @@ $('gs').addEventListener('input',()=>{$('rq').value=$('gs').value;tab='all';if($
 $('room').addEventListener('change',onRoom);
 const PAYN={cash:'Cash',transfer:'Bank transfer',pos:'POS',unpaid:'Not yet paid'};
 let lastCard=null;
-function printCard(c){const r=D.rooms.find(x=>x.id===c.room)||{name:c.room,tier:'',rate:0,caution:0},n=dn(c.checkOut)-dn(c.checkIn),sub=n*r.rate,now=new Date().toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short',timeZone:'Africa/Lagos'});
- const row=(k,v)=>`<tr><td>${k}</td><td>${esc(v||'-')}</td></tr>`;
+function cardFrom(b){const parts=String(b.guest_name||'').trim().split(/\s+/),walk=isWalk(b);
+ const note=[(b.special_requests||'').replace(/^WALK-IN at reception\.[^.]*\.?\s*/,'').trim(),b.children?'Travelling with children: '+b.children:''].filter(Boolean).join('\n');
+ return{reference:b.reference,room:b.room,checkIn:b.check_in,checkOut:b.check_out,guests:b.guests||1,fullName:b.guest_name,lastName:walk?parts.slice(1).join(' '):'',firstName:walk?parts[0]:'',birthDate:b.birth_date||'',sex:b.gender||'',address:b.home_address||'',city:b.city||'',state:b.state||'',phone:b.guest_phone||'',email:/walk-in@/.test(b.guest_email||'')?'':(b.guest_email||''),nin:b.nin||'',paid:walk?(b.payment_method||'cash'):'online',note,rate:b.rate,caution:b.caution,channel:walk?'Walk-in':'Online booking'}}
+function printCard(c){const r=D.rooms.find(x=>x.id===c.room)||{name:c.room,tier:'',rate:0,caution:0},rate=c.rate||r.rate,cau=c.caution!=null?c.caution:r.caution,n=dn(c.checkOut)-dn(c.checkIn),sub=n*rate,now=new Date().toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short',timeZone:'Africa/Lagos'});
+ const row=(k,v)=>`<tr><td>${k}</td><td>${esc(v||'')}</td></tr>`;
+ const names=c.fullName&&!c.lastName?row('Full name',c.fullName):row('Last name',c.lastName)+row('First name',c.firstName);
  $('prt').innerHTML=`<div class='ph1'><img src='images/img-01.png' alt=''><div><h1>PRIESTLY<span>APARTMENTS</span></h1><p>.....come home to happiness.</p></div><div class='ct'>Alex Ekwueme Road, by New Government House,<br>Awka, Anambra State<br>Priestlyhomeandapartment@gmail.com<br>09127289246 || 09138446711</div></div>
- <h2>Customer's Information</h2><div class='meta'><span>Reference: <b>${esc(c.reference)}</b></span><span>Printed: ${esc(now)}</span></div>
- <h3>Guest details</h3><table>${row('Last name',c.lastName)}${row('First name',c.firstName)}${row('Birth date',c.birthDate?fd(c.birthDate):'')}${row('Sex',c.sex)}${row('Address',c.address)}${row('City',c.city)}${row('State',c.state)}${row('Phone number',c.phone)}${row('Email address',c.email)}${row('NIN',c.nin)}</table>
- <h3>Stay details</h3><table>${row('Apartment',r.name+(r.tier?' ('+r.tier+')':''))}${row('Check-in',fd(c.checkIn))}${row('Check-out',fd(c.checkOut)+' (by 12:00 noon)')}${row('Nights',String(n))}${row('Number of guests',String(c.guests))}${c.note?row('Note',c.note):''}</table>
- <h3>Payment</h3><table>${row('Payment method',PAYN[c.paid]||c.paid)}${row('Room rate',n+' x '+naira(r.rate)+' = '+naira(sub))}${row('Caution fee (refundable)',naira(r.caution))}<tr class='tot'><td>Total</td><td>${naira(sub+r.caution)}</td></tr></table>
+ <h2>Customer's Information</h2><div class='meta'><span>Reference: <b>${esc(c.reference)}</b>${c.channel?' &middot; '+esc(c.channel):''}</span><span>Printed: ${esc(now)}</span></div>
+ <h3>Guest details</h3><table>${names}${row('Birth date',c.birthDate?fd(c.birthDate):'')}${row('Sex',c.sex)}${row('Address',c.address)}${row('City',c.city)}${row('State',c.state)}${row('Phone number',c.phone)}${row('Email address',c.email)}${row('NIN',c.nin)}</table>
+ <h3>Stay details</h3><table>${row('Apartment',r.name+(r.tier?' ('+r.tier+')':''))}${row('Check-in',fd(c.checkIn))}${row('Check-out',fd(c.checkOut)+' (by 12:00 noon)')}${row('Nights',String(n))}${row('Number of guests',String(c.guests))}${c.note?`<tr><td>Notes &amp; special requests</td><td style='white-space:pre-wrap'>${esc(c.note)}</td></tr>`:''}</table>
+ <h3>Payment</h3><table>${row('Payment method',c.paid==='online'?'Paid online (card/transfer via Paystack)':(PAYN[c.paid]||c.paid))}${row('Room rate',n+' x '+naira(rate)+' = '+naira(sub))}${row('Caution fee (refundable)',naira(cau))}<tr class='tot'><td>Total</td><td>${naira(sub+cau)}</td></tr></table>
  <div class='sg2'><div>Guest signature</div><div>Received by: ${esc(ME.name||'')}</div></div>
  <div class='ft'>Thank you for choosing Priestly Apartments. Check-out is by 12:00 noon. The caution fee is refundable as per house policy.</div>`;
  const im=$('prt').querySelector('img');const go=()=>setTimeout(()=>window.print(),150);if(im&&!im.complete){im.onload=im.onerror=go}else go()}
+async function printBooking(ref){try{const j=await call({action:'card',reference:ref});printCard(cardFrom(j.booking));try{await call({action:'printed',reference:ref});const b=D.bookings.find(x=>x.reference===ref);if(b){b.printed_at=new Date().toISOString();resTable()}}catch(e){toast(e.message)}}catch(e){toast(e.message)}}
 async function saveBooking(print){$('nmsg').innerHTML='';const b1=$('go'),b2=$('go2');b1.disabled=b2.disabled=true;try{
  const c={room:$('room').value,checkIn:$('ci').value,checkOut:$('co').value,lastName:$('ln').value.trim(),firstName:$('fn').value.trim(),birthDate:$('bd').value,sex:$('sx').value,address:$('ad').value.trim(),city:$('cy').value.trim(),state:$('st').value.trim(),phone:$('ph').value.trim(),email:$('em').value.trim(),nin:$('nin').value.replace(/\s/g,''),guests:$('gu').value,paid:$('pd').value,note:$('nt').value.trim()};
  const r=await call(Object.assign({action:'create'},c));c.reference=r.reference;lastCard=c;
  $('nmsg').innerHTML=`<div class='mg k'>Saved. Reference ${esc(r.reference)} (${r.nights} night${r.nights>1?'s':''}, total ${naira(r.total)}). These dates are now blocked on the website. <button class='btn sm' id='rp' type='button' style='margin-left:8px'>Print again</button></div>`;$('rp').onclick=()=>printCard(lastCard);
  ['ln','fn','bd','sx','ad','cy','st','ph','em','nin','nt'].forEach(i=>$(i).value='');$('gu').value=1;$('ci').value='';$('co').value='';await load();renderPk();summary();
- if(print)printCard(c)}
+ if(print){printCard(c);call({action:'printed',reference:r.reference}).then(()=>load()).catch(()=>{})}}
  catch(e){$('nmsg').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}b1.disabled=b2.disabled=false}
 $('go').onclick=()=>saveBooking(true);$('go2').onclick=()=>saveBooking(false);
 async function signin(){PIN=$('pin').value.trim();$('lge').innerHTML='';if(!PIN)return;$('lgo').disabled=true;
