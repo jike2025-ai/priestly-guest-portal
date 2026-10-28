@@ -88,6 +88,28 @@ h2.t{font-size:23px;margin:0 0 4px}.sub{color:var(--mu);margin:0 0 18px}
 .dim{opacity:.55}.on2{color:#15803d;font-weight:700}.sec{margin:6px 0 2px;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);grid-column:1/-1;font-weight:800}
 @media(max-width:1180px){.two2{grid-template-columns:1fr}.two2>.sm2{position:static}}
 @media(max-width:700px){.rl{display:none}.sr{max-width:none;min-width:0}.av{flex:none}}
+
+.sbt{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+#prt{display:none}
+@media print{
+ @page{size:A4;margin:14mm}
+ body{background:#fff!important}
+ body>*:not(#prt){display:none!important}
+ #prt{display:block!important;color:#111;font:12.5px/1.35 'Segoe UI',Arial,sans-serif}
+ #prt .ph1{display:flex;align-items:center;gap:16px;border-bottom:3px solid #1e2433;padding-bottom:12px}
+ #prt .ph1 img{width:78px;height:78px;object-fit:contain}
+ #prt .ph1 h1{margin:0;font:800 26px/1.1 Georgia,serif;letter-spacing:.5px;color:#b32a2a}#prt .ph1 h1 span{display:block;color:#1e2433;font-size:22px}
+ #prt .ph1 p{margin:3px 0 0;font-size:11.5px;color:#444}
+ #prt .ct{margin-left:auto;text-align:right;font-size:11.5px;line-height:1.55}
+ #prt h2{text-align:center;margin:14px 0 2px;font-size:19px;text-decoration:underline}
+ #prt .meta{display:flex;justify-content:space-between;font-size:12px;color:#444;margin:6px 0 14px}
+ #prt h3{margin:11px 0 5px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#1e2433}
+ #prt table{width:100%;border-collapse:collapse;min-width:0}
+ #prt td{border:1px solid #666;padding:4px 10px;vertical-align:top}#prt td:first-child{width:32%;font-weight:700;background:#f3f3f3}
+ #prt .tot td{font-weight:800;font-size:14px}
+ #prt .sg2{display:flex;gap:40px;margin-top:38px}#prt .sg2 div{flex:1;border-top:1px solid #111;padding-top:5px;font-size:12px;text-align:center}
+ #prt .ft{margin-top:18px;text-align:center;font-size:11px;color:#555;border-top:1px solid #bbb;padding-top:8px}
+}
 </style></head><body>
 
 <div id='lg'><div class='bx'><img src='images/img-01.png' alt=''><h2>Staff booking system</h2><p>Priestly Apartments, Awka. Staff only.</p><input id='pin' type='password' inputmode='numeric' autocomplete='off' placeholder='Staff PIN'><button class='btn p' id='lgo'>Sign in</button><div id='lge'></div></div></div>
@@ -150,7 +172,7 @@ h2.t{font-size:23px;margin:0 0 4px}.sub{color:var(--mu);margin:0 0 18px}
    <div class='f'><label for='ph'>Phone number</label><input id='ph' inputmode='tel' autocomplete='off'></div><div class='f'><label for='em'>Email address (optional)</label><input id='em' type='email' autocomplete='off'></div>
    <div class='f w'><label for='nin'>NIN (11 digits)</label><input id='nin' inputmode='numeric' maxlength='11' autocomplete='off' placeholder='National Identification Number'></div>
    <div class='f w'><label for='nt'>Note (optional)</label><input id='nt' maxlength='200' placeholder='Anything the team should know'></div></div>
-   <div id='nmsg'></div><button class='btn p' id='go' style='margin-top:18px;padding:12px 22px'>Save walk-in booking</button></div></div>
+   <div id='nmsg'></div><div class='sbt'><button class='btn p' id='go' style='padding:12px 22px'>Save &amp; print</button><button class='btn' id='go2' style='padding:12px 22px'>Save only</button></div></div></div>
  </div>
   <div class='sm2'><h4>Booking summary</h4><div id='qs'><div class='em' style='padding:10px 0'>Choose an apartment and dates.</div></div></div></div></section>
 
@@ -185,6 +207,7 @@ h2.t{font-size:23px;margin:0 0 4px}.sub{color:var(--mu);margin:0 0 18px}
 <div id='ov'></div><aside id='dr'><div class='dh'><div><h3 id='dt'></h3><small id='ds'></small></div><button id='dx' aria-label='Close'>&times;</button></div><div class='db' id='dbody'></div></aside>
 <div id='md'><div id='mdb'></div><button class='btn' id='mdx' style='margin-top:12px'>Close</button></div><div id='ts'></div>
 
+<div id='prt'></div>
 <svg width='0' height='0' style='position:absolute'><defs>
 <symbol id='i-grid' viewBox='0 0 24 24'><rect x='3' y='3' width='7' height='7' rx='1.5'/><rect x='14' y='3' width='7' height='7' rx='1.5'/><rect x='3' y='14' width='7' height='7' rx='1.5'/><rect x='14' y='14' width='7' height='7' rx='1.5'/></symbol>
 <symbol id='i-bld' viewBox='0 0 24 24'><rect x='5' y='3' width='14' height='18' rx='1.5'/><path d='M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2'/></symbol>
@@ -444,10 +467,26 @@ $('cp').onclick=()=>{calStart=addD(calStart,-14);calendar()};$('cn').onclick=()=
 ['rq','rr','rc'].forEach(i=>$(i).addEventListener('input',resTable));$('rfr').onclick=()=>load();
 $('gs').addEventListener('input',()=>{$('rq').value=$('gs').value;tab='all';if($('gs').value&&!$('p-res').classList.contains('on'))go('res');resTable()});
 $('room').addEventListener('change',onRoom);
-$('go').onclick=async()=>{$('nmsg').innerHTML='';const b=$('go');b.disabled=true;try{
- const r=await call({action:'create',room:$('room').value,checkIn:$('ci').value,checkOut:$('co').value,lastName:$('ln').value,firstName:$('fn').value,birthDate:$('bd').value,sex:$('sx').value,address:$('ad').value,city:$('cy').value,state:$('st').value,phone:$('ph').value,email:$('em').value,nin:$('nin').value,guests:$('gu').value,paid:$('pd').value,note:$('nt').value});
- $('nmsg').innerHTML=`<div class='mg k'>Saved. Reference ${esc(r.reference)} (${r.nights} night${r.nights>1?'s':''}, total ${naira(r.total)}). These dates are now blocked on the website.</div>`;['ln','fn','bd','sx','ad','cy','st','ph','em','nin','nt'].forEach(i=>$(i).value='');$('gu').value=1;$('ci').value='';$('co').value='';await load();renderPk();summary()}
- catch(e){$('nmsg').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}b.disabled=false};
+const PAYN={cash:'Cash',transfer:'Bank transfer',pos:'POS',unpaid:'Not yet paid'};
+let lastCard=null;
+function printCard(c){const r=D.rooms.find(x=>x.id===c.room)||{name:c.room,tier:'',rate:0,caution:0},n=dn(c.checkOut)-dn(c.checkIn),sub=n*r.rate,now=new Date().toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short',timeZone:'Africa/Lagos'});
+ const row=(k,v)=>`<tr><td>${k}</td><td>${esc(v||'-')}</td></tr>`;
+ $('prt').innerHTML=`<div class='ph1'><img src='images/img-01.png' alt=''><div><h1>PRIESTLY<span>APARTMENTS</span></h1><p>.....come home to happiness.</p></div><div class='ct'>Alex Ekwueme Road, by New Government House,<br>Awka, Anambra State<br>Priestlyhomeandapartment@gmail.com<br>09127289246 || 09138446711</div></div>
+ <h2>Customer's Information</h2><div class='meta'><span>Reference: <b>${esc(c.reference)}</b></span><span>Printed: ${esc(now)}</span></div>
+ <h3>Guest details</h3><table>${row('Last name',c.lastName)}${row('First name',c.firstName)}${row('Birth date',c.birthDate?fd(c.birthDate):'')}${row('Sex',c.sex)}${row('Address',c.address)}${row('City',c.city)}${row('State',c.state)}${row('Phone number',c.phone)}${row('Email address',c.email)}${row('NIN',c.nin)}</table>
+ <h3>Stay details</h3><table>${row('Apartment',r.name+(r.tier?' ('+r.tier+')':''))}${row('Check-in',fd(c.checkIn))}${row('Check-out',fd(c.checkOut)+' (by 12:00 noon)')}${row('Nights',String(n))}${row('Number of guests',String(c.guests))}${c.note?row('Note',c.note):''}</table>
+ <h3>Payment</h3><table>${row('Payment method',PAYN[c.paid]||c.paid)}${row('Room rate',n+' x '+naira(r.rate)+' = '+naira(sub))}${row('Caution fee (refundable)',naira(r.caution))}<tr class='tot'><td>Total</td><td>${naira(sub+r.caution)}</td></tr></table>
+ <div class='sg2'><div>Guest signature</div><div>Received by: ${esc(ME.name||'')}</div></div>
+ <div class='ft'>Thank you for choosing Priestly Apartments. Check-out is by 12:00 noon. The caution fee is refundable as per house policy.</div>`;
+ const im=$('prt').querySelector('img');const go=()=>setTimeout(()=>window.print(),150);if(im&&!im.complete){im.onload=im.onerror=go}else go()}
+async function saveBooking(print){$('nmsg').innerHTML='';const b1=$('go'),b2=$('go2');b1.disabled=b2.disabled=true;try{
+ const c={room:$('room').value,checkIn:$('ci').value,checkOut:$('co').value,lastName:$('ln').value.trim(),firstName:$('fn').value.trim(),birthDate:$('bd').value,sex:$('sx').value,address:$('ad').value.trim(),city:$('cy').value.trim(),state:$('st').value.trim(),phone:$('ph').value.trim(),email:$('em').value.trim(),nin:$('nin').value.replace(/\s/g,''),guests:$('gu').value,paid:$('pd').value,note:$('nt').value.trim()};
+ const r=await call(Object.assign({action:'create'},c));c.reference=r.reference;lastCard=c;
+ $('nmsg').innerHTML=`<div class='mg k'>Saved. Reference ${esc(r.reference)} (${r.nights} night${r.nights>1?'s':''}, total ${naira(r.total)}). These dates are now blocked on the website. <button class='btn sm' id='rp' type='button' style='margin-left:8px'>Print again</button></div>`;$('rp').onclick=()=>printCard(lastCard);
+ ['ln','fn','bd','sx','ad','cy','st','ph','em','nin','nt'].forEach(i=>$(i).value='');$('gu').value=1;$('ci').value='';$('co').value='';await load();renderPk();summary();
+ if(print)printCard(c)}
+ catch(e){$('nmsg').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}b1.disabled=b2.disabled=false}
+$('go').onclick=()=>saveBooking(true);$('go2').onclick=()=>saveBooking(false);
 async function signin(){PIN=$('pin').value.trim();$('lge').innerHTML='';if(!PIN)return;$('lgo').disabled=true;
  try{const j=await call({action:'login'});ME={role:j.role,name:j.name,shift:j.shift||'',shiftId:j.shiftId||''};saveMe();await load(true)}
  catch(e){PIN='';$('lge').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}$('lgo').disabled=false}
