@@ -73,6 +73,8 @@
   }
   button.primary{background:var(--crimson); color:#fff;}
   button.primary:hover{background:var(--crimson-deep);}
+  button:disabled{opacity:.4; cursor:not-allowed;}
+  button.primary:disabled:hover{background:var(--crimson);}
   button.ghost{background:transparent; color:#F2EEE4; border-color:rgba(255,255,255,0.25);}
   button.ghost:hover{background:rgba(255,255,255,0.06);}
   button:focus-visible{outline:2px solid var(--brass); outline-offset:2px;}
@@ -273,9 +275,9 @@
     <input id="in-password" type="hidden">
 
     <div class="actions" style="margin-top:0;margin-bottom:10px;">
-      <button type="button" class="primary" id="btn-wifi-voucher">Get Wi-Fi voucher</button>
+      <button type="button" class="primary" id="btn-wifi-voucher" disabled title="Enter your staff PIN to unlock">Get Wi-Fi voucher</button>
     </div>
-    <small class="note" id="wifi-voucher-msg">Fill in guest name, apartment and dates, enter your PIN above, then press the button. The guest's Wi-Fi login is added to the pass automatically and lasts until check-out day.</small>
+    <small class="note" id="wifi-voucher-msg">Enter your staff PIN above to unlock this button, fill in guest name, apartment and dates, then press it. The guest's Wi-Fi login is added to the pass automatically and lasts until check-out day.</small>
 
     <div class="actions">
       <button class="primary" id="btn-print">Print pass</button>
@@ -2881,6 +2883,7 @@ var qrcode = function() {
   document.getElementById('btn-reset').addEventListener('click', function(){
     Object.keys(els).forEach(function(k){ els[k].value = ''; });
     render();
+    document.getElementById('in-pin').dispatchEvent(new Event('input'));
   });
 
   render();
@@ -2891,6 +2894,13 @@ var qrcode = function() {
   var $ = function (id) { return document.getElementById(id); };
   var btn = $('btn-wifi-voucher'), msg = $('wifi-voucher-msg');
   if (!btn) return;
+
+  // The voucher button stays dead until a staff PIN is typed (the server still checks the PIN itself).
+  var busy = false;
+  function syncLock() { btn.disabled = busy || $('in-pin').value.trim().length < 4; }
+  $('in-pin').addEventListener('input', syncLock);
+  $('in-pin').addEventListener('change', syncLock);
+  syncLock();
 
   function say(text, bad) {
     msg.textContent = text;
@@ -2916,7 +2926,7 @@ var qrcode = function() {
     if (!name || !room || !checkIn || !checkOut) return say('Fill in guest name, apartment, check-in and check-out first.', true);
     if (!pin) return say('Enter the Staff PIN above first.', true);
 
-    btn.disabled = true;
+    busy = true; btn.disabled = true;
     var old = btn.textContent;
     btn.textContent = 'Getting voucher...';
 
@@ -2939,7 +2949,7 @@ var qrcode = function() {
     } catch (e) {
       say(e.message || 'Something went wrong', true);
     } finally {
-      btn.disabled = false;
+      busy = false; syncLock();
       btn.textContent = old;
     }
   });
