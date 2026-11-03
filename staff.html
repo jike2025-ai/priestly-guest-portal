@@ -136,7 +136,7 @@ h2.t{font-size:23px;margin:0 0 4px}.sub{color:var(--mu);margin:0 0 18px}
 
 <main>
 <section class='pg on' id='p-dash'>
- <div class='bn'><div><h1 id='gr'>Good day, Front Desk!</h1><p id='gt'></p></div><div class='k'><div><b id='k1'>0</b><span>Check-ins today</span></div><div><b id='k2'>0</b><span>Check-outs today</span></div><div><b id='k3'>0%</b><span>Occupancy tonight</span></div></div></div>
+ <div class='bn'><div><h1 id='gr'>Good day, Front Desk!</h1><p id='gt'></p></div><div class='k'><div><b id='k1'>0</b><span>Check-ins today</span></div><div><b id='k2'>0</b><span>Check-outs due</span></div><div><b id='k3'>0%</b><span>Occupancy tonight</span></div></div></div>
  <div class='sg'>
   <div class='sc s1'><small>Booked this month</small><b id='c1'>-</b><em id='c1s'></em><svg class='i big'><use href='#i-naira'/></svg></div>
   <div class='sc s2'><small>Available tonight</small><b id='c2'>-</b><em id='c2s'></em><svg class='i big'><use href='#i-bld'/></svg></div>
@@ -265,7 +265,9 @@ const call=o=>post('/api/walkin',o),acall=o=>post('/api/admin',o);
 function toast(m){const t=$('ts');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),3800)}
 
 /* ---------- state helpers ---------- */
-function bstate(b,T){if(b.status==='pending')return'hold';if(b.check_out<T)return'past';if(b.check_in>T)return'upcoming';if(b.check_in===T)return'arriving';if(b.check_out===T)return'departing';return'inhouse'}
+// Check-out is 12:00 noon (Lagos time). From noon on the departure day the guest counts as checked out and the apartment is free again.
+const CHECKOUT_HOUR=12,lagosHour=()=>+new Date().toLocaleString('en-GB',{hour:'numeric',hour12:false,timeZone:'Africa/Lagos'})%24,pastCheckout=()=>lagosHour()>=CHECKOUT_HOUR;
+function bstate(b,T){if(b.status==='pending')return'hold';if(b.check_out<T)return'past';if(b.check_out===T&&b.check_in<T&&pastCheckout())return'past';if(b.check_in>T)return'upcoming';if(b.check_in===T)return'arriving';if(b.check_out===T)return'departing';return'inhouse'}
 const isWalk=b=>b.channel==='walk-in';
 function roomState(id){const T=D.today,bs=D.bookings.filter(b=>b.room===id&&b.status!=='cancelled');
  const by=k=>bs.find(b=>bstate(b,T)===k);
@@ -307,7 +309,7 @@ function tiles(){const c=counts();
  $('gl').innerHTML=['clean','dirty','maintenance'].map(k=>`<p style='margin:9px 0'>${hkChip(k)} <span class='sub' style='margin:0 0 0 6px'>${{clean:'Ready for the next guest.',dirty:'Guest has left. Housekeeping needed.',maintenance:'Something needs repair. Do not give to a guest until fixed.'}[k]}</span></p>`).join('')+['available','inhouse','arriving','departing','upcoming','hold','past'].map(k=>`<p style='margin:9px 0'>${chip(k)} <span class='sub' style='margin:0 0 0 6px'>${DESC[k]}</span></p>`).join('')}
 function todayList(){const T=D.today,a=D.bookings.filter(b=>b.check_in===T&&b.status==='confirmed'),o=D.bookings.filter(b=>b.check_out===T&&b.status==='confirmed');
  const row=(b,k)=>`<tr class='r' data-ref='${esc(b.reference)}'><td><b>${esc(b.guest_name)}</b>${isWalk(b)?"<span class='tg'>WALK-IN</span>":''}<small>${esc(b.guest_phone||'')}</small></td><td>${esc(roomName[b.room]||b.room)}</td><td>${fs(b.check_in)} &rarr; ${fs(b.check_out)}</td><td>${chip(k)}</td></tr>`;
- const rows=a.map(b=>row(b,'arriving')).concat(o.map(b=>row(b,'departing')));
+ const rows=a.map(b=>row(b,'arriving')).concat(o.map(b=>row(b,bstate(b,T))));
  $('today').innerHTML=rows.length?`<div class='tw'><table style='min-width:560px'><tbody>${rows.join('')}</tbody></table></div>`:`<div class='em'>No check-ins or check-outs today.</div>`}
 
 function hkRow(r){const h=hk(r.id);return `<div class='hkr'>${hkChip(h.status)}<select data-hk='${r.id}' aria-label='Cleaning status'>${Object.keys(HK).map(k=>`<option value='${k}'${k===h.status?' selected':''}>${HK[k][0]}</option>`).join('')}</select>${h.note?`<small>${esc(h.note)}</small>`:''}${h.updated_by?`<small>Updated by ${esc(h.updated_by)}, ${ft(h.updated_at)}</small>`:''}</div>`}
