@@ -9,6 +9,8 @@ const { authenticate, logAction } = require('../lib/staff');
 //   {pin, action:'create', room, checkIn, checkOut, lastName, firstName, birthDate, sex, address, phone, email, city, state, nin, guests, paid, note}
 //   {pin, action:'cancel', reference}             -> walk-ins only (staff: their own, within 1 hour; admin: any)
 //   {pin, action:'room_status', room, status, note}   status: clean | dirty | maintenance
+//   {pin, action:'checkout', reference}            -> guest has left (early or on time)
+//   {pin, action:'late', reference, on:true|false} -> guest still in the room after noon (or undo)
 //   {pin, action:'card', reference}               -> full details for the printed registration card (logged)
 //   {pin, action:'printed', reference}            -> marks the card as printed (hard copy filed)
 //   {pin, action:'nin', reference}                -> admin only, reveals the full NIN (logged)
@@ -18,6 +20,7 @@ const clean = (s, n) => String(s || '').replace(/[<>\u0000-\u001f]/g, ' ').repla
 const BASE = 'reference,room,check_in,check_out,nights,guests,guest_name,guest_phone,guest_email,rate,caution,total,status,channel,special_requests,created_at,paid_at,hold_expires_at';
 const EXTRA = 'gender,nin,home_address,children,birth_date,city,state,payment_method,recorded_by';
 const PRINT = 'printed_at,printed_by';
+const STAY = 'checked_out_at,checked_out_by,late_stay';
 const isDate = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s)) && !isNaN(Date.parse(s + 'T00:00:00Z'));
 const ageOn = (dob, ref) => { const d = new Date(dob + 'T00:00:00Z'), r = new Date(ref + 'T00:00:00Z'); let a = r.getUTCFullYear() - d.getUTCFullYear(); if (r.getUTCMonth() < d.getUTCMonth() || (r.getUTCMonth() === d.getUTCMonth() && r.getUTCDate() < d.getUTCDate())) a--; return a; };
 const SETUP = 'The staff database update has not been run yet. Ask the developer to run supabase/staff-setup.sql in Supabase.';
@@ -53,9 +56,10 @@ module.exports = async (req, res) => {
       const now = new Date().toISOString();
       const from = new Date(Date.now() - 60 * 864e5).toISOString().slice(0, 10);
       const q = cols => `bookings?select=${cols}&check_out=gte.${from}&or=(status.eq.confirmed,and(status.eq.pending,hold_expires_at.gt.${now}))&order=check_in&limit=1000`;
-      let tracking = true;
-      let r = await sb(q(BASE + ',' + EXTRA + ',' + PRINT));
-      if (!r.ok) { tracking = false; r = await sb(q(BASE + ',' + EXTRA)); } // print tracking columns not added yet
+      let tracking = true, stay = true; // columns added by migration-printed.sql / migration-checkout.sql
+      let r = await sb(q(BASE + ',' + EXTRA + ',' + PRINT + ',' + STAY));
+      if (!r.ok) { stay = false; r = await sb(q(BASE + ',' + EXTRA + ',' + PRINT)); }
+      if (!r.ok) { tracking = false; r = await sb(q(BASE + ',' + EXTRA)); }
       if (!r.ok) r = await sb(q(BASE)); // database update not run yet: still show the dashboard
       if (!r.ok) throw new Error('overview failed');
       const bookings = r.data.map(x => { const o = Object.assign({}, x); o.nin_last4 = x.nin ? String(x.nin).slice(-4) : ''; delete o.nin; return o; });
@@ -64,7 +68,7 @@ module.exports = async (req, res) => {
       let housekeeping = {};
       const rs = await sb('room_status?select=room,status,note,updated_by,updated_at');
       if (rs.ok && Array.isArray(rs.data)) rs.data.forEach(x => { housekeeping[x.room] = x; });
-      return json(res, 200, { today: today(), me: { role: user.role, name: user.name }, rooms: Object.entries(ROOMS).map(([id, v]) => ({ id, ...v })), bookings, housekeeping, tracking });
+      return json(res, 200, { today: today(), me: { role: user.role, name: user.name }, rooms: Object.entries(ROOMS).map(([id, v]) => ({ id, ...v })), bookings, housekeeping, tracking, stay });
     }
 
     if (b.action === 'create') {
@@ -132,6 +136,21 @@ module.exports = async (req, res) => {
       const r = await sb('room_status?on_conflict=room', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { room: b.room, status, note: note || null, updated_by: user.name, updated_at: new Date().toISOString() } });
       if (!r.ok) throw bad(SETUP, 503);
       await logAction(user, 'room status', `${ROOMS[b.room].name}: ${status}${note ? ' (' + note + ')' : ''}`);
+      return json(res, 200, { ok: true });
+    }
+
+    if (b.action === 'checkout' || b.action === 'late') {
+      // checkout: guest has left (works early or on time). late: guest is still in the room past noon (or undo it).
+      const ref = clean(b.reference, 40);
+      const f = await sb(`bookings?select=reference,guest_name,room,check_in,check_out,status&reference=eq.${encodeURIComponent(ref)}&limit=1`);
+      const bk = f.ok && f.data && f.data[0];
+      if (!bk || bk.status !== 'confirmed') throw bad('Booking not found', 404);
+      const body = b.action === 'checkout'
+        ? { checked_out_at: new Date().toISOString(), checked_out_by: user.name, late_stay: false }
+        : (b.on === false ? { late_stay: false, checked_out_at: null, checked_out_by: null } : { late_stay: true, checked_out_at: null, checked_out_by: null });
+      const r = await sb(`bookings?reference=eq.${encodeURIComponent(ref)}`, { method: 'PATCH', prefer: 'return=minimal', body });
+      if (!r.ok) throw bad('The check-out tracking has not been set up yet. Ask the developer to run supabase/migration-checkout.sql in Supabase.', 503);
+      await logAction(user, b.action === 'checkout' ? 'checked out' : (b.on === false ? 'late stay cleared' : 'late stay'), `${ref}: ${bk.guest_name}, ${ROOMS[bk.room] ? ROOMS[bk.room].name : bk.room}`);
       return json(res, 200, { ok: true });
     }
 
