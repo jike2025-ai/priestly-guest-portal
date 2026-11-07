@@ -1,5 +1,6 @@
 'use strict';
 const { sb, json, ROOMS, today, crypto } = require('../lib/core');
+const { arrival } = require('../lib/tuya');
 
 // Alexa custom skill endpoint: greets the guest by name when the smart lock opens (an Alexa Routine calls the skill).
 //   Alexa  -> POST /api/alexa?key=ALEXA_KEY            (standard Alexa skill request; the Echo's deviceId says which room)
@@ -122,7 +123,9 @@ module.exports = async (req, res) => {
         speech = d.speech;
         if (d.patch) {
           let w = await sb(`bookings?reference=eq.${encodeURIComponent(d.ref)}`, { method: 'PATCH', prefer: 'return=minimal', body: d.patch });
-          if (!w.ok) { delete d.patch.last_event_at; await sb(`bookings?reference=eq.${encodeURIComponent(d.ref)}`, { method: 'PATCH', prefer: 'return=minimal', body: d.patch }); }
+          if (!w.ok) { delete d.patch.last_event_at; w = await sb(`bookings?reference=eq.${encodeURIComponent(d.ref)}`, { method: 'PATCH', prefer: 'return=minimal', body: d.patch }); }
+          // First welcome of the stay (greeted_at just saved) also sets the room: curtains, AC, lights. Once per stay, never repeated.
+          if (w.ok && d.patch.greeted_at) await Promise.race([arrival(room), new Promise(r => setTimeout(r, 3500))]);
         }
       } else console.log('alexa: unmapped Echo', deviceId);
     }
