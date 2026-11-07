@@ -10,13 +10,15 @@ const GREET_FROM = parseInt(E.ALEXA_GREET_FROM || '12', 10);   // before this ho
 const RETURN_FROM = parseInt(E.ALEXA_RETURN_FROM || '14', 10); // "welcome back" by name only from this hour (housekeeping works in the morning)
 
 const eq = (a, b) => { const x = Buffer.from(String(a || '')), y = Buffer.from(String(b || '')); return x.length === y.length && crypto.timingSafeEqual(x, y); };
-const esc = s => String(s).replace(/&/g, ' and ').replace(/[<>"']/g, '');
+const esc = s => String(s).replace(/&/g, ' and ').replace(/[<>"]/g, '');
 const lagosHour = () => parseInt(new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos', hour: '2-digit', hour12: false }), 10);
 
-function firstName(b) {
+function firstName(b) { // despite the name: now returns the guest's FULL name as saved on the booking
   if (b.say_name && b.say_name.trim()) return esc(b.say_name.trim());
   const w = String(b.guest_name || '').replace(/[^\p{L}' -]/gu, ' ').trim().split(/\s+/).filter(Boolean);
-  return w.length ? esc(w[0].charAt(0).toUpperCase() + w[0].slice(1).toLowerCase()) : '';
+  if (!w.length) return '';
+  const nice = x => (x === x.toUpperCase() || x === x.toLowerCase()) ? x.toLowerCase().replace(/(^|[-'])(\p{L})/gu, (m, p1, p2) => p1 + p2.toUpperCase()) : x; // ADA -> Ada, keep McDonald as typed
+  return esc(w.map(nice).join(' '));
 }
 const GENERIC = 'Welcome to Priestly Apartments. We hope you enjoy your stay.';
 const QUIET_MIN = parseInt(E.ALEXA_QUIET_MIN || '60', 10);   // after any spoken event, stay silent this many minutes (motion sensors fire constantly)
