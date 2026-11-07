@@ -23,6 +23,18 @@ function firstName(b) { // despite the name: now returns the guest's FULL name a
 const GENERIC = 'Welcome to Priestly Apartments. We hope you enjoy your stay.';
 const QUIET_MIN = parseInt(E.ALEXA_QUIET_MIN || '60', 10);   // after any spoken event, stay silent this many minutes (motion sensors fire constantly)
 const AWAY_MIN = parseInt(E.ALEXA_AWAY_MIN || '180', 10);    // silent this long = guest was out: next event is "welcome back"
+
+const PHONES = '<say-as interpret-as="digits">09127289246</say-as>, or <say-as interpret-as="digits">09138446711</say-as>';
+const niceDate = d => { try { return new Date(d + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }); } catch (e) { return d; } };
+// The full welcome: said once on arrival (and whenever a guest asks by voice).
+const fullWelcome = (name, room, checkOut) =>
+  `Welcome to Priestly Apartments, ${name}. Where luxury feels like home. ` +
+  `You are staying in ${room}, and we are delighted to have you with us until ${niceDate(checkOut)}. Check-out is at twelve noon. ` +
+  `Your apartment comes with twenty-four seven power, free Wi-Fi, a smart T V, a fully equipped kitchen, secure parking, and round-the-clock security. ` +
+  `Your Wi-Fi and hotspot details are on your welcome pass, and our food and bar menu is just a call away. ` +
+  `You can also ask me to open the curtains or adjust the air conditioner at any time. ` +
+  `If you need any help at all, please contact the front desk on ${PHONES}. ` +
+  `Enjoy your stay at Priestly Apartments.`;
 const NIGHT = h => h >= 23 || h < 6;                          // never speak at night after the first welcome
 
 // Decide what to say. Pure function: easy to test. Returns {speech|null (stay silent), patch|null (fields to save on the booking), ref}
@@ -40,11 +52,11 @@ function decide(bookings, day, hour, nowMs, agoOverride, force) {
   const iso = new Date(now).toISOString();
   if (!b.greeted_at) {
     return { ref: b.reference, patch: { greeted_at: iso, last_event_at: iso },
-      speech: `Welcome to Priestly Apartments, ${name}. You are in ${room}. Your Wi-Fi details are on your welcome pass. You can ask me to open the curtains, turn the air conditioner on or off, or control the lights at any time. If you need anything, please call the front desk. Please enjoy your stay at Priestly Apartments.` };
+      speech: fullWelcome(name, room, b.check_out) };
   }
   if (force) {                                                  // guest asked by voice: always answer
     return { ref: b.reference, patch: { last_event_at: iso },
-      speech: `Welcome, ${name}. You are in ${room}. Your Wi-Fi details are on your welcome pass. If you need anything, please call the front desk. Please enjoy your stay at Priestly Apartments.` };
+      speech: fullWelcome(name, room, b.check_out) };
   }
   if (NIGHT(hour)) return none;
   const last = Date.parse(b.last_event_at || b.greeted_at);
