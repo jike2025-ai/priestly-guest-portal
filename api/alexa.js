@@ -24,7 +24,7 @@ const AWAY_MIN = parseInt(E.ALEXA_AWAY_MIN || '180', 10);    // silent this long
 const NIGHT = h => h >= 23 || h < 6;                          // never speak at night after the first welcome
 
 // Decide what to say. Pure function: easy to test. Returns {speech|null (stay silent), patch|null (fields to save on the booking), ref}
-function decide(bookings, day, hour, nowMs, agoOverride) {
+function decide(bookings, day, hour, nowMs, agoOverride, force) {
   const now = nowMs || Date.now();
   const ok = (bookings || []).filter(b => b.status === undefined || b.status === 'confirmed')
     .filter(b => b.check_in <= day && b.check_out >= day && !(b.check_out === day && hour >= 12))
@@ -39,6 +39,10 @@ function decide(bookings, day, hour, nowMs, agoOverride) {
   if (!b.greeted_at) {
     return { ref: b.reference, patch: { greeted_at: iso, last_event_at: iso },
       speech: `Welcome to Priestly Apartments, ${name}. You are in ${room}. Your Wi-Fi details are on your welcome pass. You can ask me to open the curtains, turn the air conditioner on or off, or control the lights at any time. If you need anything, please call the front desk. Please enjoy your stay at Priestly Apartments.` };
+  }
+  if (force) {                                                  // guest asked by voice: always answer
+    return { ref: b.reference, patch: { last_event_at: iso },
+      speech: `Welcome, ${name}. You are in ${room}. Your Wi-Fi details are on your welcome pass. If you need anything, please call the front desk. Please enjoy your stay at Priestly Apartments.` };
   }
   if (NIGHT(hour)) return none;
   const last = Date.parse(b.last_event_at || b.greeted_at);
@@ -78,7 +82,7 @@ module.exports = async (req, res) => {
       if (!ROOMS[room]) return json(res, 400, { error: 'Add &room=moscow (or another apartment id)' });
       const day = url.searchParams.get('day') || today(), hour = url.searchParams.has('hour') ? parseInt(url.searchParams.get('hour'), 10) : lagosHour();
       const ago = url.searchParams.has('ago') ? parseInt(url.searchParams.get('ago'), 10) : undefined;
-      const d = decide(await bookingsFor(room, day), day, hour, Date.now(), ago);
+      const d = decide(await bookingsFor(room, day), day, hour, Date.now(), ago, url.searchParams.get('force') === '1');
       return json(res, 200, { room, day, hour, speech: d.speech || '(silent)', wouldSave: d.patch ? Object.keys(d.patch) : null });
     }
     if (req.method !== 'POST') return json(res, 405, { error: 'POST only' });
@@ -99,7 +103,7 @@ module.exports = async (req, res) => {
       const up = await sb('echo_devices?on_conflict=device_id', { method: 'POST', prefer: 'resolution=merge-duplicates,return=representation', body: { device_id: deviceId, last_seen: new Date().toISOString() } });
       const room = up.ok && up.data && up.data[0] && up.data[0].room;
       if (room && ROOMS[room]) {
-        const day = today(), d = decide(await bookingsFor(room, day), day, lagosHour());
+        const day = today(), d = decide(await bookingsFor(room, day), day, lagosHour(), Date.now(), undefined, rq.type === 'IntentRequest' && (rq.intent || {}).name === 'GreetIntent');
         if (!d.speech) return silent(res);
         speech = d.speech;
         if (d.patch) {
