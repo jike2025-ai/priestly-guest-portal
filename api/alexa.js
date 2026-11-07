@@ -1,6 +1,6 @@
 'use strict';
 const { sb, json, ROOMS, today, crypto } = require('../lib/core');
-const { arrival } = require('../lib/tuya');
+const { arrival, raw: tuyaRaw } = require('../lib/tuya');
 
 // Alexa custom skill endpoint: greets the guest by name when the smart lock opens (an Alexa Routine calls the skill).
 //   Alexa  -> POST /api/alexa?key=ALEXA_KEY            (standard Alexa skill request; the Echo's deviceId says which room)
@@ -90,6 +90,31 @@ module.exports = async (req, res) => {
     const url = new URL(req.url, 'http://x');
     if (!E.ALEXA_KEY) return json(res, 503, { error: 'Alexa greeting is not set up yet' });
     if (!eq(url.searchParams.get('key'), E.ALEXA_KEY)) return json(res, 403, { error: 'Forbidden' });
+
+    // Owner's Smart Life tools (same secret key): ?tuya=devices | ?tuya=functions&device=ID | ?tuya=send&device=ID&code=switch_led&value=true
+    if (req.method === 'GET' && url.searchParams.has('tuya')) {
+      if (!E.TUYA_ACCESS_ID || !E.TUYA_ACCESS_SECRET) return json(res, 503, { error: 'Add TUYA_ACCESS_ID and TUYA_ACCESS_SECRET in Vercel first' });
+      const act = url.searchParams.get('tuya'), dev = (url.searchParams.get('device') || '').replace(/[^A-Za-z0-9]/g, '');
+      if (act === 'devices') {
+        const out = []; let last = '';
+        for (let i = 0; i < 10; i++) {
+          const j = await tuyaRaw('GET', '/v1.0/iot-01/associated-users/devices?size=50' + (last ? '&last_row_key=' + encodeURIComponent(last) : ''));
+          if (!j.success) return json(res, 200, { error: j.msg || 'Tuya refused', code: j.code });
+          (j.result.devices || []).forEach(d => out.push(`${d.name} | ${d.id} | ${d.category} | ${d.online ? 'online' : 'offline'}`));
+          if (!j.result.has_more) break; last = j.result.last_row_key;
+        }
+        return json(res, 200, { count: out.length, devices: out });
+      }
+      if (!dev) return json(res, 400, { error: 'Add &device=DEVICE_ID' });
+      if (act === 'functions') { const j = await tuyaRaw('GET', `/v1.0/devices/${dev}/functions`); return json(res, 200, j.success ? j.result : { error: j.msg, code: j.code }); }
+      if (act === 'send') {
+        const code = url.searchParams.get('code') || '', raw = url.searchParams.get('value');
+        const value = raw === 'true' ? true : raw === 'false' ? false : (raw !== '' && !isNaN(raw) ? Number(raw) : raw);
+        const j = await tuyaRaw('POST', `/v1.0/devices/${dev}/commands`, { commands: [{ code, value }] });
+        return json(res, 200, { sent: { code, value }, ok: !!j.success, error: j.success ? undefined : j.msg, tuyaCode: j.code });
+      }
+      return json(res, 400, { error: 'Unknown tuya action' });
+    }
 
     // Dry run for testing from a phone/browser.
     if (req.method === 'GET') {
