@@ -2,6 +2,7 @@ const { cors, json, bad, sb, ROOMS, today } = require('../lib/core');
 const { authenticate, logAction, hashPin, adminPin, same } = require('../lib/staff');
 
 // POST /api/admin  (ADMIN ONLY, PIN login)
+//   {pin, action:'request_resolve', id, decision:'cancel'|'decline', note?}
 //   {pin, action:'staff_list'}
 //   {pin, action:'staff_add', full_name, username, phone, email, pin_new, shift}
 //   {pin, action:'staff_update', id, active?, shift?, full_name?, phone?, email?, pin_new?}
@@ -27,6 +28,22 @@ module.exports = async (req, res) => {
     const b = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
     const user = await authenticate(req, b.pin);
     if (user.role !== 'admin') throw bad('Admin only', 403);
+
+    if (b.action === 'request_resolve') {
+      const id = String(b.id || ''); if (!/^[0-9a-f-]{36}$/.test(id)) throw bad('Unknown request');
+      const decision = b.decision === 'cancel' ? 'cancel' : 'decline', note = clean(b.note, 200);
+      const f = await sb(`booking_requests?select=id,reference,guest_name,room,check_in,check_out,requested_by&id=eq.${id}&status=eq.pending&limit=1`);
+      const rq = f.ok && f.data && f.data[0];
+      if (!rq) throw bad('That request was already handled', 409);
+      if (decision === 'cancel') {
+        const c = await sb(`bookings?reference=eq.${encodeURIComponent(rq.reference)}&channel=eq.walk-in&status=eq.confirmed`, { method: 'PATCH', prefer: 'return=minimal', body: { status: 'cancelled' } });
+        if (!c.ok) throw new Error('cancel failed');
+      }
+      const u = await sb(`booking_requests?id=eq.${id}`, { method: 'PATCH', prefer: 'return=minimal', body: { status: decision === 'cancel' ? 'done' : 'declined', resolved_by: user.name, resolved_at: new Date().toISOString(), note: note || null } });
+      if (!u.ok) throw new Error('could not save the decision');
+      await logAction(user, decision === 'cancel' ? 'cancel approved' : 'cancel declined', `${rq.reference}: ${rq.guest_name}, ${rq.room} ${rq.check_in} to ${rq.check_out} (asked by ${rq.requested_by})${note ? '. ' + note : ''}`);
+      return json(res, 200, { ok: true });
+    }
 
     if (b.action === 'staff_list') {
       const r = await sb('staff?select=id,username,full_name,phone,email,shift,active,created_at&order=created_at');

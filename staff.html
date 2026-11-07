@@ -120,6 +120,7 @@ h2.t{font-size:23px;margin:0 0 4px}.sub{color:var(--mu);margin:0 0 18px}
 <button class='nv' data-p='apts'><svg class='i'><use href='#i-bld'/></svg>Apartments</button>
 <button class='nv' data-p='cal'><svg class='i'><use href='#i-cal'/></svg>Calendar</button>
 <button class='nv' data-p='res'><svg class='i'><use href='#i-list'/></svg>Reservations<span class='ct' id='nres'>0</span></button>
+<button class='nv' data-p='req'><svg class='i'><use href='#i-list'/></svg>Requests<span class='ct' id='nreq'>0</span></button>
 <button class='nv' data-p='new'><svg class='i'><use href='#i-plus'/></svg>New walk-in booking</button>
 <h6>Help &amp; tools</h6>
 <button class='nv' data-p='guide'><svg class='i'><use href='#i-book'/></svg>Front desk guide</button>
@@ -178,6 +179,9 @@ h2.t{font-size:23px;margin:0 0 4px}.sub{color:var(--mu);margin:0 0 18px}
 
 <section class='pg' id='p-ana'><h2 class='t'>Analytics</h2><p class='sub'>Admin overview: income, occupancy, apartment condition, payments and staff activity. Room income excludes the refundable caution fee.</p><div id='anab'><div class='em'>Loading...</div></div></section>
 
+<section class='pg' id='p-req'><h2 class='t'>Requests</h2><p class='sub'>Receptionists ask here when a walk-in booking has a mistake (wrong name or dates). The admin cancels it, then the receptionist enters it again correctly.</p>
+ <div class='pn'><div class='ph'><h3>Cancel / correction requests</h3><div class='sp'><button class='btn' id='rqr'>Refresh</button></div></div><div class='pb tw' id='rqb'><div class='em'>Loading...</div></div></div></section>
+
 <section class='pg' id='p-stf'><h2 class='t'>Staff accounts</h2><p class='sub'>Receptionists sign in with their own PIN only. Each login is recorded so you can see who worked and when.</p>
  <div class='pn'><div class='ph'><h3>Add a receptionist</h3></div><div class='pb'><div class='af'>
   <div class='f'><label for='sfn'>Full name</label><input id='sfn' autocomplete='off'></div><div class='f'><label for='sfu'>Username</label><input id='sfu' autocomplete='off'></div>
@@ -199,7 +203,7 @@ h2.t{font-size:23px;margin:0 0 4px}.sub{color:var(--mu);margin:0 0 18px}
   <div class='pn'><div class='pb'><h3>Walk-in guests</h3><ul><li>Use <b>New walk-in booking</b>. Dates are blocked on the website immediately.</li><li>Record how they paid (cash, transfer, POS) or choose <i>Not yet paid</i>.</li><li>The calendar shows walk-ins with a teal <b>WALK-IN</b> mark.</li><li>A walk-in can be cancelled from its details panel. Online bookings cannot be cancelled here.</li></ul></div></div>
   <div class='pn'><div class='pb'><h3>Food and drink orders</h3><ul><li>Guests who are lodging order from the website menu. The order arrives on the front desk WhatsApp.</li><li>Confirm stock, reply with the total, then deliver to the apartment door.</li></ul><div class='lk'><a class='btn' href='https://wa.me/2349127289246' target='_blank' rel='noopener'>Open front desk WhatsApp</a><a class='btn' href='index.html#dine' target='_blank' rel='noopener'>View menu &amp; prices</a></div></div></div>
   <div class='pn'><div class='pb'><h3>Online bookings</h3><ul><li>Guests pay online. <b>Confirmed</b> means payment was received.</li><li><b>Awaiting payment</b> (purple, striped) is a short hold while the guest is paying. It is released automatically if they do not finish.</li><li>Two bookings can never overlap on the same apartment. The system blocks it.</li></ul></div></div>
-  <div class='pn'><div class='pb'><h3>Your login</h3><ul><li>Sign in with <b>your own PIN</b> only. Never share it. Every sign-in, booking and room update is recorded under your name.</li><li>Always press <b>Sign out</b> at the end of your shift.</li><li>You can cancel a walk-in only if you saved it yourself in the last hour. For anything else, call the admin.</li></ul></div></div>
+  <div class='pn'><div class='pb'><h3>Your login</h3><ul><li>Sign in with <b>your own PIN</b> only. Never share it. Every sign-in, booking and room update is recorded under your name.</li><li>Always press <b>Sign out</b> at the end of your shift.</li><li>You can cancel a walk-in only if you saved it yourself in the last hour. For anything else (wrong name or dates), open the booking and press <b>Ask admin to cancel or correct</b>. The admin decides, then you enter it again.</li></ul></div></div>
   <div class='pn'><div class='pb'><h3>Cleaning and maintenance</h3><ul><li>On <b>Apartments</b>, set each apartment to <b>Clean</b>, <b>Needs cleaning</b> or <b>Maintenance</b>.</li><li>After a guest checks out, mark it <b>Needs cleaning</b>. When housekeeping is done, mark it <b>Clean</b>.</li><li>For repairs, choose <b>Maintenance</b> and write what is wrong.</li></ul></div></div>
  </div></section>
 </main>
@@ -284,7 +288,7 @@ const pay=b=>{if(isWalk(b)){const m=/Payment: (\w+)/.exec(b.special_requests||''
 async function load(first){
  try{const j=await call({action:'overview'});D=j;if(j.me){ME.role=j.me.role;ME.name=j.me.name;saveMe()}roomName={};D.rooms.forEach(r=>roomName[r.id]=r.name);D.bookings=D.bookings.filter(b=>b.status!=='cancelled');
   if(!calStart)calStart=addD(D.today,-3);
-  $('lg').style.display='none';sess();applyRole();renderAll();if(first){fillRooms();const n=D.tracking?D.bookings.filter(b=>b.status==='confirmed'&&!b.printed_at&&b.check_out>=D.today).length:0;if(n)toast(n+' booking'+(n>1?'s need':' needs')+' a printed guest card. See Reservations, To print.')}}
+  $('lg').style.display='none';sess();applyRole();renderAll();loadReq(true);if(first){fillRooms();const n=D.tracking?D.bookings.filter(b=>b.status==='confirmed'&&!b.printed_at&&b.check_out>=D.today).length:0;if(n)toast(n+' booking'+(n>1?'s need':' needs')+' a printed guest card. See Reservations, To print.')}}
  catch(e){if(e.status===403||first){PIN='';try{sessionStorage.removeItem('pa_pin')}catch(x){}$('lg').style.display='flex';$('lge').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}else toast(e.message)}}
 function applyRole(){$('adminNav').style.display=isAdmin()?'block':'none';const r=$('rl');r.textContent=isAdmin()?'Admin':'Receptionist'+(ME.shift&&ME.shift!=='any'?' - '+ME.shift:'');r.className='rl'+(isAdmin()?'':' st');$('avc').textContent=(ME.name||'F').trim().charAt(0).toUpperCase()}
 function renderAll(){head();stats();tiles();todayList();aptCards();calendar();resTable();summary();renderPk()}
@@ -363,7 +367,7 @@ function openB(ref){const b=D.bookings.find(x=>x.reference===ref);if(!b)return;c
  <div class='lk'>${ph?`<a class='btn sm' href='tel:${esc(ph)}'>Call</a><a class='btn sm' target='_blank' rel='noopener' href='https://wa.me/${esc(wa)}'>WhatsApp</a>`:''}</div>
  <h5>Payment</h5><dl class='kv'><dt>Rate</dt><dd>${naira(b.rate)} x ${b.nights}</dd><dt>Caution fee</dt><dd>${naira(b.caution)} (refundable)</dd><dt>Total</dt><dd>${naira(b.total)}</dd><dt>Status</dt><dd>${esc(pay(b))}</dd></dl>
  ${b.special_requests?`<h5>Notes &amp; requests</h5><p style='margin:0;white-space:pre-wrap;font-size:14.5px'>${esc(b.special_requests)}</p>`:''}
- <h5>Actions</h5><div class='lk' style='margin-top:0'>${D.stay&&b.status==='confirmed'?(['inhouse','arriving','departing','overdue'].includes(k)?`<button class='btn sm p' data-co='${esc(b.reference)}'>Mark checked out now</button>`:'')+(['departing','past'].includes(k)&&b.check_out===D.today&&!b.checked_out_at&&!b.late_stay?`<button class='btn sm' data-late='${esc(b.reference)}'>Guest still in room</button>`:'')+(b.late_stay&&!b.checked_out_at&&k!=='overdue'?`<button class='btn sm' data-late-off='${esc(b.reference)}'>Clear late stay</button>`:''):''}<button class='btn sm p' data-pr='${esc(b.reference)}'>Print registration card${b.printed_at?' (printed before)':''}</button><button class='btn sm' data-dc='${esc(b.room)}'>${icon('key')}Door code</button><a class='btn sm' href='card.html' target='_blank' rel='noopener'>Welcome card &amp; Wi-Fi</a>${isWalk(b)&&b.status==='confirmed'&&k!=='past'&&(isAdmin()||(b.recorded_by===ME.name&&Date.now()-Date.parse(b.created_at)<3600e3))?`<button class='btn sm dg' data-cx='${esc(b.reference)}'>Cancel walk-in</button>`:''}</div>
+ <h5>Actions</h5><div class='lk' style='margin-top:0'>${D.stay&&b.status==='confirmed'?(['inhouse','arriving','departing','overdue'].includes(k)?`<button class='btn sm p' data-co='${esc(b.reference)}'>Mark checked out now</button>`:'')+(['departing','past'].includes(k)&&b.check_out===D.today&&!b.checked_out_at&&!b.late_stay?`<button class='btn sm' data-late='${esc(b.reference)}'>Guest still in room</button>`:'')+(b.late_stay&&!b.checked_out_at&&k!=='overdue'?`<button class='btn sm' data-late-off='${esc(b.reference)}'>Clear late stay</button>`:''):''}<button class='btn sm p' data-pr='${esc(b.reference)}'>Print registration card${b.printed_at?' (printed before)':''}</button><button class='btn sm' data-dc='${esc(b.room)}'>${icon('key')}Door code</button><a class='btn sm' href='card.html' target='_blank' rel='noopener'>Welcome card &amp; Wi-Fi</a>${isWalk(b)&&b.status==='confirmed'&&k!=='past'?((isAdmin()||(b.recorded_by===ME.name&&Date.now()-Date.parse(b.created_at)<3600e3))?`<button class='btn sm dg' data-cx='${esc(b.reference)}'>Cancel walk-in</button>`:(rqOpen(b.reference)?`<button class='btn sm' disabled>Request sent, waiting for admin</button>`:`<button class='btn sm dg' data-rq='${esc(b.reference)}'>Ask admin to cancel or correct</button>`)):''}</div>
  <p class='sub' style='margin:16px 0 0;font-size:12.5px'>Booked ${new Date(b.created_at).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short',timeZone:'Africa/Lagos'})}</p>`;
  $('dr').classList.add('on');$('ov').classList.add('on')}
 function closeAll(){$('dr').classList.remove('on');$('ov').classList.remove('on');$('md').classList.remove('on');$('side').classList.remove('on')}
@@ -445,8 +449,24 @@ function drawShifts(){const f=$('shf').value,L=SH.filter(x=>!f||x.staff_name===f
  $('shb').innerHTML=L.length?`<table style='min-width:620px'><thead><tr><th>Person</th><th>Signed in</th><th>Signed out</th><th>Time on duty</th></tr></thead><tbody>${L.map(x=>`<tr><td><b>${esc(x.staff_name)}</b><small>${x.role==='admin'?'Admin':'Receptionist'}</small></td><td>${ft(x.started_at)}</td><td>${x.online?"<span class='on2'>Signed in now</span>":x.ended_at?ft(x.ended_at):'<small>No sign-out (last seen '+ft(x.last_seen)+')</small>'}</td><td>${hm(x.minutes)}</td></tr>`).join('')}</tbody></table>`:`<div class='em'>No shifts recorded yet.</div>`}
 $('shf').onchange=drawShifts;$('shr').onclick=loadAct;
 
+
+/* ---------- cancel / correction requests ---------- */
+let RQ=[];
+const rqOpen=ref=>RQ.find(x=>x.reference===ref&&x.status==='pending');
+async function loadReq(quiet){
+ try{const j=await call({action:'requests'});RQ=j.requests||[];const n=RQ.filter(x=>x.status==='pending').length;$('nreq').textContent=n;$('nreq').style.display=n?'':'none';
+  if(quiet&&n&&isAdmin()&&!loadReq.said){loadReq.said=1;toast(n+' cancel request'+(n>1?'s are':' is')+' waiting for you. See Requests.')}
+  if(!j.ready){$('rqb').innerHTML=`<div class='em'>Requests are not switched on yet. The developer must run the database update first.</div>`;return}
+  const rows=RQ.map(x=>{const st=x.status==='pending'?"<span class='tg o'>WAITING</span>":x.status==='done'?"<span class='tg'>CANCELLED</span>":"<span class='tg'>DECLINED</span>";
+   const act=x.status==='pending'?(isAdmin()?`<button class='btn sm dg' data-rc='${esc(x.id)}'>Cancel booking</button> <button class='btn sm' data-rd='${esc(x.id)}'>Decline</button>`:'<small>Waiting for the admin</small>'):`<small>${esc(x.resolved_by||'')}${x.note?': '+esc(x.note):''}${x.status==='done'?'. You can enter the booking again.':''}</small>`;
+   return `<tr><td style='white-space:nowrap'>${ft(x.created_at)}</td><td><b>${esc(x.guest_name||'')}</b><small>${esc(roomName[x.room]||x.room||'')}, ${esc(x.check_in||'')} to ${esc(x.check_out||'')}<br>${esc(x.reference)}</small></td><td>${esc(x.requested_by)}</td><td>${esc(x.reason)}</td><td>${st}<br>${act}</td></tr>`}).join('');
+  $('rqb').innerHTML=RQ.length?`<table style='min-width:680px'><thead><tr><th>Asked</th><th>Booking</th><th>By</th><th>What is wrong</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`:`<div class='em'>No requests. If a receptionist makes a mistake, they use "Ask admin to cancel or correct" on the booking.</div>`;
+  }
+ catch(e){if(!quiet)$('rqb').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}}
+$('rqr').onclick=()=>loadReq();
+
 /* ---------- nav ---------- */
-function go(p){document.querySelectorAll('.pg').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));document.querySelectorAll('.nv[data-p]').forEach(x=>x.classList.toggle('on',x.dataset.p===p));closeAll();window.scrollTo(0,0);if(p==='ana')loadAna();if(p==='stf')loadStaff();if(p==='act')loadAct()}
+function go(p){document.querySelectorAll('.pg').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));document.querySelectorAll('.nv[data-p]').forEach(x=>x.classList.toggle('on',x.dataset.p===p));closeAll();window.scrollTo(0,0);if(p==='ana')loadAna();if(p==='stf')loadStaff();if(p==='act')loadAct();if(p==='req')loadReq()}
 document.addEventListener('change',async e=>{const t=e.target;if(!t.matches||!t.matches('[data-hk]'))return;const room=t.dataset.hk;let note='';
  if(t.value==='maintenance'){note=prompt('What needs to be fixed? (short note)')||'';}
  try{await call({action:'room_status',room,status:t.value,note});toast((roomName[room]||room)+': '+HK[t.value][0]);await load()}catch(x){toast(x.message);load()}});
@@ -459,6 +479,9 @@ document.addEventListener('click',async e=>{const t=e.target;
  const lo=t.closest('[data-late-off]');if(lo){stayAct('late',lo.dataset.lateOff,false);return}
  const pr=t.closest('[data-pr]');if(pr){printBooking(pr.dataset.pr);return}
  const dc=t.closest('[data-dc]');if(dc){doorCode(dc.dataset.dc);return}
+ const rq=t.closest('[data-rq]');if(rq){const why=prompt('What is wrong with this booking? (for example: wrong name, wrong dates)');if(!why||why.trim().length<5){if(why!==null)toast('Please write what is wrong (at least a few words)');return}try{await call({action:'request_change',reference:rq.dataset.rq,reason:why});toast('Request sent to the admin.');closeAll();loadReq()}catch(x){toast(x.message)}return}
+ const rc=t.closest('[data-rc]');if(rc){if(!confirm('Cancel this walk-in booking and free the dates? The receptionist will enter it again correctly.'))return;try{await acall({action:'request_resolve',id:rc.dataset.rc,decision:'cancel'});toast('Booking cancelled. The dates are free again.');await load();loadReq()}catch(x){toast(x.message)}return}
+ const rd=t.closest('[data-rd]');if(rd){const n=prompt('Reason for declining (optional):');if(n===null)return;try{await acall({action:'request_resolve',id:rd.dataset.rd,decision:'decline',note:n});toast('Request declined.');loadReq()}catch(x){toast(x.message)}return}
  const cx=t.closest('[data-cx]');if(cx){if(!confirm('Cancel this walk-in booking and free the dates?'))return;try{await call({action:'cancel',reference:cx.dataset.cx});toast('Walk-in cancelled. The dates are free again.');closeAll();load()}catch(x){toast(x.message)}return}
  const tl=t.closest('.tile');if(tl){const k=tl.dataset.k;if(k==='available'||k==='inhouse'||k==='arriving'||k==='departing'||k==='upcoming'||k==='hold'||k==='hk'){if(k==='available'||k==='hk'){go('apts')}else{tab=k;go('res');resTable()}}return}
  const tb=t.closest('[data-t]');if(tb){tab=tb.dataset.t;resTable();return}

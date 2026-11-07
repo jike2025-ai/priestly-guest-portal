@@ -7,6 +7,8 @@ const { authenticate, logAction } = require('../lib/staff');
 //   {pin, action:'logout', shiftId}               -> ends the shift
 //   {pin, action:'overview'}                      -> apartments, bookings, housekeeping status
 //   {pin, action:'create', room, checkIn, checkOut, lastName, firstName, birthDate, sex, address, phone, email, city, state, nin, guests, paid, note}
+//   {pin, action:'request_change', reference, reason} -> receptionist asks the admin to cancel/correct a walk-in
+//   {pin, action:'requests'}                      -> pending requests + decisions of the last 3 days
 //   {pin, action:'cancel', reference}             -> walk-ins only (staff: their own, within 1 hour; admin: any)
 //   {pin, action:'room_status', room, status, note}   status: clean | dirty | maintenance
 //   {pin, action:'checkout', reference}            -> guest has left (early or on time)
@@ -23,6 +25,7 @@ const PRINT = 'printed_at,printed_by';
 const STAY = 'checked_out_at,checked_out_by,late_stay';
 const isDate = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s)) && !isNaN(Date.parse(s + 'T00:00:00Z'));
 const ageOn = (dob, ref) => { const d = new Date(dob + 'T00:00:00Z'), r = new Date(ref + 'T00:00:00Z'); let a = r.getUTCFullYear() - d.getUTCFullYear(); if (r.getUTCMonth() < d.getUTCMonth() || (r.getUTCMonth() === d.getUTCMonth() && r.getUTCDate() < d.getUTCDate())) a--; return a; };
+const SETUP_REQ = 'The requests table has not been created yet. Ask the developer to run supabase/migration-requests.sql in Supabase.';
 const SETUP = 'The staff database update has not been run yet. Ask the developer to run supabase/staff-setup.sql in Supabase.';
 
 module.exports = async (req, res) => {
@@ -126,6 +129,28 @@ module.exports = async (req, res) => {
       await logAction(user, 'walk-in cancelled', `${ref}: ${bk.guest_name}, ${bk.room} ${bk.check_in} to ${bk.check_out}`);
       await alertOwner(`WALK-IN cancelled ${ref}`, `Walk-in booking ${ref} (${bk.guest_name}, ${bk.room}, ${bk.check_in} to ${bk.check_out}) was cancelled by ${user.name}. The dates are free again.`);
       return json(res, 200, { ok: true });
+    }
+
+    if (b.action === 'request_change') {
+      const ref = clean(b.reference, 40), reason = clean(b.reason, 300), enc = encodeURIComponent(ref);
+      if (reason.length < 5) throw bad('Please say what is wrong (for example: wrong name or wrong dates)');
+      const f = await sb(`bookings?select=reference,guest_name,room,check_in,check_out&reference=eq.${enc}&channel=eq.walk-in&status=eq.confirmed&limit=1`);
+      const bk = f.ok && f.data && f.data[0];
+      if (!bk) throw bad('That walk-in booking was not found, or it is already cancelled', 404);
+      const ex = await sb(`booking_requests?select=id&reference=eq.${enc}&status=eq.pending&limit=1`);
+      if (!ex.ok) throw bad(SETUP_REQ, 503);
+      if (ex.data && ex.data[0]) throw bad('A request for this booking is already waiting for the admin');
+      const r = await sb('booking_requests', { method: 'POST', prefer: 'return=minimal', body: { reference: ref, guest_name: bk.guest_name, room: bk.room, check_in: bk.check_in, check_out: bk.check_out, reason, requested_by: user.name } });
+      if (!r.ok) throw bad(SETUP_REQ, 503);
+      await logAction(user, 'cancel requested', `${ref}: ${bk.guest_name}. Reason: ${reason}`);
+      try { await alertOwner(`Cancel request ${ref}`, `${user.name} asked you to cancel or correct walk-in booking ${ref} (${bk.guest_name}, ${bk.room}, ${bk.check_in} to ${bk.check_out}).\n\nReason: ${reason}\n\nOpen the staff page > Requests to decide.`); } catch (e) { /* email is a bonus */ }
+      return json(res, 200, { ok: true });
+    }
+
+    if (b.action === 'requests') {
+      const since = encodeURIComponent(new Date(Date.now() - 3 * 864e5).toISOString());
+      const r = await sb(`booking_requests?select=id,reference,guest_name,room,check_in,check_out,reason,requested_by,created_at,status,resolved_by,resolved_at,note&or=(status.eq.pending,resolved_at.gt.${since})&order=created_at.desc&limit=50`);
+      return json(res, 200, { ready: r.ok, requests: r.ok && Array.isArray(r.data) ? r.data : [] });
     }
 
     if (b.action === 'room_status') {
