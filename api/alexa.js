@@ -1,6 +1,6 @@
 'use strict';
 const { sb, json, ROOMS, today, crypto } = require('../lib/core');
-const { arrival, raw: tuyaRaw } = require('../lib/tuya');
+const { arrival, raw: tuyaRaw, check: tuyaCheck } = require('../lib/tuya');
 
 // Alexa custom skill endpoint: greets the guest by name when the smart lock opens (an Alexa Routine calls the skill).
 //   Alexa  -> POST /api/alexa?key=ALEXA_KEY            (standard Alexa skill request; the Echo's deviceId says which room)
@@ -93,8 +93,9 @@ module.exports = async (req, res) => {
 
     // Owner's Smart Life tools (same secret key): ?tuya=devices | ?tuya=functions&device=ID | ?tuya=send&device=ID&code=switch_led&value=true
     if (req.method === 'GET' && url.searchParams.has('tuya')) {
-      if (!E.TUYA_ACCESS_ID || !E.TUYA_ACCESS_SECRET) return json(res, 503, { error: 'Add TUYA_ACCESS_ID and TUYA_ACCESS_SECRET in Vercel first' });
+      if (!(E.TUYA_ACCESS_ID || '').trim() || !(E.TUYA_ACCESS_SECRET || '').trim()) return json(res, 503, { error: 'Add TUYA_ACCESS_ID and TUYA_ACCESS_SECRET in Vercel first' });
       const act = url.searchParams.get('tuya'), dev = (url.searchParams.get('device') || '').replace(/[^A-Za-z0-9]/g, '');
+      if (act === 'check') return json(res, 200, await tuyaCheck());
       if (act === 'devices') {
         const out = []; let last = '';
         for (let i = 0; i < 10; i++) {
