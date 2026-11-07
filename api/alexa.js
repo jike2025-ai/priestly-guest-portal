@@ -4,7 +4,7 @@ const { sb, json, ROOMS, today, crypto } = require('../lib/core');
 // Alexa custom skill endpoint: greets the guest by name when the smart lock opens (an Alexa Routine calls the skill).
 //   Alexa  -> POST /api/alexa?key=ALEXA_KEY            (standard Alexa skill request; the Echo's deviceId says which room)
 //   Tester -> GET  /api/alexa?key=ALEXA_KEY&room=moscow[&hour=15&day=2026-11-06]   (dry run, shows the greeting, changes nothing)
-// Env: ALEXA_KEY (secret), ALEXA_SKILL_ID (recommended), ALEXA_GREET_FROM (default 12), ALEXA_RETURN_FROM (default 14)
+// Env: ALEXA_QUIET_MIN (60), ALEXA_AWAY_MIN (180), ALEXA_KEY (secret), ALEXA_SKILL_ID (recommended), ALEXA_GREET_FROM (default 12), ALEXA_RETURN_FROM (default 14)
 const E = process.env;
 const GREET_FROM = parseInt(E.ALEXA_GREET_FROM || '12', 10);   // before this hour on check-in day: never greet by name (staff are preparing the room)
 const RETURN_FROM = parseInt(E.ALEXA_RETURN_FROM || '14', 10); // "welcome back" by name only from this hour (housekeeping works in the morning)
@@ -19,31 +19,51 @@ function firstName(b) {
   return w.length ? esc(w[0].charAt(0).toUpperCase() + w[0].slice(1).toLowerCase()) : '';
 }
 const GENERIC = 'Welcome to Priestly Apartments. We hope you enjoy your stay.';
+const QUIET_MIN = parseInt(E.ALEXA_QUIET_MIN || '60', 10);   // after any spoken event, stay silent this many minutes (motion sensors fire constantly)
+const AWAY_MIN = parseInt(E.ALEXA_AWAY_MIN || '180', 10);    // silent this long = guest was out: next event is "welcome back"
+const NIGHT = h => h >= 23 || h < 6;                          // never speak at night after the first welcome
 
-// Decide what to say. Pure function: easy to test.
-function decide(bookings, day, hour) {
+// Decide what to say. Pure function: easy to test. Returns {speech|null (stay silent), patch|null (fields to save on the booking), ref}
+function decide(bookings, day, hour, nowMs, agoOverride) {
+  const now = nowMs || Date.now();
   const ok = (bookings || []).filter(b => b.status === undefined || b.status === 'confirmed')
     .filter(b => b.check_in <= day && b.check_out >= day && !(b.check_out === day && hour >= 12))
     .sort((a, b) => (a.check_in < b.check_in ? 1 : -1));
   const b = ok[0];
-  if (!b) return { speech: GENERIC, mark: null };
+  const none = { speech: null, patch: null };
+  if (!b) return none;                                          // empty apartment: say nothing
   const name = firstName(b), room = (ROOMS[b.room] || { name: b.room }).name;
-  if (!name) return { speech: GENERIC, mark: null };
-  if (b.check_in === day && hour < GREET_FROM) return { speech: GENERIC, mark: null };
+  if (!name) return none;
+  if (b.check_in === day && hour < GREET_FROM) return none;     // staff preparing the room
+  const iso = new Date(now).toISOString();
   if (!b.greeted_at) {
-    return { speech: `Welcome to Priestly Apartments, ${name}. You are in ${room}. Your Wi-Fi details are on your welcome pass. If you need anything, please call the front desk. Enjoy your stay.`, mark: b.reference };
+    return { ref: b.reference, patch: { greeted_at: iso, last_event_at: iso },
+      speech: `Welcome to Priestly Apartments, ${name}. You are in ${room}. Your Wi-Fi details are on your welcome pass. You can ask me to open the curtains, turn the air conditioner on or off, or control the lights at any time. If you need anything, please call the front desk. Please enjoy your stay at Priestly Apartments.` };
   }
-  if (hour >= RETURN_FROM) return { speech: `Welcome back, ${name}.`, mark: null };
-  return { speech: GENERIC, mark: null };
+  if (NIGHT(hour)) return none;
+  const last = Date.parse(b.last_event_at || b.greeted_at);
+  const mins = agoOverride !== undefined ? agoOverride : (now - last) / 60000;
+  if (mins < QUIET_MIN) return none;                            // spoke recently: stay quiet
+  const patch = { last_event_at: iso };
+  if (mins < AWAY_MIN) {                                        // guest has been inside: offer comfort
+    return { ref: b.reference, patch, speech: `Hello ${name}. Would you like me to open the curtains, or turn off the air conditioner? Just say: Alexa, open the curtains. Or: Alexa, turn off the air conditioner.` };
+  }
+  if (hour >= RETURN_FROM) {                                    // back after being out
+    return { ref: b.reference, patch, speech: `Welcome back, ${name}. I hope you are enjoying your stay at Priestly Apartments.` };
+  }
+  return none;
 }
 
 async function bookingsFor(room, day) {
   const base = `bookings?room=eq.${encodeURIComponent(room)}&status=eq.confirmed&check_in=lte.${day}&check_out=gte.${day}&order=check_in.desc&limit=3`;
-  let r = await sb(base + '&select=reference,room,guest_name,check_in,check_out,status,greeted_at,say_name');
-  if (!r.ok) r = await sb(base + '&select=reference,room,guest_name,check_in,check_out,status'); // migration not run yet
-  return r.ok && Array.isArray(r.data) ? r.data : [];
+  for (const cols of ['reference,room,guest_name,check_in,check_out,status,greeted_at,say_name,last_event_at', 'reference,room,guest_name,check_in,check_out,status,greeted_at,say_name', 'reference,room,guest_name,check_in,check_out,status']) {
+    const r = await sb(base + '&select=' + cols);
+    if (r.ok && Array.isArray(r.data)) return r.data;
+  }
+  return [];
 }
 
+const silent = res => json(res, 200, { version: '1.0', response: { shouldEndSession: true } });
 const reply = (res, text) => json(res, 200, { version: '1.0', response: { outputSpeech: { type: 'SSML', ssml: `<speak>${text}</speak>` }, shouldEndSession: true } });
 
 module.exports = async (req, res) => {
@@ -57,8 +77,9 @@ module.exports = async (req, res) => {
       const room = url.searchParams.get('room');
       if (!ROOMS[room]) return json(res, 400, { error: 'Add &room=moscow (or another apartment id)' });
       const day = url.searchParams.get('day') || today(), hour = url.searchParams.has('hour') ? parseInt(url.searchParams.get('hour'), 10) : lagosHour();
-      const d = decide(await bookingsFor(room, day), day, hour);
-      return json(res, 200, { room, day, hour, speech: d.speech, wouldMarkGreeted: d.mark });
+      const ago = url.searchParams.has('ago') ? parseInt(url.searchParams.get('ago'), 10) : undefined;
+      const d = decide(await bookingsFor(room, day), day, hour, Date.now(), ago);
+      return json(res, 200, { room, day, hour, speech: d.speech || '(silent)', wouldSave: d.patch ? Object.keys(d.patch) : null });
     }
     if (req.method !== 'POST') return json(res, 405, { error: 'POST only' });
 
@@ -79,8 +100,12 @@ module.exports = async (req, res) => {
       const room = up.ok && up.data && up.data[0] && up.data[0].room;
       if (room && ROOMS[room]) {
         const day = today(), d = decide(await bookingsFor(room, day), day, lagosHour());
+        if (!d.speech) return silent(res);
         speech = d.speech;
-        if (d.mark) await sb(`bookings?reference=eq.${encodeURIComponent(d.mark)}`, { method: 'PATCH', prefer: 'return=minimal', body: { greeted_at: new Date().toISOString() } });
+        if (d.patch) {
+          let w = await sb(`bookings?reference=eq.${encodeURIComponent(d.ref)}`, { method: 'PATCH', prefer: 'return=minimal', body: d.patch });
+          if (!w.ok) { delete d.patch.last_event_at; await sb(`bookings?reference=eq.${encodeURIComponent(d.ref)}`, { method: 'PATCH', prefer: 'return=minimal', body: d.patch }); }
+        }
       } else console.log('alexa: unmapped Echo', deviceId);
     }
     reply(res, speech);

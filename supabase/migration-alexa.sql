@@ -8,3 +8,4 @@ create table if not exists public.echo_devices (
 alter table public.echo_devices enable row level security;
 alter table public.bookings add column if not exists greeted_at timestamptz;
 alter table public.bookings add column if not exists say_name text;
+alter table public.bookings add column if not exists last_event_at timestamptz;
