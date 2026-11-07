@@ -98,8 +98,8 @@ module.exports = async (req, res) => {
       if (act === 'check') return json(res, 200, await tuyaCheck());
       if (act === 'devices') {
         const out = []; let last = '';
-        for (let i = 0; i < 10; i++) {
-          const j = await tuyaRaw('GET', '/v1.0/iot-01/associated-users/devices?size=50' + (last ? '&last_row_key=' + encodeURIComponent(last) : ''));
+        for (let i = 0; i < 15; i++) {
+          const j = await tuyaRaw('GET', '/v1.0/iot-01/associated-users/devices?' + (last ? 'last_row_key=' + encodeURIComponent(last) + '&' : '') + 'size=20');
           if (!j.success) return json(res, 200, { error: j.msg || 'Tuya refused', code: j.code });
           (j.result.devices || []).forEach(d => out.push(`${d.name} | ${d.id} | ${d.category} | ${d.online ? 'online' : 'offline'}`));
           if (!j.result.has_more) break; last = j.result.last_row_key;
