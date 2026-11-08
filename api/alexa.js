@@ -91,7 +91,7 @@ module.exports = async (req, res) => {
     if (!E.ALEXA_KEY) return json(res, 503, { error: 'Alexa greeting is not set up yet' });
     if (!eq(url.searchParams.get('key'), E.ALEXA_KEY)) return json(res, 403, { error: 'Forbidden' });
 
-    // Owner's Smart Life tools (same secret key): ?tuya=devices | ?tuya=functions&device=ID | ?tuya=send&device=ID&code=switch_led&value=true
+    // Owner's Smart Life tools (same secret key): ?tuya=devices | ?tuya=functions&device=ID | ?tuya=status&device=ID | ?tuya=send&device=ID&code=switch_led&value=true
     if (req.method === 'GET' && url.searchParams.has('tuya')) {
       if (!(E.TUYA_ACCESS_ID || '').trim() || !(E.TUYA_ACCESS_SECRET || '').trim()) return json(res, 503, { error: 'Add TUYA_ACCESS_ID and TUYA_ACCESS_SECRET in Vercel first' });
       const act = url.searchParams.get('tuya'), dev = (url.searchParams.get('device') || '').replace(/[^A-Za-z0-9]/g, '');
@@ -107,6 +107,7 @@ module.exports = async (req, res) => {
         return json(res, 200, { count: out.length, devices: out });
       }
       if (!dev) return json(res, 400, { error: 'Add &device=DEVICE_ID' });
+      if (act === 'status') { const j = await tuyaRaw('GET', `/v1.0/devices/${dev}/status`); return json(res, 200, j.success ? { status: j.result } : { error: j.msg, code: j.code }); }
       if (act === 'functions') { const j = await tuyaRaw('GET', `/v1.0/devices/${dev}/functions`); return json(res, 200, j.success ? j.result : { error: j.msg, code: j.code }); }
       if (act === 'send') {
         const code = url.searchParams.get('code') || '', raw = url.searchParams.get('value');
