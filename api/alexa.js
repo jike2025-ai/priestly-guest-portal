@@ -1,6 +1,6 @@
 'use strict';
 const { sb, json, ROOMS, today, crypto } = require('../lib/core');
-const { arrival, raw: tuyaRaw, check: tuyaCheck } = require('../lib/tuya');
+const { arrival, raw: tuyaRaw, check: tuyaCheck, scenes: tuyaScenes } = require('../lib/tuya');
 
 // Alexa custom skill endpoint: greets the guest by name when the smart lock opens (an Alexa Routine calls the skill).
 //   Alexa  -> POST /api/alexa?key=ALEXA_KEY            (standard Alexa skill request; the Echo's deviceId says which room)
@@ -95,6 +95,8 @@ module.exports = async (req, res) => {
     if (req.method === 'GET' && url.searchParams.has('tuya')) {
       if (!(E.TUYA_ACCESS_ID || '').trim() || !(E.TUYA_ACCESS_SECRET || '').trim()) return json(res, 503, { error: 'Add TUYA_ACCESS_ID and TUYA_ACCESS_SECRET in Vercel first' });
       const act = url.searchParams.get('tuya'), dev = (url.searchParams.get('device') || '').replace(/[^A-Za-z0-9]/g, '');
+      if (act === 'scenes') return json(res, 200, await tuyaScenes());
+      if (act === 'trigger') { const sc = (url.searchParams.get('scene') || '').replace(/[^A-Za-z0-9]/g, ''); const j = await tuyaRaw('POST', `/v2.0/cloud/scene/rule/${sc}/actions/trigger`); return json(res, 200, { ran: !!j.success, error: j.success ? undefined : j.msg, tuyaCode: j.code }); }
       if (act === 'check') return json(res, 200, await tuyaCheck());
       if (act === 'devices') {
         const out = []; let last = '';
