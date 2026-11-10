@@ -1,5 +1,6 @@
 'use strict';
 const { sb, json, ROOMS, today, crypto } = require('../lib/core');
+const { logAction } = require('../lib/staff');
 const { arrival, raw: tuyaRaw, check: tuyaCheck, scenes: tuyaScenes } = require('../lib/tuya');
 
 // Alexa custom skill endpoint: greets the guest by name when the smart lock opens (an Alexa Routine calls the skill).
@@ -154,7 +155,13 @@ module.exports = async (req, res) => {
           let w = await sb(`bookings?reference=eq.${encodeURIComponent(d.ref)}`, { method: 'PATCH', prefer: 'return=minimal', body: d.patch });
           if (!w.ok) { delete d.patch.last_event_at; w = await sb(`bookings?reference=eq.${encodeURIComponent(d.ref)}`, { method: 'PATCH', prefer: 'return=minimal', body: d.patch }); }
           // First welcome of the stay (greeted_at just saved) also sets the room: curtains, AC, lights. Once per stay, never repeated.
-          if (w.ok && d.patch.greeted_at) await Promise.race([arrival(room), new Promise(r => setTimeout(r, 3500))]);
+          if (w.ok && d.patch.greeted_at) {
+            const who = { name: 'Alexa', role: 'system' }, rn = (ROOMS[room] || { name: room }).name;
+            await logAction(who, 'welcome spoken', `${rn}: first welcome for ${d.ref}`);
+            const out = await Promise.race([arrival(room), new Promise(r => setTimeout(() => r(null), 3500))]);
+            if (out === null) await logAction(who, 'arrival scene', `${rn}: no answer from Smart Life within 3.5 s (it may still have run)`);
+            else if (out.length) await logAction(who, 'arrival scene', `${rn}: ${out.every(Boolean) ? 'sent OK' : 'FAILED, check the devices'} (${out.filter(Boolean).length}/${out.length} steps)`);
+          }
         }
       } else console.log('alexa: unmapped Echo', deviceId);
     }
