@@ -190,13 +190,15 @@ module.exports = async (req, res) => {
           if (!w.ok) { delete d.patch.last_event_at; w = await sb(`bookings?reference=eq.${encodeURIComponent(d.ref)}`, { method: 'PATCH', prefer: 'return=minimal', body: d.patch }); }
           // First welcome of the stay (greeted_at just saved) also sets the room: curtains, AC, lights. Once per stay, never repeated.
           if (w.ok && d.patch.greeted_at) {
-            const who = { name: 'Alexa', role: 'system' }, rn = (ROOMS[room] || { name: room }).name;
-            await logAction(who, 'welcome spoken', `${rn}: first welcome for ${d.ref}`);
-            const rs = await sb(`room_scenes?select=scene_id&room=eq.${encodeURIComponent(room)}&limit=1`);
-            const steps = rs.ok && rs.data && rs.data[0] ? [{ scene: rs.data[0].scene_id }] : undefined; // set from alexa-setup.html, else TUYA_ARRIVAL env
-            const out = await Promise.race([arrival(room, steps), new Promise(r => setTimeout(() => r(null), 3500))]);
-            if (out === null) await logAction(who, 'arrival scene', `${rn}: no answer from Smart Life within 3.5 s (it may still have run)`);
-            else if (out.length) await logAction(who, 'arrival scene', `${rn}: ${out.every(Boolean) ? 'sent OK' : 'FAILED, check the devices'} (${out.filter(Boolean).length}/${out.length} steps)`);
+            try { // the spoken welcome must never depend on the room scene
+              const who = { name: 'Alexa', role: 'system' }, rn = (ROOMS[room] || { name: room }).name;
+              await logAction(who, 'welcome spoken', `${rn}: first welcome for ${d.ref}`);
+              const rs = await sb(`room_scenes?select=scene_id&room=eq.${encodeURIComponent(room)}&limit=1`);
+              const steps = rs.ok && rs.data && rs.data[0] ? [{ scene: rs.data[0].scene_id }] : undefined; // set from alexa-setup.html, else TUYA_ARRIVAL env
+              const out = await Promise.race([arrival(room, steps), new Promise(r => setTimeout(() => r(null), 3500))]);
+              if (out === null) await logAction(who, 'arrival scene', `${rn}: no answer from Smart Life within 3.5 s (it may still have run)`);
+              else if (out.length) await logAction(who, 'arrival scene', `${rn}: ${out.every(Boolean) ? 'sent OK' : 'FAILED, check the devices'} (${out.filter(Boolean).length}/${out.length} steps)`);
+            } catch (e) { console.error('arrival', e.message); }
           }
         }
       } else console.log('alexa: unmapped Echo', deviceId);
