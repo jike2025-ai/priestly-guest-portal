@@ -1,5 +1,5 @@
 const { cors, json, bad, sb, ROOMS, today, quote, crypto, alertOwner, fd, naira } = require('../lib/core');
-const { authenticate, logAction } = require('../lib/staff');
+const { authenticate, logAction, can, capsOf } = require('../lib/staff');
 
 // POST /api/walkin  (staff page: receptionists and admin, PIN only)
 //   {pin, action:'login'}                         -> {role, name, shiftId}   (starts a tracked shift)
@@ -35,15 +35,19 @@ module.exports = async (req, res) => {
     const b = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
     if (!process.env.ADMIN_PIN && !process.env.STAFF_PIN && !process.env.ADMIN_SECRET) throw bad('Staff login is not set up yet', 503);
     const user = await authenticate(req, b.pin);
-    const admin = user.role === 'admin';
+    // what each action needs; the CEO role is read-only (view), a receptionist books and prints, a supervisor can cancel any walk-in, a manager sees NINs
+    const NEED = { login: 'view', ping: 'view', logout: 'view', overview: 'view', requests: 'view', create: 'book', cancel: 'view', request_change: 'request', room_status: 'housekeeping', checkout: 'stay', late: 'stay', card: 'print', printed: 'print', nin: 'nin' };
+    if (NEED[b.action] && !can(user, NEED[b.action])) throw bad('Your role is view-only for this. Ask a manager or the admin.', 403);
+    const admin = can(user, 'cancel_any');
+    const track = user.role !== 'ceo';   // executives are not clocked in as a shift
 
     if (b.action === 'login') {
       let shiftId = null;
       try {
-        const r = await sb('staff_shifts', { method: 'POST', prefer: 'return=representation', body: { staff_id: user.id, staff_name: user.name, role: user.role } });
+        const r = !track ? { ok: false } : await sb('staff_shifts', { method: 'POST', prefer: 'return=representation', body: { staff_id: user.id, staff_name: user.name, role: user.role } });
         if (r.ok && r.data && r.data[0]) shiftId = r.data[0].id;
       } catch (e) { /* tracking table not created yet: login still works */ }
-      return json(res, 200, { role: user.role, name: user.name, shift: user.shift || null, shiftId });
+      return json(res, 200, { role: user.role, name: user.name, caps: capsOf(user), shift: user.shift || null, shiftId });
     }
 
     if (b.action === 'ping' || b.action === 'logout') {
@@ -71,7 +75,7 @@ module.exports = async (req, res) => {
       let housekeeping = {};
       const rs = await sb('room_status?select=room,status,note,updated_by,updated_at');
       if (rs.ok && Array.isArray(rs.data)) rs.data.forEach(x => { housekeeping[x.room] = x; });
-      return json(res, 200, { today: today(), me: { role: user.role, name: user.name }, rooms: Object.entries(ROOMS).map(([id, v]) => ({ id, ...v })), bookings, housekeeping, tracking, stay });
+      return json(res, 200, { today: today(), me: { role: user.role, name: user.name, caps: capsOf(user) }, rooms: Object.entries(ROOMS).map(([id, v]) => ({ id, ...v })), bookings, housekeeping, tracking, stay });
     }
 
     if (b.action === 'create') {
@@ -123,7 +127,7 @@ module.exports = async (req, res) => {
       const f = await sb(`bookings?select=reference,guest_name,room,check_in,check_out,created_at,recorded_by&reference=eq.${encodeURIComponent(ref)}&channel=eq.walk-in&status=eq.confirmed&limit=1`);
       const bk = f.ok && f.data && f.data[0];
       if (!bk) throw bad('That walk-in booking was not found (online bookings cannot be cancelled here)', 404);
-      if (!admin && !(bk.recorded_by === user.name && Date.now() - Date.parse(bk.created_at) < 3600e3)) throw bad('Only the admin can cancel this booking now. Staff can only cancel their own booking within 1 hour of saving it.', 403);
+      if (!admin && !(bk.recorded_by === user.name && Date.now() - Date.parse(bk.created_at) < 3600e3)) throw bad('Only a supervisor, manager or the admin can cancel this booking now. Staff can only cancel their own booking within 1 hour of saving it.', 403);
       const r = await sb(`bookings?reference=eq.${encodeURIComponent(ref)}&channel=eq.walk-in&status=eq.confirmed`, { method: 'PATCH', prefer: 'return=minimal', body: { status: 'cancelled' } });
       if (!r.ok) throw new Error('cancel failed');
       await logAction(user, 'walk-in cancelled', `${ref}: ${bk.guest_name}, ${bk.room} ${bk.check_in} to ${bk.check_out}`);
@@ -197,7 +201,7 @@ module.exports = async (req, res) => {
     }
 
     if (b.action === 'nin') {
-      if (!admin) throw bad('Only the admin can view full NIN numbers', 403);
+      if (!can(user, 'nin')) throw bad('Only a manager or the admin can view full NIN numbers', 403);
       const ref = clean(b.reference, 40);
       const r = await sb(`bookings?select=nin,guest_name&reference=eq.${encodeURIComponent(ref)}&limit=1`);
       if (!r.ok || !r.data || !r.data[0]) throw bad('Booking not found', 404);

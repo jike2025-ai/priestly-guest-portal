@@ -1,5 +1,5 @@
 const { cors, json, bad, sb, ROOMS, today } = require('../lib/core');
-const { authenticate, logAction, hashPin, adminPin, same } = require('../lib/staff');
+const { authenticate, logAction, hashPin, adminPin, same, can, canAssign, ROLES, capsOf } = require('../lib/staff');
 
 // POST /api/admin  (ADMIN ONLY, PIN login)
 //   {pin, action:'request_resolve', id, decision:'cancel'|'decline', note?}
@@ -27,7 +27,8 @@ module.exports = async (req, res) => {
   try {
     const b = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
     const user = await authenticate(req, b.pin);
-    if (user.role !== 'admin') throw bad('Admin only', 403);
+    const NEED = { request_resolve: 'resolve_requests', staff_list: 'staff_view', staff_add: 'staff_manage', staff_update: 'staff_manage', shifts: 'activity', log: 'activity', analytics: 'analytics' };
+    if (!can(user, NEED[b.action] || '*')) throw bad('Your role does not include this. Ask the admin.', 403);
 
     if (b.action === 'request_resolve') {
       const id = String(b.id || ''); if (!/^[0-9a-f-]{36}$/.test(id)) throw bad('Unknown request');
@@ -46,13 +47,13 @@ module.exports = async (req, res) => {
     }
 
     if (b.action === 'staff_list') {
-      const r = await sb('staff?select=id,username,full_name,phone,email,shift,active,created_at&order=created_at');
+      const r = await sb('staff?select=id,username,full_name,phone,email,role,shift,active,created_at&order=created_at');
       if (!r.ok) throw bad(SETUP, 503);
       // last seen per staff
       const s = await sb('staff_shifts?select=staff_id,started_at,last_seen,ended_at&order=started_at.desc&limit=500');
       const last = {};
       (s.ok ? s.data : []).forEach(x => { if (x.staff_id && !last[x.staff_id]) last[x.staff_id] = x; });
-      return json(res, 200, { staff: r.data.map(x => ({ ...x, last: last[x.id] || null })) });
+      return json(res, 200, { staff: r.data.map(x => ({ ...x, role: ROLES.includes(x.role) ? x.role : 'receptionist', last: last[x.id] || null })), canManage: can(user, 'staff_manage'), roles: user.role === 'admin' ? ROLES : (can(user, 'staff_manage') ? ['receptionist', 'supervisor'] : []) });
     }
 
     if (b.action === 'staff_add') {
@@ -62,23 +63,32 @@ module.exports = async (req, res) => {
       const phone = clean(b.phone, 20); if (phone && !/^\+?[0-9]{7,15}$/.test(phone.replace(/[\s-]/g, ''))) throw bad('That phone number does not look right');
       const email = clean(b.email, 120).toLowerCase(); if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw bad('That email does not look right');
       const shift = ['morning', 'night', 'any'].includes(b.shift) ? b.shift : 'any';
+      const role = ROLES.includes(b.role) ? b.role : 'receptionist';
+      if (!canAssign(user, role)) throw bad('You cannot create a ' + role + ' account. Ask the admin.', 403);
+      if (role === 'ceo' && !email) throw bad('Please enter the CEO email address: booking emails are sent there');
       const pin = checkPin(b.pin_new);
-      const r = await sb('staff', { method: 'POST', prefer: 'return=minimal', body: { username, full_name: full, phone: phone || null, email: email || null, role: 'receptionist', shift, pin_hash: hashPin(pin) } });
+      const r = await sb('staff', { method: 'POST', prefer: 'return=minimal', body: { username, full_name: full, phone: phone || null, email: email || null, role, shift, pin_hash: hashPin(pin) } });
       if (r.status === 409) throw bad('That username or PIN is already used by another staff member. Choose a different one.', 409);
       if (!r.ok) throw bad(SETUP, 503);
-      await logAction(user, 'staff added', `${full} (${username}), ${shift} shift`);
+      await logAction(user, 'staff added', `${full} (${username}), ${role}, ${shift} shift`);
       return json(res, 200, { ok: true });
     }
 
     if (b.action === 'staff_update') {
       const id = String(b.id || ''); if (!/^[0-9a-f-]{36}$/.test(id)) throw bad('Unknown staff member');
+      const cur = await sb(`staff?select=role,email&id=eq.${id}&limit=1`);
+      const curRole = cur.ok && cur.data && cur.data[0] ? (ROLES.includes(cur.data[0].role) ? cur.data[0].role : 'receptionist') : null;
+      if (!curRole) throw bad('Staff member not found', 404);
+      if (!canAssign(user, curRole)) throw bad('Only the admin can change a ' + curRole + ' account', 403);
       const body = {};
+      if (b.role !== undefined) { if (!ROLES.includes(b.role)) throw bad('Unknown role'); if (!canAssign(user, b.role)) throw bad('You cannot give the ' + b.role + ' role', 403); body.role = b.role; }
       if (typeof b.active === 'boolean') body.active = b.active;
       if (b.shift) { if (!['morning', 'night', 'any'].includes(b.shift)) throw bad('Unknown shift'); body.shift = b.shift; }
       if (b.full_name) { const n = clean(b.full_name, 80); if (n.length < 3) throw bad('Please enter the full name'); body.full_name = n; }
       if (b.phone !== undefined) body.phone = clean(b.phone, 20) || null;
       if (b.email !== undefined) body.email = clean(b.email, 120).toLowerCase() || null;
       if (b.pin_new) body.pin_hash = hashPin(checkPin(b.pin_new));
+      if ((body.role || curRole) === 'ceo' && (body.email !== undefined ? !body.email : !cur.data[0].email)) throw bad('A CEO account needs an email address');
       if (!Object.keys(body).length) throw bad('Nothing to change');
       const r = await sb(`staff?id=eq.${id}`, { method: 'PATCH', prefer: 'return=representation', body });
       if (r.status === 409) throw bad('That PIN is already used by another staff member. Choose a different one.', 409);

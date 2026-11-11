@@ -183,10 +183,10 @@ h2.t{font-size:23px;margin:0 0 4px}.sub{color:var(--mu);margin:0 0 18px}
  <div class='pn'><div class='ph'><h3>Cancel / correction requests</h3><div class='sp'><button class='btn' id='rqr'>Refresh</button></div></div><div class='pb tw' id='rqb'><div class='em'>Loading...</div></div></div></section>
 
 <section class='pg' id='p-stf'><h2 class='t'>Staff accounts</h2><p class='sub'>Receptionists sign in with their own PIN only. Each login is recorded so you can see who worked and when.</p>
- <div class='pn'><div class='ph'><h3>Add a receptionist</h3></div><div class='pb'><div class='af'>
+ <div class='pn'><div class='ph'><h3>Add a staff member</h3></div><div class='pb'><div class='af'>
   <div class='f'><label for='sfn'>Full name</label><input id='sfn' autocomplete='off'></div><div class='f'><label for='sfu'>Username</label><input id='sfu' autocomplete='off'></div>
   <div class='f'><label for='sfp'>Phone number</label><input id='sfp' inputmode='tel' autocomplete='off'></div><div class='f'><label for='sfe'>Email</label><input id='sfe' type='email' autocomplete='off'></div>
-  <div class='f'><label for='sfs'>Shift</label><select id='sfs'><option value='morning'>Morning</option><option value='night'>Night</option><option value='any'>Any</option></select></div>
+  <div class='f'><label for='sfr'>Role</label><select id='sfr'><option value='receptionist'>Receptionist</option></select></div><div class='f'><label for='sfs'>Shift</label><select id='sfs'><option value='morning'>Morning</option><option value='night'>Night</option><option value='any'>Any</option></select></div>
   <div class='f'><label for='sfi'>Login PIN (4 to 8 digits)</label><input id='sfi' inputmode='numeric' maxlength='8' autocomplete='off'></div>
   <div class='f'><button class='btn p' id='sfa' style='padding:11px 18px;justify-content:center'>Add staff</button></div></div><div id='sfm'></div></div></div>
  <div class='pn'><div class='ph'><h3>Team</h3></div><div class='pb tw' id='stl'><div class='em'>Loading...</div></div></div></section>
@@ -247,9 +247,11 @@ const fs=s=>new Date(s+'T00:00:00Z').toLocaleDateString('en-GB',{day:'numeric',m
 const icon=n=>`<svg class='i'><use href='#i-${n}'/></svg>`;
 let PIN='';try{PIN=sessionStorage.getItem('pa_pin')||''}catch(e){}
 let D={today:'',rooms:[],bookings:[],housekeeping:{}},calStart='',tab='cur',roomName={},pv='';
-let ME={role:'staff',name:'',shift:'',shiftId:''};try{ME=Object.assign(ME,JSON.parse(sessionStorage.getItem('pa_me')||'{}'))}catch(e){}
+let ME={role:'receptionist',name:'',shift:'',shiftId:'',caps:[]};try{ME=Object.assign(ME,JSON.parse(sessionStorage.getItem('pa_me')||'{}'))}catch(e){}
 const saveMe=()=>{try{sessionStorage.setItem('pa_me',JSON.stringify(ME))}catch(e){}};
 const isAdmin=()=>ME.role==='admin';
+const can=c=>(ME.caps||[]).includes('*')||(ME.caps||[]).includes(c);
+const ROLEN={receptionist:'Receptionist',supervisor:'Supervisor',manager:'Manager',ceo:'CEO',admin:'Admin'};
 const HK={clean:['Clean','#16a34a'],dirty:['Needs cleaning','#dc2626'],maintenance:['Maintenance','#64748b']};
 const hk=id=>(D.housekeeping&&D.housekeeping[id])||{status:'clean'};
 const hkChip=st=>`<span class='chip c-hk${st}'>${HK[st][0]}</span>`;
@@ -286,11 +288,15 @@ const pay=b=>{if(isWalk(b)){const m=/Payment: (\w+)/.exec(b.special_requests||''
 
 /* ---------- load ---------- */
 async function load(first){
- try{const j=await call({action:'overview'});D=j;if(j.me){ME.role=j.me.role;ME.name=j.me.name;saveMe()}roomName={};D.rooms.forEach(r=>roomName[r.id]=r.name);D.bookings=D.bookings.filter(b=>b.status!=='cancelled');
+ try{const j=await call({action:'overview'});D=j;if(j.me){ME.role=j.me.role;ME.name=j.me.name;ME.caps=j.me.caps||ME.caps;saveMe()}roomName={};D.rooms.forEach(r=>roomName[r.id]=r.name);D.bookings=D.bookings.filter(b=>b.status!=='cancelled');
   if(!calStart)calStart=addD(D.today,-3);
   $('lg').style.display='none';sess();applyRole();renderAll();loadReq(true);if(first){fillRooms();const n=D.tracking?D.bookings.filter(b=>b.status==='confirmed'&&!b.printed_at&&b.check_out>=D.today).length:0;if(n)toast(n+' booking'+(n>1?'s need':' needs')+' a printed guest card. See Reservations, To print.')}}
  catch(e){if(e.status===403||first){PIN='';try{sessionStorage.removeItem('pa_pin')}catch(x){}$('lg').style.display='flex';$('lge').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}else toast(e.message)}}
-function applyRole(){$('adminNav').style.display=isAdmin()?'block':'none';const r=$('rl');r.textContent=isAdmin()?'Admin':'Receptionist'+(ME.shift&&ME.shift!=='any'?' - '+ME.shift:'');r.className='rl'+(isAdmin()?'':' st');$('avc').textContent=(ME.name||'F').trim().charAt(0).toUpperCase()}
+function applyRole(){const show=(p,on)=>{const e=document.querySelector(".nv[data-p='"+p+"']");if(e)e.style.display=on?'':'none'};
+ show('ana',can('analytics'));show('stf',can('staff_view'));show('act',can('activity'));show('new',can('book'));
+ $('adminNav').style.display=(can('analytics')||can('staff_view')||can('activity'))?'block':'none';
+ const h=document.querySelector('#adminNav h6');if(h)h.textContent=isAdmin()?'Admin only':'Management';
+ const r=$('rl');r.textContent=(ROLEN[ME.role]||'Staff')+(ME.role==='receptionist'&&ME.shift&&ME.shift!=='any'?' - '+ME.shift:'')+(ME.role==='ceo'?' (view only)':'');r.className='rl'+(isAdmin()?'':' st');$('avc').textContent=(ME.name||'F').trim().charAt(0).toUpperCase()}
 function renderAll(){head();stats();tiles();todayList();aptCards();calendar();resTable();summary();renderPk()}
 
 function head(){const h=+new Date().toLocaleString('en-GB',{hour:'numeric',hour12:false,timeZone:'Africa/Lagos'});
@@ -367,7 +373,7 @@ function openB(ref){const b=D.bookings.find(x=>x.reference===ref);if(!b)return;c
  <div class='lk'>${ph?`<a class='btn sm' href='tel:${esc(ph)}'>Call</a><a class='btn sm' target='_blank' rel='noopener' href='https://wa.me/${esc(wa)}'>WhatsApp</a>`:''}</div>
  <h5>Payment</h5><dl class='kv'><dt>Rate</dt><dd>${naira(b.rate)} x ${b.nights}</dd><dt>Caution fee</dt><dd>${naira(b.caution)} (refundable)</dd><dt>Total</dt><dd>${naira(b.total)}</dd><dt>Status</dt><dd>${esc(pay(b))}</dd></dl>
  ${b.special_requests?`<h5>Notes &amp; requests</h5><p style='margin:0;white-space:pre-wrap;font-size:14.5px'>${esc(b.special_requests)}</p>`:''}
- <h5>Actions</h5><div class='lk' style='margin-top:0'>${D.stay&&b.status==='confirmed'?(['inhouse','arriving','departing','overdue'].includes(k)?`<button class='btn sm p' data-co='${esc(b.reference)}'>Mark checked out now</button>`:'')+(['departing','past'].includes(k)&&b.check_out===D.today&&!b.checked_out_at&&!b.late_stay?`<button class='btn sm' data-late='${esc(b.reference)}'>Guest still in room</button>`:'')+(b.late_stay&&!b.checked_out_at&&k!=='overdue'?`<button class='btn sm' data-late-off='${esc(b.reference)}'>Clear late stay</button>`:''):''}<button class='btn sm p' data-pr='${esc(b.reference)}'>Print registration card${b.printed_at?' (printed before)':''}</button><button class='btn sm' data-dc='${esc(b.room)}'>${icon('key')}Door code</button><a class='btn sm' href='card.html' target='_blank' rel='noopener'>Welcome card &amp; Wi-Fi</a>${isWalk(b)&&b.status==='confirmed'&&k!=='past'?((isAdmin()||(b.recorded_by===ME.name&&Date.now()-Date.parse(b.created_at)<3600e3))?`<button class='btn sm dg' data-cx='${esc(b.reference)}'>Cancel walk-in</button>`:(rqOpen(b.reference)?`<button class='btn sm' disabled>Request sent, waiting for admin</button>`:`<button class='btn sm dg' data-rq='${esc(b.reference)}'>Ask admin to cancel or correct</button>`)):''}</div>
+ <h5>Actions</h5><div class='lk' style='margin-top:0'>${can('stay')&&D.stay&&b.status==='confirmed'?(['inhouse','arriving','departing','overdue'].includes(k)?`<button class='btn sm p' data-co='${esc(b.reference)}'>Mark checked out now</button>`:'')+(['departing','past'].includes(k)&&b.check_out===D.today&&!b.checked_out_at&&!b.late_stay?`<button class='btn sm' data-late='${esc(b.reference)}'>Guest still in room</button>`:'')+(b.late_stay&&!b.checked_out_at&&k!=='overdue'?`<button class='btn sm' data-late-off='${esc(b.reference)}'>Clear late stay</button>`:''):''}${can('print')?`<button class='btn sm p' data-pr='${esc(b.reference)}'>Print registration card${b.printed_at?' (printed before)':''}</button><button class='btn sm' data-dc='${esc(b.room)}'>${icon('key')}Door code</button><a class='btn sm' href='card.html' target='_blank' rel='noopener'>Welcome card &amp; Wi-Fi</a>`:''}${can('request')&&isWalk(b)&&b.status==='confirmed'&&k!=='past'?((can('cancel_any')||(b.recorded_by===ME.name&&Date.now()-Date.parse(b.created_at)<3600e3))?`<button class='btn sm dg' data-cx='${esc(b.reference)}'>Cancel walk-in</button>`:(rqOpen(b.reference)?`<button class='btn sm' disabled>Request sent, waiting for admin</button>`:`<button class='btn sm dg' data-rq='${esc(b.reference)}'>Ask admin to cancel or correct</button>`)):''}</div>
  <p class='sub' style='margin:16px 0 0;font-size:12.5px'>Booked ${new Date(b.created_at).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short',timeZone:'Africa/Lagos'})}</p>`;
  $('dr').classList.add('on');$('ov').classList.add('on')}
 function closeAll(){$('dr').classList.remove('on');$('ov').classList.remove('on');$('md').classList.remove('on');$('side').classList.remove('on')}
@@ -404,7 +410,7 @@ function prefill(room,d){go('new');$('room').value=room;let c=d,n=0;while((c<D.t
 
 /* ---------- admin pages ---------- */
 const money=n=>naira(Math.round(n));
-async function loadAna(){if(!isAdmin())return;$('anab').innerHTML=`<div class='em'>Loading...</div>`;
+async function loadAna(){if(!can('analytics'))return;$('anab').innerHTML=`<div class='em'>Loading...</div>`;
  try{const a=await acall({action:'analytics'}),c=counts(),T=D.today,m=T.slice(0,7);
   const cur=a.months.find(x=>x.key===m)||{online:0,walkin:0,count:0},mx=Math.max(1,...a.months.map(x=>x.online+x.walkin));
   const walkShare=(()=>{const w=a.payments.cash.n+a.payments.transfer.n+a.payments.pos.n+a.payments.unpaid.n,t=w+a.payments.online.n;return t?Math.round(w/t*100):0})();
@@ -425,22 +431,23 @@ async function loadAna(){if(!isAdmin())return;$('anab').innerHTML=`<div class='e
   </div>`}
  catch(e){$('anab').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}}
 
-async function loadStaff(){if(!isAdmin())return;
+async function loadStaff(){if(!can('staff_view'))return;
  try{const j=await acall({action:'staff_list'});
-  $('stl').innerHTML=j.staff.length?`<table style='min-width:760px'><thead><tr><th>Name</th><th>Contact</th><th>Shift</th><th>Last sign-in</th><th>Status</th><th></th></tr></thead><tbody>${j.staff.map(x=>{const on=x.last&&!x.last.ended_at&&Date.now()-Date.parse(x.last.last_seen)<6*60000;return `<tr class='${x.active?'':'dim'}'><td><b>${esc(x.full_name)}</b><small>@${esc(x.username)}</small></td><td>${esc(x.phone||'-')}<small>${esc(x.email||'')}</small></td><td><select data-ss='${x.id}' style='border:1px solid var(--ln);border-radius:8px;padding:5px'>${['morning','night','any'].map(k=>`<option value='${k}'${k===x.shift?' selected':''}>${k[0].toUpperCase()+k.slice(1)}</option>`).join('')}</select></td><td>${x.last?ft(x.last.started_at):'Never'}${on?"<small class='on2'>Signed in now</small>":''}</td><td>${x.active?"<span class='chip c-available'>Active</span>":"<span class='chip c-hkmaintenance'>Disabled</span>"}</td><td style='white-space:nowrap'><button class='btn sm' data-sp='${x.id}'>Reset PIN</button> <button class='btn sm ${x.active?'dg':''}' data-st='${x.id}' data-on='${x.active?0:1}'>${x.active?'Disable':'Enable'}</button></td></tr>`}).join('')}</tbody></table>`:`<div class='em'>No receptionists yet. Add the first one above.</div>`}
+  const af=$('sfa').closest('.pn');if(af)af.style.display=(j.roles&&j.roles.length)?'':'none';$('sfr').innerHTML=(j.roles||[]).map(k=>`<option value='${k}'>${ROLEN[k]}</option>`).join('');
+  $('stl').innerHTML=j.staff.length?`<table style='min-width:760px'><thead><tr><th>Name</th><th>Role</th><th>Contact</th><th>Shift</th><th>Last sign-in</th><th>Status</th><th></th></tr></thead><tbody>${j.staff.map(x=>{const on=x.last&&!x.last.ended_at&&Date.now()-Date.parse(x.last.last_seen)<6*60000;return `<tr class='${x.active?'':'dim'}'><td><b>${esc(x.full_name)}</b><small>@${esc(x.username)}</small></td><td>${j.roles&&j.roles.includes(x.role)?`<select data-sr='${x.id}' style='border:1px solid var(--ln);border-radius:8px;padding:5px'>${j.roles.map(k=>`<option value='${k}'${k===x.role?' selected':''}>${ROLEN[k]}</option>`).join('')}</select>`:`<b>${esc(ROLEN[x.role]||x.role)}</b>`}</td><td>${esc(x.phone||'-')}<small>${esc(x.email||'')}</small></td><td><select data-ss='${x.id}' style='border:1px solid var(--ln);border-radius:8px;padding:5px'>${['morning','night','any'].map(k=>`<option value='${k}'${k===x.shift?' selected':''}>${k[0].toUpperCase()+k.slice(1)}</option>`).join('')}</select></td><td>${x.last?ft(x.last.started_at):'Never'}${on?"<small class='on2'>Signed in now</small>":''}</td><td>${x.active?"<span class='chip c-available'>Active</span>":"<span class='chip c-hkmaintenance'>Disabled</span>"}</td><td style='white-space:nowrap'>${j.roles&&j.roles.includes(x.role)?`<button class='btn sm' data-sp='${x.id}'>Reset PIN</button> <button class='btn sm ${x.active?'dg':''}' data-st='${x.id}' data-on='${x.active?0:1}'>${x.active?'Disable':'Enable'}</button>`:''}</td></tr>`}).join('')}</tbody></table>`:`<div class='em'>No receptionists yet. Add the first one above.</div>`}
  catch(e){$('stl').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}}
 $('sfa').onclick=async()=>{const b=$('sfa');b.disabled=true;$('sfm').innerHTML='';
- try{await acall({action:'staff_add',full_name:$('sfn').value,username:$('sfu').value,phone:$('sfp').value,email:$('sfe').value,shift:$('sfs').value,pin_new:$('sfi').value});
-  $('sfm').innerHTML=`<div class='mg k'>${esc($('sfn').value)} can now sign in with their PIN.</div>`;['sfn','sfu','sfp','sfe','sfi'].forEach(i=>$(i).value='');loadStaff()}
+ try{await acall({action:'staff_add',full_name:$('sfn').value,username:$('sfu').value,phone:$('sfp').value,email:$('sfe').value,role:$('sfr').value,shift:$('sfs').value,pin_new:$('sfi').value});
+  $('sfm').innerHTML=`<div class='mg k'>${esc($('sfn').value)} can now sign in with their PIN (${esc(ROLEN[$('sfr').value]||'')}).</div>`;['sfn','sfu','sfp','sfe','sfi'].forEach(i=>$(i).value='');loadStaff()}
  catch(e){$('sfm').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}b.disabled=false};
 document.addEventListener('click',async e=>{const t=e.target.closest('[data-sp],[data-st]');if(!t)return;
  try{if(t.dataset.sp){const p=prompt('New PIN for this person (4 to 8 digits):');if(!p)return;await acall({action:'staff_update',id:t.dataset.sp,pin_new:p});toast('PIN changed')}
   else{if(t.dataset.on==='0'&&!confirm('Disable this account? They will not be able to sign in.'))return;await acall({action:'staff_update',id:t.dataset.st,active:t.dataset.on==='1'});toast(t.dataset.on==='1'?'Account enabled':'Account disabled')}
   loadStaff()}catch(x){toast(x.message)}});
-document.addEventListener('change',async e=>{const t=e.target;if(!t.dataset||!t.dataset.ss)return;try{await acall({action:'staff_update',id:t.dataset.ss,shift:t.value});toast('Shift updated')}catch(x){toast(x.message)}});
+document.addEventListener('change',async e=>{const t=e.target;if(t.dataset&&t.dataset.sr){try{await acall({action:'staff_update',id:t.dataset.sr,role:t.value});toast('Role updated');loadStaff()}catch(x){toast(x.message);loadStaff()}return}if(!t.dataset||!t.dataset.ss)return;try{await acall({action:'staff_update',id:t.dataset.ss,shift:t.value});toast('Shift updated')}catch(x){toast(x.message)}});
 
 let SH=[];
-async function loadAct(){if(!isAdmin())return;
+async function loadAct(){if(!can('activity'))return;
  try{const [a,b]=await Promise.all([acall({action:'shifts'}),acall({action:'log'})]);SH=a.shifts;
   const names=[...new Set(SH.map(x=>x.staff_name))];$('shf').innerHTML=`<option value=''>Everyone</option>`+names.map(n=>`<option>${esc(n)}</option>`).join('');drawShifts();
   $('lgb').innerHTML=b.log.length?`<table style='min-width:640px'><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead><tbody>${b.log.map(x=>`<tr><td style='white-space:nowrap'>${ft(x.created_at)}</td><td><b>${esc(x.staff_name)}</b></td><td>${esc(x.action)}</td><td>${esc(x.detail||'')}</td></tr>`).join('')}</tbody></table>`:`<div class='em'>Nothing recorded yet.</div>`}
@@ -455,10 +462,10 @@ let RQ=[];
 const rqOpen=ref=>RQ.find(x=>x.reference===ref&&x.status==='pending');
 async function loadReq(quiet){
  try{const j=await call({action:'requests'});RQ=j.requests||[];const n=RQ.filter(x=>x.status==='pending').length;$('nreq').textContent=n;$('nreq').style.display=n?'':'none';
-  if(quiet&&n&&isAdmin()&&!loadReq.said){loadReq.said=1;toast(n+' cancel request'+(n>1?'s are':' is')+' waiting for you. See Requests.')}
+  if(quiet&&n&&can('resolve_requests')&&!loadReq.said){loadReq.said=1;toast(n+' cancel request'+(n>1?'s are':' is')+' waiting for you. See Requests.')}
   if(!j.ready){$('rqb').innerHTML=`<div class='em'>Requests are not switched on yet. The developer must run the database update first.</div>`;return}
   const rows=RQ.map(x=>{const st=x.status==='pending'?"<span class='tg o'>WAITING</span>":x.status==='done'?"<span class='tg'>CANCELLED</span>":"<span class='tg'>DECLINED</span>";
-   const act=x.status==='pending'?(isAdmin()?`<button class='btn sm dg' data-rc='${esc(x.id)}'>Cancel booking</button> <button class='btn sm' data-rd='${esc(x.id)}'>Decline</button>`:'<small>Waiting for the admin</small>'):`<small>${esc(x.resolved_by||'')}${x.note?': '+esc(x.note):''}${x.status==='done'?'. You can enter the booking again.':''}</small>`;
+   const act=x.status==='pending'?(can('resolve_requests')?`<button class='btn sm dg' data-rc='${esc(x.id)}'>Cancel booking</button> <button class='btn sm' data-rd='${esc(x.id)}'>Decline</button>`:'<small>Waiting for a supervisor or the admin</small>'):`<small>${esc(x.resolved_by||'')}${x.note?': '+esc(x.note):''}${x.status==='done'?'. You can enter the booking again.':''}</small>`;
    return `<tr><td style='white-space:nowrap'>${ft(x.created_at)}</td><td><b>${esc(x.guest_name||'')}</b><small>${esc(roomName[x.room]||x.room||'')}, ${esc(x.check_in||'')} to ${esc(x.check_out||'')}<br>${esc(x.reference)}</small></td><td>${esc(x.requested_by)}</td><td>${esc(x.reason)}</td><td>${st}<br>${act}</td></tr>`}).join('');
   $('rqb').innerHTML=RQ.length?`<table style='min-width:680px'><thead><tr><th>Asked</th><th>Booking</th><th>By</th><th>What is wrong</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`:`<div class='em'>No requests. If a receptionist makes a mistake, they use "Ask admin to cancel or correct" on the booking.</div>`;
   }
@@ -526,7 +533,7 @@ async function saveBooking(print){$('nmsg').innerHTML='';const b1=$('go'),b2=$('
  catch(e){$('nmsg').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}b1.disabled=b2.disabled=false}
 $('go').onclick=()=>saveBooking(true);$('go2').onclick=()=>saveBooking(false);
 async function signin(){PIN=$('pin').value.trim();$('lge').innerHTML='';if(!PIN)return;$('lgo').disabled=true;
- try{const j=await call({action:'login'});ME={role:j.role,name:j.name,shift:j.shift||'',shiftId:j.shiftId||''};saveMe();await load(true)}
+ try{const j=await call({action:'login'});ME={role:j.role,name:j.name,caps:j.caps||[],shift:j.shift||'',shiftId:j.shiftId||''};saveMe();await load(true)}
  catch(e){PIN='';$('lge').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}$('lgo').disabled=false}
 $('lgo').onclick=signin;$('pin').addEventListener('keydown',e=>{if(e.key==='Enter')signin()});
 $('lo').onclick=async()=>{try{await call({action:'logout'})}catch(e){}PIN='';try{sessionStorage.removeItem('pa_pin');sessionStorage.removeItem('pa_me')}catch(e){}location.reload()};

@@ -1,4 +1,4 @@
-const { cors, json, sb, bad, today, naira, fd, roomLabel, mail, owners, emailHtml, adminLink, SITE } = require('../lib/core');
+const { cors, json, sb, bad, today, naira, fd, roomLabel, mail, owners, execs, uniq, emailHtml, adminLink, SITE } = require('../lib/core');
 
 // POST /api/refund-request {ref, email, note, bank}
 // The guest asks for their caution fee back. We record it and alert the owners; nothing is refunded yet.
@@ -22,7 +22,8 @@ module.exports = async (req, res) => {
     if (!u.data || !u.data.length) throw bad('A refund request already exists for this booking', 409);
     const r = u.data[0];
     try {
-      if (owners().length) await mail(owners(), `REFUND REQUEST: ${roomLabel(r)} - ${r.guest_name}`, emailHtml({
+      const toOwners = uniq(owners().concat(await execs()));
+      if (toOwners.length) await mail(toOwners, `REFUND REQUEST: ${roomLabel(r)} - ${r.guest_name}`, emailHtml({
         title: 'Caution fee refund requested', lead: 'The guest has checked out and asks for the caution fee back. Inspect the apartment first, then open the secure review link to record the result.',
         rows: [['Reference', r.reference], ['Guest', r.guest_name], ['Phone', r.guest_phone], ['Email', r.guest_email], ['Apartment', roomLabel(r)], ['Check-out', fd(r.check_out)], ['Caution fee', naira(r.caution)], ['Guest message', r.refund_note || '-'], ['Bank details given', r.refund_bank || '-']],
         cta: { label: 'Open refund review', href: adminLink(r.reference) }, note: 'Keep this email private: the button gives access to the refund decision.'

@@ -5,7 +5,7 @@
 // Body: { pin, name, room, checkIn: "YYYY-MM-DD", checkOut: "YYYY-MM-DD" }
 // Reply: { username, password, expires }
 
-const { authenticate } = require('../lib/staff');
+const { authenticate, can } = require('../lib/staff');
 const { supa, safeEqual, cors, readBody, validDate, daysBetween, expiryFor } = require('../lib/wifi');
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -22,6 +22,7 @@ module.exports = async (req, res) => {
     try { user = await authenticate(req, b.pin); }
     catch (e) { return res.status(e.status === 403 ? 401 : (e.status || 500)).json({ error: e.status ? e.message : 'Something went wrong' }); }
 
+    if (!can(user, 'print')) return res.status(403).json({ error: 'Your role is view-only' });
     const name = String(b.name || '').trim().slice(0, 100);
     const room = String(b.room || '').trim().slice(0, 60);
     const checkIn = String(b.checkIn || '');
