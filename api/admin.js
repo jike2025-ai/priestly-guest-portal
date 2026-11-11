@@ -1,4 +1,5 @@
 const { cors, json, bad, sb, ROOMS, today } = require('../lib/core');
+const ical = require('../lib/ical');
 const { authenticate, logAction, hashPin, adminPin, same, can, canAssign, ROLES, capsOf } = require('../lib/staff');
 
 // POST /api/admin  (ADMIN ONLY, PIN login)
@@ -44,6 +45,38 @@ module.exports = async (req, res) => {
       if (!u.ok) throw new Error('could not save the decision');
       await logAction(user, decision === 'cancel' ? 'cancel approved' : 'cancel declined', `${rq.reference}: ${rq.guest_name}, ${rq.room} ${rq.check_in} to ${rq.check_out} (asked by ${rq.requested_by})${note ? '. ' + note : ''}`);
       return json(res, 200, { ok: true });
+    }
+
+    if (b.action === 'feed_list') {
+      const r = await sb('ical_feeds?select=*');
+      const feeds = r.ok && Array.isArray(r.data) ? r.data : [];
+      const rooms = Object.entries(ROOMS).map(([id, v]) => ({ id, name: v.name, links: Object.keys(ical.CHANNELS).map(ch => ({ channel: ch, label: ical.CHANNELS[ch], export_url: ical.exportUrl(id, ch), feed: feeds.find(f => f.room === id && f.channel === ch) ? (({ url, last_sync, last_status, last_count }) => ({ url, last_sync, last_status, last_count }))(feeds.find(f => f.room === id && f.channel === ch)) : null })) }));
+      return json(res, 200, { ready: r.ok, rooms });
+    }
+
+    if (b.action === 'feed_save') {
+      const room = String(b.room || ''), ch = String(b.channel || '');
+      if (!ROOMS[room] || !ical.CHANNELS[ch]) throw bad('Unknown apartment or website');
+      const url = String(b.url || '').trim();
+      if (!url) {
+        await sb(`ical_feeds?room=eq.${room}&channel=eq.${ch}`, { method: 'DELETE', prefer: 'return=minimal' });
+        await logAction(user, 'calendar link removed', `${ROOMS[room].name} / ${ical.CHANNELS[ch]}`);
+        return json(res, 200, { ok: true });
+      }
+      if (!/^https:\/\/[^\s]{8,1000}$/.test(url.replace(/^webcal:\/\//i, 'https://'))) throw bad('That does not look like a calendar link (it should start with https://)');
+      const r = await sb('ical_feeds?on_conflict=room,channel', { method: 'POST', prefer: 'resolution=merge-duplicates,return=representation', body: { room, channel: ch, url: url.replace(/^webcal:\/\//i, 'https://') } });
+      if (!r.ok || !r.data || !r.data[0]) throw bad('The calendar table is not set up yet. Ask the developer to run the calendar database update.', 503);
+      await logAction(user, 'calendar link saved', `${ROOMS[room].name} / ${ical.CHANNELS[ch]}`);
+      const out = await ical.syncFeed(r.data[0]);
+      return json(res, 200, { ok: true, sync: out });
+    }
+
+    if (b.action === 'feed_sync') {
+      const r = await sb('ical_feeds?select=*');
+      if (!r.ok) throw bad('The calendar table is not set up yet. Ask the developer to run the calendar database update.', 503);
+      const res2 = await Promise.all(r.data.map(ical.syncFeed));
+      await logAction(user, 'calendars synced', `${r.data.length} link(s)`);
+      return json(res, 200, { ok: true, results: res2 });
     }
 
     if (b.action === 'staff_list') {

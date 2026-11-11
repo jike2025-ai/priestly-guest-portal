@@ -128,6 +128,7 @@ h2.t{font-size:23px;margin:0 0 4px}.sub{color:var(--mu);margin:0 0 18px}
 <div id='adminNav' style='display:none'><h6>Admin only</h6>
 <button class='nv' data-p='ana'><svg class='i'><use href='#i-chart'/></svg>Analytics</button>
 <button class='nv' data-p='stf'><svg class='i'><use href='#i-users'/></svg>Staff accounts</button>
+<button class='nv' data-p='chn' style='display:none'><svg class='i'><use href='#i-cal'/></svg>Website calendars</button>
 <button class='nv' data-p='act'><svg class='i'><use href='#i-clk'/></svg>Shifts &amp; activity</button></div>
 </div></aside>
 
@@ -191,6 +192,9 @@ h2.t{font-size:23px;margin:0 0 4px}.sub{color:var(--mu);margin:0 0 18px}
   <div class='f'><button class='btn p' id='sfa' style='padding:11px 18px;justify-content:center'>Add staff</button></div></div><div id='sfm'></div></div></div>
  <div class='pn'><div class='ph'><h3>Team</h3></div><div class='pb tw' id='stl'><div class='em'>Loading...</div></div></div></section>
 
+<section class='pg' id='p-chn'><h2 class='t'>Website calendars</h2><p class='sub'>Connect Airbnb, Booking.com and Lodgers so a booking on one website blocks the same dates everywhere. Two links per apartment and website: give the website <b>our link</b>, and paste <b>their link</b> here.</p>
+ <div class='pn'><div class='pb'><ol style='margin:0;padding-left:20px'><li>On the website, open the apartment's calendar settings and look for <b>Import calendar</b> (or "Sync calendars"). Paste <b>Our link</b> from below.</li><li>On the same page, copy the website's <b>Export calendar</b> link and paste it below, then press Save.</li><li>Bookings now flow both ways. Our side re-reads their calendars at least every 10 minutes whenever guests or staff are using the site, and once a day regardless.</li></ol><p style='margin:8px 0 0'><button class='btn sm p' id='chs'>Sync all now</button></p><div id='chm'></div></div></div>
+ <div id='chl'></div></section>
 <section class='pg' id='p-act'><h2 class='t'>Shifts &amp; activity</h2><p class='sub'>Every sign-in is a shift. Time is counted from sign-in to sign-out (or the last time the page was open).</p>
  <div class='pn'><div class='ph'><h3>Who worked when</h3><div class='sp'><select id='shf' class='btn'><option value=''>Everyone</option></select><button class='btn' id='shr'>Refresh</button></div></div><div class='pb tw' id='shb'><div class='em'>Loading...</div></div></div>
  <div class='pn'><div class='ph'><h3>Activity log</h3></div><div class='pb tw' id='lgb'><div class='em'>Loading...</div></div></div></section>
@@ -293,7 +297,7 @@ async function load(first){
   $('lg').style.display='none';sess();applyRole();renderAll();loadReq(true);if(first){fillRooms();const n=D.tracking?D.bookings.filter(b=>b.status==='confirmed'&&!b.printed_at&&b.check_out>=D.today).length:0;if(n)toast(n+' booking'+(n>1?'s need':' needs')+' a printed guest card. See Reservations, To print.')}}
  catch(e){if(e.status===403||first){PIN='';try{sessionStorage.removeItem('pa_pin')}catch(x){}$('lg').style.display='flex';$('lge').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}else toast(e.message)}}
 function applyRole(){const show=(p,on)=>{const e=document.querySelector(".nv[data-p='"+p+"']");if(e)e.style.display=on?'':'none'};
- show('ana',can('analytics'));show('stf',can('staff_view'));show('act',can('activity'));show('new',can('book'));
+ show('ana',can('analytics'));show('stf',can('staff_view'));show('act',can('activity'));show('chn',isAdmin());show('new',can('book'));
  $('adminNav').style.display=(can('analytics')||can('staff_view')||can('activity'))?'block':'none';
  const h=document.querySelector('#adminNav h6');if(h)h.textContent=isAdmin()?'Admin only':'Management';
  const r=$('rl');r.textContent=(ROLEN[ME.role]||'Staff')+(ME.role==='receptionist'&&ME.shift&&ME.shift!=='any'?' - '+ME.shift:'')+(ME.role==='ceo'?' (view only)':'');r.className='rl'+(isAdmin()?'':' st');$('avc').textContent=(ME.name||'F').trim().charAt(0).toUpperCase()}
@@ -473,7 +477,19 @@ async function loadReq(quiet){
 $('rqr').onclick=()=>loadReq();
 
 /* ---------- nav ---------- */
-function go(p){document.querySelectorAll('.pg').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));document.querySelectorAll('.nv[data-p]').forEach(x=>x.classList.toggle('on',x.dataset.p===p));closeAll();window.scrollTo(0,0);if(p==='ana')loadAna();if(p==='stf')loadStaff();if(p==='act')loadAct();if(p==='req')loadReq()}
+
+async function loadChn(){if(!isAdmin())return;$('chl').innerHTML=`<div class='em'>Loading...</div>`;
+ try{const j=await acall({action:'feed_list'});
+  if(!j.ready)$('chm').innerHTML=`<div class='mg e'>The calendar table is not set up yet. Ask the developer to run the calendar database update.</div>`;
+  $('chl').innerHTML=j.rooms.map(r=>`<div class='pn'><div class='ph'><h3>${esc(r.name)}</h3></div><div class='pb'>${r.links.map(l=>{const f=l.feed;return `<div style='padding:10px 0;border-top:1px solid var(--ln)'><b>${esc(l.label)}</b>${f?`<small style='display:block;color:${/^OK/.test(f.last_status||'')?'#15803d':'#b91c1c'}'>${esc(f.last_status||'Not synced yet')}${f.last_sync?' - '+ft(f.last_sync):''}</small>`:`<small style='display:block'>Not connected</small>`}
+   <div class='af' style='margin-top:6px'><div class='f'><label>Our link (give this to ${esc(l.label)})</label><div style='display:flex;gap:6px'><input readonly value='${esc(l.export_url)}' onfocus='this.select()' style='flex:1;min-width:0'><button class='btn sm' data-cp='${esc(l.export_url)}'>Copy</button></div></div>
+   <div class='f'><label>Their link (from ${esc(l.label)})</label><div style='display:flex;gap:6px'><input data-fu='${r.id}|${l.channel}' value='${esc(f?f.url:'')}' placeholder='https://...' style='flex:1;min-width:0'><button class='btn sm p' data-fs='${r.id}|${l.channel}'>Save</button></div></div></div></div>`}).join('')}</div></div>`).join('')}
+ catch(e){$('chl').innerHTML=`<div class='mg e'>${esc(e.message)}</div>`}}
+$('chs').onclick=async()=>{const b=$('chs');b.disabled=true;try{const j=await acall({action:'feed_sync'});const bad=j.results.filter(x=>!x.ok).length;toast(j.results.length?(bad?bad+' calendar(s) need attention':'All calendars synced'):'No calendars connected yet');loadChn()}catch(e){toast(e.message)}b.disabled=false};
+document.addEventListener('click',async e=>{const c=e.target.closest('[data-cp]');if(c){try{await navigator.clipboard.writeText(c.dataset.cp);toast('Link copied')}catch(x){toast('Press and hold the link to copy it')}return}
+ const f=e.target.closest('[data-fs]');if(!f)return;const [room,channel]=f.dataset.fs.split('|'),inp=document.querySelector(`[data-fu='${f.dataset.fs}']`);f.disabled=true;
+ try{const j=await acall({action:'feed_save',room,channel,url:inp.value});toast(!inp.value.trim()?'Link removed':(j.sync&&j.sync.ok?'Saved and synced':(j.sync&&j.sync.error?'Saved, but: '+j.sync.error:'Saved. Check the clash warning.')));loadChn()}catch(x){toast(x.message)}f.disabled=false});
+function go(p){document.querySelectorAll('.pg').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));document.querySelectorAll('.nv[data-p]').forEach(x=>x.classList.toggle('on',x.dataset.p===p));closeAll();window.scrollTo(0,0);if(p==='ana')loadAna();if(p==='stf')loadStaff();if(p==='act')loadAct();if(p==='chn')loadChn();if(p==='req')loadReq()}
 document.addEventListener('change',async e=>{const t=e.target;if(!t.matches||!t.matches('[data-hk]'))return;const room=t.dataset.hk;let note='';
  if(t.value==='maintenance'){note=prompt('What needs to be fixed? (short note)')||'';}
  try{await call({action:'room_status',room,status:t.value,note});toast((roomName[room]||room)+': '+HK[t.value][0]);await load()}catch(x){toast(x.message);load()}});
