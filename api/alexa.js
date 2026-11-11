@@ -92,6 +92,40 @@ module.exports = async (req, res) => {
     if (!E.ALEXA_KEY) return json(res, 503, { error: 'Alexa greeting is not set up yet' });
     if (!eq(url.searchParams.get('key'), E.ALEXA_KEY)) return json(res, 403, { error: 'Forbidden' });
 
+    // Setup page API (alexa-setup.html): list Echos/rooms/scenes, map an Echo to an apartment, choose each apartment's arrival scene.
+    if (url.searchParams.has('setup')) {
+      const act = url.searchParams.get('setup');
+      const body = req.method === 'POST' ? (typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {})) : {};
+      if (act === 'overview') {
+        const ec = await sb('echo_devices?select=device_id,room,label,last_seen&order=last_seen.desc&limit=60');
+        const rs = await sb('room_scenes?select=room,scene_id');
+        let scenes = [], sceneError = null;
+        if ((E.TUYA_ACCESS_ID || '').trim() && (E.TUYA_ACCESS_SECRET || '').trim()) { try { const r = await tuyaScenes(); scenes = (r.scenes || []).map(x => { const [name, id] = x.split(' | '); return { name, id }; }); sceneError = r.error || null; } catch (e) { sceneError = e.message; } } else sceneError = 'Tuya keys are not set in Vercel';
+        return json(res, 200, { rooms: Object.keys(ROOMS).map(id => ({ id, name: ROOMS[id].name })), echos: ec.ok ? ec.data : [], echoError: ec.ok ? null : 'echo_devices table missing', roomScenes: rs.ok ? rs.data : [], sceneTable: rs.ok, scenes, sceneError });
+      }
+      if (req.method !== 'POST') return json(res, 405, { error: 'POST only' });
+      if (act === 'echo') {
+        const id = String(body.device_id || ''), room = body.room ? String(body.room) : null;
+        if (!/^amzn1\.ask\.device\.[A-Za-z0-9._-]+$/.test(id)) return json(res, 400, { error: 'Bad device id' });
+        if (room && !ROOMS[room]) return json(res, 400, { error: 'Unknown apartment' });
+        const w = await sb(`echo_devices?device_id=eq.${encodeURIComponent(id)}`, { method: 'PATCH', prefer: 'return=minimal', body: { room, label: room ? ROOMS[room].name + ' Echo' : null } });
+        return json(res, w.ok ? 200 : 500, w.ok ? { ok: true } : { error: 'Could not save' });
+      }
+      if (act === 'scene') {
+        const room = String(body.room || ''), sid = String(body.scene_id || '').replace(/[^A-Za-z0-9]/g, '');
+        if (!ROOMS[room]) return json(res, 400, { error: 'Unknown apartment' });
+        const w = sid ? await sb('room_scenes?on_conflict=room', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { room, scene_id: sid, updated_at: new Date().toISOString() } })
+                      : await sb(`room_scenes?room=eq.${encodeURIComponent(room)}`, { method: 'DELETE', prefer: 'return=minimal' });
+        return json(res, w.ok ? 200 : 500, w.ok ? { ok: true } : { error: 'Could not save. Run supabase/migration-room-scenes.sql first.' });
+      }
+      if (act === 'run') {
+        const sid = String(body.scene_id || '').replace(/[^A-Za-z0-9]/g, '');
+        const j = sid ? await tuyaRaw('POST', `/v2.0/cloud/scene/rule/${sid}/actions/trigger`) : { success: false, msg: 'No scene' };
+        return json(res, 200, { ran: !!j.success, error: j.success ? undefined : j.msg });
+      }
+      return json(res, 400, { error: 'Unknown setup action' });
+    }
+
     // Owner's Smart Life tools (same secret key): ?tuya=devices | ?tuya=functions&device=ID | ?tuya=status&device=ID | ?tuya=send&device=ID&code=switch_led&value=true
     if (req.method === 'GET' && url.searchParams.has('tuya')) {
       if (!(E.TUYA_ACCESS_ID || '').trim() || !(E.TUYA_ACCESS_SECRET || '').trim()) return json(res, 503, { error: 'Add TUYA_ACCESS_ID and TUYA_ACCESS_SECRET in Vercel first' });
@@ -158,7 +192,9 @@ module.exports = async (req, res) => {
           if (w.ok && d.patch.greeted_at) {
             const who = { name: 'Alexa', role: 'system' }, rn = (ROOMS[room] || { name: room }).name;
             await logAction(who, 'welcome spoken', `${rn}: first welcome for ${d.ref}`);
-            const out = await Promise.race([arrival(room), new Promise(r => setTimeout(() => r(null), 3500))]);
+            const rs = await sb(`room_scenes?select=scene_id&room=eq.${encodeURIComponent(room)}&limit=1`);
+            const steps = rs.ok && rs.data && rs.data[0] ? [{ scene: rs.data[0].scene_id }] : undefined; // set from alexa-setup.html, else TUYA_ARRIVAL env
+            const out = await Promise.race([arrival(room, steps), new Promise(r => setTimeout(() => r(null), 3500))]);
             if (out === null) await logAction(who, 'arrival scene', `${rn}: no answer from Smart Life within 3.5 s (it may still have run)`);
             else if (out.length) await logAction(who, 'arrival scene', `${rn}: ${out.every(Boolean) ? 'sent OK' : 'FAILED, check the devices'} (${out.filter(Boolean).length}/${out.length} steps)`);
           }

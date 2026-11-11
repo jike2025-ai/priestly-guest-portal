@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Alexa setup | Priestly Apartments</title>
+<style>
+:root{--bg:#f5f6fa;--card:#fff;--ink:#1b2030;--mut:#6b7285;--line:#e4e7ef;--pri:#f97316;--ok:#15803d;--bad:#b91c1c}
+@media (prefers-color-scheme:dark){:root{--bg:#12151d;--card:#1b2030;--ink:#eef0f6;--mut:#9aa1b5;--line:#2c3348}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.w{max-width:760px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:8px 0 4px}h2{font-size:17px;margin:0 0 4px}p{margin:4px 0}.m{color:var(--mut);font-size:13px}
+.c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}
+input,select,button{font:inherit;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);max-width:100%}
+button{cursor:pointer;background:var(--pri);color:#fff;border-color:var(--pri);font-weight:600}button.g{background:transparent;color:var(--ink);border-color:var(--line)}button:disabled{opacity:.5}
+.r{display:grid;grid-template-columns:1fr;gap:6px;padding:10px 0;border-top:1px solid var(--line)}.r:first-of-type{border-top:0}
+@media(min-width:620px){.r{grid-template-columns:150px 1fr auto;align-items:center}}
+.b{font-weight:600}.tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:99px;background:#fff3e8;color:#c2410c;font-weight:700;margin-left:6px}
+.e{color:var(--bad)}.o{color:var(--ok)}
+#msg{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#1b2030;color:#fff;padding:10px 16px;border-radius:10px;display:none;max-width:90%;z-index:9}
+ol{padding-left:20px;margin:6px 0}li{margin:3px 0}
+</style>
+</head>
+<body>
+<div class="w">
+ <h1>Alexa setup</h1>
+ <p class="m">Owner page. Connects each apartment's Echo and its arrival scene. Needs your secret key (the same one as in Vercel, <code>ALEXA_KEY</code>).</p>
+
+ <div class="c" id="kc">
+  <h2>Secret key</h2>
+  <p><input id="key" type="password" placeholder="Paste ALEXA_KEY" autocomplete="off" style="width:100%;max-width:420px"> <button id="go">Open</button></p>
+  <p class="m">Kept only for this browser tab.</p>
+ </div>
+
+ <div id="main" hidden>
+  <div class="c">
+   <h2>Step 1: show each Echo to the system</h2>
+   <ol>
+    <li>Stand at the apartment's Echo and say: <b>"Alexa, open Priestly Welcome"</b>.</li>
+    <li>Come back here and press <b>Refresh</b>. The Echo appears at the top as <span class="tag">NEW</span>.</li>
+    <li>Choose its apartment in the list and it saves by itself.</li>
+   </ol>
+   <p><button class="g" id="rf">Refresh</button></p>
+   <div id="echos"></div>
+  </div>
+
+  <div class="c">
+   <h2>Step 2: choose each apartment's arrival scene</h2>
+   <p class="m">Create one Tap-to-Run scene per apartment in the Smart Life app (curtains, lights, AC), then pick it here. It runs once, on the guest's first welcome.</p>
+   <div id="scenes"></div>
+  </div>
+ </div>
+</div>
+<div id="msg"></div>
+<script>
+const $=id=>document.getElementById(id);
+let KEY='',D=null;
+try{KEY=sessionStorage.getItem('ak')||''}catch(e){}
+const toast=t=>{const m=$('msg');m.textContent=t;m.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>m.style.display='none',3500)};
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(setup,body){
+  const u='/api/alexa?key='+encodeURIComponent(KEY)+'&setup='+setup;
+  const r=await fetch(u,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(j.error||('Error '+r.status));
+  return j}
+const ago=t=>{const s=(Date.now()-Date.parse(t))/1000;if(s<90)return 'just now';if(s<3600)return Math.round(s/60)+' min ago';if(s<86400)return Math.round(s/3600)+' h ago';return Math.round(s/86400)+' days ago'};
+function roomOpts(sel){return '<option value="">Not assigned</option>'+D.rooms.map(r=>`<option value="${esc(r.id)}"${r.id===sel?' selected':''}>${esc(r.name)}</option>`).join('')}
+function render(){
+  if(D.echoError)$('echos').innerHTML=`<p class="e">${esc(D.echoError)}. Ask the developer to run the database update.</p>`;
+  else{
+    const un=D.echos.filter(e=>!e.room&&Date.now()-Date.parse(e.last_seen)<6*3600e3);
+    $('echos').innerHTML=D.echos.length?D.echos.map((e,i)=>`<div class="r"><div><span class="b">${e.room?esc(e.label||e.room):'Unassigned Echo'}</span>${!e.room&&un[0]&&un[0].device_id===e.device_id?'<span class="tag">NEW</span>':''}<div class="m">heard ${ago(e.last_seen)} · …${esc(e.device_id.slice(-6))}</div></div><div><select data-e="${i}">${roomOpts(e.room)}</select></div><div class="m" id="es${i}"></div></div>`).join(''):'<p class="m">No Echo has been heard yet. Say the phrase to an Echo, then press Refresh.</p>';
+    document.querySelectorAll('[data-e]').forEach(s=>s.onchange=async()=>{const e=D.echos[+s.dataset.e];try{await api('echo',{device_id:e.device_id,room:s.value||null});toast('Saved');load()}catch(x){toast(x.message)}})}
+  const rs={};D.roomScenes.forEach(x=>rs[x.room]=x.scene_id);
+  if(!D.sceneTable)$('scenes').innerHTML='<p class="e">The scenes table is missing. Ask the developer to run supabase/migration-room-scenes.sql.</p>';
+  else if(D.sceneError)$('scenes').innerHTML=`<p class="e">Could not read your Smart Life scenes: ${esc(D.sceneError)}</p>`;
+  else $('scenes').innerHTML=D.rooms.map(r=>`<div class="r"><div class="b">${esc(r.name)}</div><div><select data-r="${esc(r.id)}"><option value="">No scene</option>${D.scenes.map(s=>`<option value="${esc(s.id)}"${rs[r.id]===s.id?' selected':''}>${esc(s.name)}</option>`).join('')}</select></div><div><button class="g" data-run="${esc(r.id)}"${rs[r.id]?'':' disabled'}>Test</button></div></div>`).join('')+(D.scenes.length?'':'<p class="m">No scenes found yet. Create them in the Smart Life app, then press Refresh.</p>');
+  document.querySelectorAll('[data-r]').forEach(s=>s.onchange=async()=>{try{await api('scene',{room:s.dataset.r,scene_id:s.value});toast('Saved');load()}catch(x){toast(x.message)}});
+  document.querySelectorAll('[data-run]').forEach(b=>b.onclick=async()=>{const sid=rs[b.dataset.run];if(!sid||!confirm('Run this apartment\'s arrival scene now? Curtains, lights and AC will react.'))return;try{const j=await api('run',{scene_id:sid});toast(j.ran?'Scene sent to Smart Life':('Failed: '+(j.error||'unknown')))}catch(x){toast(x.message)}})}
+async function load(){try{D=await api('overview');$('kc').hidden=true;$('main').hidden=false;render()}catch(e){$('kc').hidden=false;$('main').hidden=true;try{sessionStorage.removeItem('ak')}catch(x){}toast(e.message)}}
+$('go').onclick=()=>{KEY=$('key').value.trim();try{sessionStorage.setItem('ak',KEY)}catch(e){}load()};
+$('key').onkeydown=e=>{if(e.key==='Enter')$('go').click()};
+$('rf').onclick=load;
+if(KEY)load();
+</script>
+</body>
+</html>
