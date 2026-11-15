@@ -43,6 +43,7 @@ const NIGHT = h => h >= 23 || h < 6;                          // never speak at 
 function decide(bookings, day, hour, nowMs, agoOverride, force) {
   const now = nowMs || Date.now();
   const ok = (bookings || []).filter(b => b.status === undefined || b.status === 'confirmed')
+    .filter(b => !String(b.reference || '').startsWith('X-'))   // calendar-sync blocks from Airbnb/Booking.com are not named guests
     .filter(b => b.check_in <= day && b.check_out >= day && !(b.check_out === day && hour >= 12))
     .sort((a, b) => (a.check_in < b.check_in ? 1 : -1));
   const b = ok[0];

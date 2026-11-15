@@ -1,5 +1,6 @@
 const { cors, json, sb, ROOMS, today, checkSig } = require('../lib/core');
 const ical = require('../lib/ical');
+const { missedWelcomes } = require('../lib/watch');
 
 // GET /api/availability            -> list of apartments with prices
 // GET /api/availability?room=paris -> booked date ranges for that apartment
@@ -13,7 +14,7 @@ module.exports = async (req, res) => {
     catch (e) { return json(res, 500, { error: 'Could not build the calendar' }); }
   }
   // daily cron: refresh every connected website calendar
-  if (req.query.sync) { const n = await ical.syncStale(0); return json(res, 200, { synced: n }); }
+  if (req.query.sync) { await missedWelcomes(); const n = await ical.syncStale(0); return json(res, 200, { synced: n }); }
   const id = String(req.query.room || '');
   if (!id) return json(res, 200, { rooms: Object.entries(ROOMS).map(([k, v]) => ({ id: k, ...v })) });
   if (!ROOMS[id]) return json(res, 400, { error: 'Unknown apartment' });

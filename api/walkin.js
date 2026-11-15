@@ -1,5 +1,6 @@
 const { cors, json, bad, sb, ROOMS, today, quote, crypto, alertOwner, fd, naira } = require('../lib/core');
 const { authenticate, logAction, can, capsOf } = require('../lib/staff');
+const { missedWelcomes } = require('../lib/watch');
 
 // POST /api/walkin  (staff page: receptionists and admin, PIN only)
 //   {pin, action:'login'}                         -> {role, name, shiftId}   (starts a tracked shift)
@@ -60,6 +61,7 @@ module.exports = async (req, res) => {
     }
 
     if (b.action === 'overview') {
+      await Promise.race([missedWelcomes(), new Promise(r => setTimeout(r, 3000))]);
       const now = new Date().toISOString();
       const from = new Date(Date.now() - 60 * 864e5).toISOString().slice(0, 10);
       const q = cols => `bookings?select=${cols}&check_out=gte.${from}&or=(status.eq.confirmed,and(status.eq.pending,hold_expires_at.gt.${now}))&order=check_in&limit=1000`;
