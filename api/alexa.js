@@ -57,7 +57,9 @@ function decide(bookings, day, hour, nowMs, agoOverride, force) {
     return { ref: b.reference, patch: { greeted_at: iso, last_event_at: iso },
       speech: fullWelcome(name, room, b.check_out) };
   }
-  if (force) {                                                  // guest asked by voice: always answer
+  if (force) {                                                  // guest asked by voice: always answer ... but never more than once every 3 minutes (a motion routine wired to this phrase would otherwise repeat the welcome non-stop)
+    const lastF = Date.parse(b.last_event_at || b.greeted_at);
+    if (agoOverride === undefined && now - lastF < 180000) return none;
     return { ref: b.reference, patch: { last_event_at: iso },
       speech: fullWelcome(name, room, b.check_out) };
   }
