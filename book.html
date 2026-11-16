@@ -44,6 +44,7 @@ textarea:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,
 <h1>Book your <i>stay</i></h1><p class='lead'>Pick your apartment and dates, pay securely online, and your receipt arrives by email. Rates are per night: arrive any time on your check-in day, and every night ends with check-out by 12:00 noon the next day.</p>
 <div class='glass'>
  <div class='fld'><label for='room'>Apartment</label><select id='room'><option value=''>Loading apartments...</option></select><div class='bk' id='bk'></div></div>
+ <div class='fld' id='opw' hidden><label for='opt'>Layout</label><select id='opt'></select></div>
  <div class='fld'><label>Choose your dates</label><div id='cal' class='cal'></div><div class='bk' id='sel'></div><input type='hidden' id='ci'><input type='hidden' id='co'><p class='note' style='margin:8px 0 0'>Dates that are already booked are crossed out and cannot be chosen. Check-out is by 12:00 noon.</p></div>
  <div class='fld'><label for='gu'>Guests</label><input type='number' id='gu' min='1' max='10' value='1' inputmode='numeric'></div>
  <div id='sum' hidden></div><div id='dmsg'></div>
@@ -79,12 +80,14 @@ const Q=new URLSearchParams(location.search);let ROOMS=[],booked=[],busy=false;
 async function api(p,o){let r;try{r=await fetch(API+p,o)}catch(e){throw new Error('Cannot reach the booking service right now. Please try again or call the front desk.')}const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Something went wrong');return j}
 (function(){let h='';if(CFG.TEST_MODE)h+=`<div class='msg warn'><b>Test mode.</b> No real money is charged. Do not use real card details.</div>`;if(!API||API.includes('YOUR-PROJECT'))h+=`<div class='msg err'>The booking service is not connected yet. See SETUP.md.</div>`;$('banner').innerHTML=h})();
 
+const cur=r=>$('opw').hidden||!r.option||$('opt').value!=='one-bed'?r:{rate:r.option.rate,caution:r.option.caution};
+function setOpt(){const r=ROOMS.find(x=>x.id===$('room').value);$('opw').hidden=!(r&&r.option);if(r&&r.option){$('opt').innerHTML=`<option value=''>Standard 2-bedroom: ${ng(r.rate)} / night</option><option value='${r.option.id}'>${E(r.option.label)}: ${ng(r.option.rate)} / night</option>`}else $('opt').innerHTML=''}
 async function init(){
   if(Q.get('ref'))return showResult(Q.get('ref'));
     try{ROOMS=(await api('/api/availability')).rooms}catch(e){$('room').innerHTML=`<option value=''>Booking unavailable</option>`;$('fmsg').innerHTML=`<div class='msg err'>${E(e.message)}</div>`;return}
   $('room').innerHTML=`<option value=''>Choose an apartment</option>`+ROOMS.map(r=>`<option value='${r.id}'>${E(r.name)} \u2014 ${E(r.tier)} \u2014 ${ng(r.rate)} / night</option>`).join('');
   const want=(Q.get('room')||'').toLowerCase().replace(/\s+/g,'-');if(ROOMS.some(r=>r.id===want))$('room').value=want;
-  await onRoom();
+  setOpt();await onRoom();
 }
 
 /* ---- availability calendar: booked nights can never be picked ---- */
@@ -139,17 +142,17 @@ function calc(){
   if(n<1)return err('Check-out must be after check-in.');
   if(n>30)return err('For stays over 30 nights, please contact the front desk.');
   if(booked.some(b=>ci<b.to&&co>b.from))return err('Those dates overlap an existing booking. Please choose other dates.');
-  const sub=n*r.rate,tot=sub+r.caution;
-  $('sum').hidden=false;$('sum').innerHTML=`<div class='ln'><span>${n} night${n>1?'s':''} x ${ng(r.rate)}</span><span>${ng(sub)}</span></div><div class='ln'><span>Caution fee (refundable after check-out inspection)</span><span>${ng(r.caution)}</span></div><div class='ln t'><span>Total</span><span>${ng(tot)}</span></div><p class='note'>Check-in any time on ${fd(ci)}. Check-out by 12:00 noon on ${fd(co)}.</p>`;
+  const pr=cur(r),sub=n*pr.rate,tot=sub+pr.caution;
+  $('sum').hidden=false;$('sum').innerHTML=`<div class='ln'><span>${n} night${n>1?'s':''} x ${ng(pr.rate)}</span><span>${ng(sub)}</span></div><div class='ln'><span>Caution fee (refundable after check-out inspection)</span><span>${ng(pr.caution)}</span></div><div class='ln t'><span>Total</span><span>${ng(tot)}</span></div><p class='note'>Check-in any time on ${fd(ci)}. Check-out by 12:00 noon on ${fd(co)}.</p>`;
   $('pay').disabled=false;
 }
 $('srs').addEventListener('change',()=>{$('pkw').hidden=!document.querySelector('#srs input[value="Airport pickup"]').checked});
 $('kd').addEventListener('change',()=>{$('kdw').hidden=!$('kd').value});
 $('sn').addEventListener('input',()=>{$('snc').textContent=$('sn').value.length+' / 500'});
-$('room').addEventListener('change',onRoom);['ci','co'].forEach(i=>$(i).addEventListener('change',calc));
+$('room').addEventListener('change',()=>{setOpt();onRoom()});$('opt').addEventListener('change',calc);['ci','co'].forEach(i=>$(i).addEventListener('change',calc));
 $('pay').onclick=async()=>{
   if(busy)return;const f=$('fmsg');f.innerHTML='';const bad=m=>{f.innerHTML=`<div class='msg err'>${m}</div>`};
-  const d={room:$('room').value,checkIn:$('ci').value,checkOut:$('co').value,guests:$('gu').value,name:$('nm').value.trim(),email:$('em').value.trim(),phone:$('ph').value.trim(),website:$('web').value};
+  const d={room:$('room').value,checkIn:$('ci').value,checkOut:$('co').value,guests:$('gu').value,name:$('nm').value.trim(),email:$('em').value.trim(),phone:$('ph').value.trim(),website:$('web').value,option:$('opw').hidden?'':$('opt').value};
   d.requests=[].map.call(document.querySelectorAll('#srs input:checked'),x=>x.value);d.pickup=d.requests.includes('Airport pickup')?$('pk').value.trim():'';d.note=$('sn').value.trim();
   d.gender=$('sx').value;d.nin=$('nin').value.replace(/\s/g,'');d.address=$('ad').value.trim();d.children=$('kd').value;d.childrenNote=d.children?$('kn').value.trim():'';
   if(d.name.length<2)return bad('Please enter your full name.');

@@ -18,17 +18,18 @@ module.exports = async (req, res) => {
 
     const info = buildGuestInfo(b); // sex, NIN, address and children: validated here, never trusted from the browser
     const special = buildRequests(b); // only known options and trimmed text are kept
-    const q = quote(b.room, b.checkIn, b.checkOut); // price is always worked out here, never trusted from the browser
+    const q = quote(b.room, b.checkIn, b.checkOut, 'online', String(b.option || '')); // price is always worked out here, never trusted from the browser
     const hold = parseInt(E.HOLD_MINUTES, 10) || 15;
     await sb(`bookings?status=eq.pending&hold_expires_at=lt.${new Date().toISOString()}`, { method: 'PATCH', body: { status: 'expired' } });
 
     const reference = 'PA-' + crypto.randomBytes(8).toString('hex').toUpperCase();
     const row = { reference, room: b.room, check_in: b.checkIn, check_out: b.checkOut, nights: q.nights, guests, guest_name: name, guest_phone: phone, guest_email: email, rate: q.rate, caution: q.caution, total: q.total, status: 'pending', hold_expires_at: new Date(Date.now() + hold * 60000).toISOString() };
     Object.assign(row, info);
-    if (special) row.special_requests = special;
+    const spec2 = ((q.option ? 'ROOM OPTION: ' + q.option.label + '. ' : '') + (special || '')).slice(0, 500);
+    if (spec2) row.special_requests = spec2;
     let ins = await sb('bookings', { method: 'POST', prefer: 'return=minimal', body: row });
     // If the special_requests column has not been added to Supabase yet, save the booking without it (the requests still travel in the Paystack metadata).
-    if (special && ins.status === 400 && /special_requests/i.test(JSON.stringify(ins.data))) { delete row.special_requests; ins = await sb('bookings', { method: 'POST', prefer: 'return=minimal', body: row }); }
+    if (spec2 && ins.status === 400 && /special_requests/i.test(JSON.stringify(ins.data))) { delete row.special_requests; ins = await sb('bookings', { method: 'POST', prefer: 'return=minimal', body: row }); }
     // If the new guest-detail columns are not in Supabase yet, do not block the guest: save without them and shout in the logs.
     if (ins.status === 400 && GUEST_COLS.some(c => new RegExp(c, 'i').test(JSON.stringify(ins.data)))) { GUEST_COLS.forEach(c => delete row[c]); console.error('MIGRATION MISSING: run supabase/migration-guest-details.sql, guest registration details were NOT saved for ' + reference); ins = await sb('bookings', { method: 'POST', prefer: 'return=minimal', body: row }); }
     if (ins.status === 409) throw bad('Sorry, those dates were just taken. Please choose different dates.', 409);

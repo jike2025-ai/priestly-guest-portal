@@ -1,5 +1,6 @@
 <!DOCTYPE html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1,viewport-fit=cover'><meta name='robots' content='noindex,nofollow'><title>Staff Booking System | Priestly Apartments</title><meta name='theme-color' content='#f97316'>
 <style>
+[hidden]{display:none!important}
 :root{--or:#f97316;--or2:#fb923c;--bg:#f4f6fb;--card:#fff;--ink:#1e2433;--mu:#6b7385;--ln:#e6e9f2;--gr:#16a34a;--am:#f59e0b;--sk:#0ea5e9;--ro:#f97316;--bl:#3b82f6;--vi:#8b5cf6;--sl:#94a3b8;--rd:#dc2626;--sans:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;--sw:268px}
 *{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
 button,input,select,textarea{font:inherit;color:inherit}a{color:inherit}
@@ -161,7 +162,8 @@ h2.t{font-size:23px;margin:0 0 4px}.sub{color:var(--mu);margin:0 0 18px}
 <section class='pg' id='p-new'><h2 class='t'>New walk-in booking</h2><p class='sub'>Same as the paper Customer's Information form. The dates are blocked on the website straight away, so nobody can book them online.</p>
  <div class='two2'><div>
   <div class='pn'><div class='ph'><h3>1. Apartment, dates and payment</h3></div><div class='pb'><div class='fg'>
-   <div class='f w'><label for='room'>Apartment (price per night)</label><select id='room'></select><div id='rbk' class='sub' style='margin:4px 0 0;font-size:13px'></div></div>
+   <div class='f w'><label for='room'>Apartment (reception price per night)</label><select id='room'></select><div id='rbk' class='sub' style='margin:4px 0 0;font-size:13px'></div></div>
+   <div class='f w' id='ropw' hidden><label for='rop'>Layout</label><select id='rop'></select></div>
    <div class='f w'><label>Stay dates</label><div class='pk' id='pk'></div><div class='psel' id='psel'></div><input id='ci' type='hidden'><input id='co' type='hidden'></div>
    <div class='f'><label for='gu'>Number of guests</label><input id='gu' type='number' min='1' max='10' value='1'></div>
    <div class='f'><label for='pd'>Payment received</label><select id='pd'><option value='cash'>Cash</option><option value='transfer'>Bank transfer</option><option value='pos'>POS</option><option value='unpaid'>Not yet paid</option></select></div>
@@ -264,7 +266,7 @@ const ft=t=>new Date(t).toLocaleString('en-GB',{day:'numeric',month:'short',hour
 const ST={overdue:['Still in room (late)','#dc2626'],inhouse:['In-house','#f59e0b'],arriving:['Arriving today','#0ea5e9'],departing:['Departing today','#f97316'],upcoming:['Upcoming','#3b82f6'],hold:['Awaiting payment','#8b5cf6'],past:['Checked out','#94a3b8'],available:['Available','#16a34a']};
 const DESC={overdue:'Guest has not left yet. Mark checked out when they go.',available:'No guest tonight. Ready to book.',inhouse:'Guest is staying tonight.',arriving:'Guest checks in today.',departing:'Guest checks out by 12:00 noon today.',upcoming:'Confirmed booking in the future.',hold:'Guest is paying online. Held for a short time.',past:'Stay completed.'};
 const AM=['24/7 power','Hotspot Wi-Fi','Smart TV','Full kitchen','Security & CCTV'];
-const PH={'VIP':'img-09','Executive':'img-10','Standard':'img-11','Self-con VIP':'img-09','Self-con Standard':'img-12'};
+const PH={'Executive':'img-09','Standard':'img-11','Executive Self-con':'img-12'};
 const photo=r=>'images/'+(r.id==='kigali'?'img-30':PH[r.tier]||'img-09')+'.jpg';
 const chip=k=>`<span class='chip c-${k}'>${ST[k][0]}</span>`;
 const sess=()=>{try{sessionStorage.setItem('pa_pin',PIN)}catch(e){}};
@@ -333,7 +335,7 @@ function aptCards(){$('ag').innerHTML=D.rooms.map(r=>{const s=roomState(r.id),co
  let note;if(b)note=`<b>${esc(b.guest_name)}${isWalk(b)?"<span class='tg'>WALK-IN</span>":''}</b><small>${fs(b.check_in)} &rarr; ${fs(b.check_out)} &middot; ${b.guests||1} guest${(b.guests||1)>1?'s':''}</small>`;else note=`<b>${s.k==='available'?'Free tonight':''}</b><small>${DESC[s.k]}</small>`;
  const nx=n?`<small style='display:block;margin-top:4px;color:${ST[bstate(n,D.today)==='hold'?'hold':'upcoming'][1]}'>Next: ${fs(n.check_in)} &rarr; ${fs(n.check_out)} (${esc(n.guest_name)})</small>`:`<small style='display:block;margin-top:4px'>No further bookings.</small>`;
  return `<div class='ac' style='--sc:${col}'><div class='im' style="background-image:url('${photo(r)}')">${chip(s.k)}<span class='tr'>${esc(r.tier)}</span></div><div class='bd'><h4>${esc(r.name)}<small>${naira(r.rate)}/night</small></h4>
- <div class='am'><span>${/^Self/.test(r.tier)?'Self-contained':'2 bedrooms'}</span>${AM.map(a=>`<span>${a}</span>`).join('')}</div>
+ <div class='am'><span>${/Self/.test(r.tier)?'Self-contained':'2 bedrooms'}</span>${AM.map(a=>`<span>${a}</span>`).join('')}</div>
  <div class='nt'>${note}${nx}</div><small style='color:var(--mu)'>Caution fee ${naira(r.caution)} (refundable)</small>${hkRow(r)}</div>
  <div class='ft'><button class='btn p sm' data-bk='${r.id}'>Book walk-in</button><button class='btn sm' data-dc='${r.id}'>${icon('key')}Door code</button>${D.stay&&b&&['inhouse','arriving','departing','overdue'].includes(s.k)?`<button class='btn sm${s.k==='overdue'?' dg':''}' data-co='${esc(b.reference)}'>Checked out</button>`:''}</div></div>`}).join('')}
 
@@ -403,13 +405,15 @@ function renderPk(){const id=$('room').value;
 function pickDate(d){const id=$('room').value,ci=$('ci').value,co=$('co').value;
  if(!ci||co||d<=ci){$('ci').value=d;$('co').value=''}else{$('co').value=d}
  renderPk();summary()}
-function onRoom(){const c=conflict();if($('ci').value&&(c||!$('room').value)){$('ci').value='';$('co').value=''}renderPk();summary()}
+function setOpt(){const r=D.rooms.find(x=>x.id===$('room').value);$('ropw').hidden=!(r&&r.option);$('rop').innerHTML=r&&r.option?`<option value=''>Standard 2-bedroom: ${naira(r.rate)} per night</option><option value='${r.option.id}'>${esc(r.option.label)}: ${naira(r.option.rate)} per night</option>`:''}
+const curP=r=>$('ropw').hidden||!r.option||$('rop').value!=='one-bed'?r:{rate:r.option.rate,caution:r.option.caution};
+function onRoom(){setOpt();const c=conflict();if($('ci').value&&(c||!$('room').value)){$('ci').value='';$('co').value=''}renderPk();summary()}
 function summary(){const id=$('room').value,r=D.rooms.find(x=>x.id===id),ci=$('ci').value,co=$('co').value;
  const bk=id?rbk(id).map(b=>fs(b.check_in)+' to '+fs(b.check_out)):[];$('rbk').innerHTML=id?(bk.length?'Booked (crossed out below): '+bk.map(esc).join(' | '):'No upcoming bookings for this apartment.'):'';
  if(!r||!ci||!co||co<=ci){$('qs').innerHTML=`<div class='em' style='padding:10px 0'>Choose an apartment and dates.</div>`;return}
- const n=dn(co)-dn(ci),sub=n*r.rate,cf=conflict();
- $('qs').innerHTML=`<div class='rw'><span>${esc(r.name)} (${esc(r.tier)})</span><b></b></div><div class='rw'><span>${fd(ci)} &rarr; ${fd(co)}</span><b>${n} night${n>1?'s':''}</b></div><div class='rw'><span>${n} x ${naira(r.rate)}</span><b>${naira(sub)}</b></div><div class='rw'><span>Caution fee (refundable)</span><b>${naira(r.caution)}</b></div><div class='rw tt'><span>Total to collect</span><span>${naira(sub+r.caution)}</span></div>`+(cf?`<div class='mg e'>Not free: ${esc(cf.guest_name)} has this apartment ${fs(cf.check_in)} to ${fs(cf.check_out)}.</div>`:`<div class='mg k'>These dates are free.</div>`)}
-function prefill(room,d){go('new');$('room').value=room;let c=d,n=0;while((c<D.today||nightTaken(room,c))&&n++<90)c=addD(c,1);$('ci').value=c;$('co').value=addD(c,1);pv=c.slice(0,7);renderPk();summary();$('ln').focus()}
+ const P=curP(r),n=dn(co)-dn(ci),sub=n*P.rate,cf=conflict();
+ $('qs').innerHTML=`<div class='rw'><span>${esc(r.name)} (${esc(r.tier)}${P!==r?', '+esc(r.option.label):''})</span><b></b></div><div class='rw'><span>${fd(ci)} &rarr; ${fd(co)}</span><b>${n} night${n>1?'s':''}</b></div><div class='rw'><span>${n} x ${naira(P.rate)}</span><b>${naira(sub)}</b></div><div class='rw'><span>Caution fee (refundable)</span><b>${naira(P.caution)}</b></div><div class='rw tt'><span>Total to collect</span><span>${naira(sub+P.caution)}</span></div>`+(cf?`<div class='mg e'>Not free: ${esc(cf.guest_name)} has this apartment ${fs(cf.check_in)} to ${fs(cf.check_out)}.</div>`:`<div class='mg k'>These dates are free.</div>`)}
+function prefill(room,d){go('new');$('room').value=room;setOpt();let c=d,n=0;while((c<D.today||nightTaken(room,c))&&n++<90)c=addD(c,1);$('ci').value=c;$('co').value=addD(c,1);pv=c.slice(0,7);renderPk();summary();$('ln').focus()}
 
 
 /* ---------- admin pages ---------- */
@@ -521,7 +525,7 @@ $('dx').onclick=$('mdx').onclick=$('ov').onclick=closeAll;$('hb').onclick=()=>{$
 $('cp').onclick=()=>{calStart=addD(calStart,-14);calendar()};$('cn').onclick=()=>{calStart=addD(calStart,14);calendar()};$('ct').onclick=()=>{calStart=addD(D.today,-3);calendar()};
 ['rq','rr','rc'].forEach(i=>$(i).addEventListener('input',resTable));$('rfr').onclick=()=>load();
 $('gs').addEventListener('input',()=>{$('rq').value=$('gs').value;tab='all';if($('gs').value&&!$('p-res').classList.contains('on'))go('res');resTable()});
-$('room').addEventListener('change',onRoom);
+$('room').addEventListener('change',onRoom);$('rop').addEventListener('change',summary);
 const PAYN={cash:'Cash',transfer:'Bank transfer',pos:'POS',unpaid:'Not yet paid'};
 let lastCard=null;
 function cardFrom(b){const parts=String(b.guest_name||'').trim().split(/\s+/),walk=isWalk(b);
@@ -541,7 +545,7 @@ function printCard(c){const r=D.rooms.find(x=>x.id===c.room)||{name:c.room,tier:
 async function stayAct(action,ref,on){try{await call({action,reference:ref,on});toast(action==='checkout'?'Marked as checked out. The apartment is free.':on===false?'Late stay cleared.':'Marked: guest is still in the room.');closeAll();await load()}catch(e){toast(e.message)}}
 async function printBooking(ref){try{const j=await call({action:'card',reference:ref});printCard(cardFrom(j.booking));try{await call({action:'printed',reference:ref});const b=D.bookings.find(x=>x.reference===ref);if(b){b.printed_at=new Date().toISOString();resTable()}}catch(e){toast(e.message)}}catch(e){toast(e.message)}}
 async function saveBooking(print){$('nmsg').innerHTML='';const b1=$('go'),b2=$('go2');b1.disabled=b2.disabled=true;try{
- const c={room:$('room').value,checkIn:$('ci').value,checkOut:$('co').value,lastName:$('ln').value.trim(),firstName:$('fn').value.trim(),birthDate:$('bd').value,sex:$('sx').value,address:$('ad').value.trim(),city:$('cy').value.trim(),state:$('st').value.trim(),phone:$('ph').value.trim(),email:$('em').value.trim(),nin:$('nin').value.replace(/\s/g,''),guests:$('gu').value,paid:$('pd').value,note:$('nt').value.trim()};
+ const c={room:$('room').value,option:$('ropw').hidden?'':$('rop').value,checkIn:$('ci').value,checkOut:$('co').value,lastName:$('ln').value.trim(),firstName:$('fn').value.trim(),birthDate:$('bd').value,sex:$('sx').value,address:$('ad').value.trim(),city:$('cy').value.trim(),state:$('st').value.trim(),phone:$('ph').value.trim(),email:$('em').value.trim(),nin:$('nin').value.replace(/\s/g,''),guests:$('gu').value,paid:$('pd').value,note:$('nt').value.trim()};
  const r=await call(Object.assign({action:'create'},c));c.reference=r.reference;lastCard=c;
  $('nmsg').innerHTML=`<div class='mg k'>Saved. Reference ${esc(r.reference)} (${r.nights} night${r.nights>1?'s':''}, total ${naira(r.total)}). These dates are now blocked on the website. <button class='btn sm' id='rp' type='button' style='margin-left:8px'>Print again</button></div>`;$('rp').onclick=()=>printCard(lastCard);
  ['ln','fn','bd','sx','ad','cy','st','ph','em','nin','nt'].forEach(i=>$(i).value='');$('gu').value=1;$('ci').value='';$('co').value='';await load();renderPk();summary();

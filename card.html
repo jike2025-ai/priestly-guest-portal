@@ -261,18 +261,18 @@
       <select id="in-room">
         <option value="">— Select apartment —</option>
         <optgroup label="Two-bedroom">
-          <option>New York (VIP)</option>
-          <option>Moscow (VIP)</option>
+          <option>New York (Executive)</option>
+          <option>Moscow (Executive)</option>
           <option>Rio de Janeiro (Executive)</option>
           <option>Paris (Executive)</option>
           <option>Dubai (Standard)</option>
           <option>Giza (Standard)</option>
         </optgroup>
         <optgroup label="Self-contained">
-          <option>Zanzibar (Self-con Standard)</option>
-          <option>Kigali (Self-con VIP)</option>
-          <option>Santorini (Self-con VIP)</option>
-          <option>Abuja (Self-con VIP)</option>
+          <option>Zanzibar (Executive Self-con)</option>
+          <option>Kigali (Executive Self-con)</option>
+          <option>Santorini (Executive Self-con)</option>
+          <option>Abuja (Executive Self-con)</option>
         </optgroup>
       </select>
     </div>
@@ -343,7 +343,7 @@
           <h2 class="dest-name" id="pv-city">Your stay</h2>
           <div class="kind" id="pv-kind">Prepared while you check in</div>
         </div>
-        <div class="stamp" id="pv-stamp" style="display:none;"><span id="pv-tier">VIP</span></div>
+        <div class="stamp" id="pv-stamp" style="display:none;"><span id="pv-tier">Executive</span></div>
       </div>
 
       <div class="pass-fields">
@@ -2757,16 +2757,16 @@ var qrcode = function() {
 
   // apartment metadata: city -> {kind, code} used for the route line, the pass number and the stamp
   var APT_META = {
-    'New York (VIP)':            {kind:'Two-bedroom apartment', code:'NYC'},
-    'Moscow (VIP)':               {kind:'Two-bedroom apartment', code:'MOW'},
+    'New York (Executive)':            {kind:'Two-bedroom apartment', code:'NYC'},
+    'Moscow (Executive)':               {kind:'Two-bedroom apartment', code:'MOW'},
     'Rio de Janeiro (Executive)': {kind:'Two-bedroom apartment', code:'RIO'},
     'Paris (Executive)':          {kind:'Two-bedroom apartment', code:'PAR'},
     'Dubai (Standard)':           {kind:'Two-bedroom apartment', code:'DXB'},
     'Giza (Standard)':            {kind:'Two-bedroom apartment', code:'CAI'},
-    'Zanzibar (Self-con Standard)':        {kind:'Self-contained apartment', code:'ZNZ'},
-    'Kigali (Self-con VIP)':          {kind:'Self-contained apartment', code:'KGL'},
-    'Santorini (Self-con VIP)':            {kind:'Self-contained apartment', code:'JTR'},
-    'Abuja (Self-con VIP)':                {kind:'Self-contained apartment', code:'ABV'}
+    'Zanzibar (Executive Self-con)':        {kind:'Self-contained apartment', code:'ZNZ'},
+    'Kigali (Executive Self-con)':          {kind:'Self-contained apartment', code:'KGL'},
+    'Santorini (Executive Self-con)':            {kind:'Self-contained apartment', code:'JTR'},
+    'Abuja (Executive Self-con)':                {kind:'Self-contained apartment', code:'ABV'}
   };
 
   function fmtDate(d){

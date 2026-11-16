@@ -1,4 +1,4 @@
-const { cors, json, bad, sb, ROOMS, today, quote, crypto, alertOwner, fd, naira } = require('../lib/core');
+const { cors, json, bad, sb, ROOMS, roomsView, today, quote, crypto, alertOwner, fd, naira } = require('../lib/core');
 const { authenticate, logAction, can, capsOf } = require('../lib/staff');
 const { missedWelcomes } = require('../lib/watch');
 
@@ -77,7 +77,7 @@ module.exports = async (req, res) => {
       let housekeeping = {};
       const rs = await sb('room_status?select=room,status,note,updated_by,updated_at');
       if (rs.ok && Array.isArray(rs.data)) rs.data.forEach(x => { housekeeping[x.room] = x; });
-      return json(res, 200, { today: today(), me: { role: user.role, name: user.name, caps: capsOf(user) }, rooms: Object.entries(ROOMS).map(([id, v]) => ({ id, ...v })), bookings, housekeeping, tracking, stay });
+      return json(res, 200, { today: today(), me: { role: user.role, name: user.name, caps: capsOf(user) }, rooms: roomsView('walkin'), bookings, housekeeping, tracking, stay });
     }
 
     if (b.action === 'create') {
@@ -104,7 +104,7 @@ module.exports = async (req, res) => {
       const note = clean(b.note, 200);
       const guests = Math.min(10, Math.max(1, parseInt(b.guests, 10) || 1));
       const paid = ['cash', 'transfer', 'pos', 'unpaid'].includes(b.paid) ? b.paid : 'cash';
-      const q = quote(b.room, b.checkIn, b.checkOut);
+      const q = quote(b.room, b.checkIn, b.checkOut, 'walkin', String(b.option || ''));
       await sb(`bookings?status=eq.pending&hold_expires_at=lt.${new Date().toISOString()}`, { method: 'PATCH', body: { status: 'expired' } });
       const reference = 'PA-W-' + crypto.randomBytes(6).toString('hex').toUpperCase();
       const name = first + ' ' + last;
@@ -113,7 +113,7 @@ module.exports = async (req, res) => {
         guest_name: name, guest_phone: phone, guest_email: email || 'walk-in@priestlyapartments.com',
         rate: q.rate, caution: q.caution, total: q.total, status: 'confirmed', paid_at: paid === 'unpaid' ? null : new Date().toISOString(), channel: 'walk-in',
         gender: sex, nin, home_address: address, birth_date: dob, city, state, payment_method: paid, recorded_by: user.name,
-        special_requests: ('WALK-IN at reception. Payment: ' + paid + (note ? '. ' + note : '')).slice(0, 500)
+        special_requests: ((q.option ? 'ROOM OPTION: ' + q.option.label + '. ' : '') + 'WALK-IN at reception. Payment: ' + paid + (note ? '. ' + note : '')).slice(0, 500)
       };
       const ins = await sb('bookings', { method: 'POST', prefer: 'return=minimal', body: row });
       if (ins.status === 409) throw bad('Those dates are already booked for this apartment (online or at reception). Please choose other dates.', 409);

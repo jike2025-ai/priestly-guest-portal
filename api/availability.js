@@ -1,4 +1,4 @@
-const { cors, json, sb, ROOMS, today, checkSig } = require('../lib/core');
+const { cors, json, sb, ROOMS, roomsView, today, checkSig } = require('../lib/core');
 const ical = require('../lib/ical');
 const { missedWelcomes } = require('../lib/watch');
 
@@ -16,7 +16,7 @@ module.exports = async (req, res) => {
   // daily cron: refresh every connected website calendar
   if (req.query.sync) { await missedWelcomes(); const n = await ical.syncStale(0); return json(res, 200, { synced: n }); }
   const id = String(req.query.room || '');
-  if (!id) return json(res, 200, { rooms: Object.entries(ROOMS).map(([k, v]) => ({ id: k, ...v })) });
+  if (!id) return json(res, 200, { rooms: roomsView('online') });
   if (!ROOMS[id]) return json(res, 400, { error: 'Unknown apartment' });
   try {
     await Promise.race([ical.syncStale(10, id), new Promise(r => setTimeout(r, 4000))]);   // keep other websites' bookings fresh before guests see dates
