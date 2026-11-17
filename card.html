@@ -305,11 +305,6 @@
     <input id="in-username" type="hidden">
     <input id="in-password" type="hidden">
 
-    <div class="field">
-      <label for="in-wpass">Wi-Fi network password <span style="opacity:.6">(leave empty if the network is open)</span></label>
-      <input id="in-wpass" type="text" autocomplete="off" placeholder="Network password">
-    </div>
-
     <div class="actions" style="margin-top:0;margin-bottom:10px;">
       <button type="button" class="primary" id="btn-wifi-voucher" disabled title="Enter your staff PIN to unlock">Get Wi-Fi voucher</button>
     </div>
@@ -2736,7 +2731,6 @@ var qrcode = function() {
     staff: document.getElementById('in-staff'),
     username: document.getElementById('in-username'),
     password: document.getElementById('in-password'),
-    wpass: document.getElementById('in-wpass'),
     pin: document.getElementById('in-pin')
   };
   var ROOM_IDS = {'New York':'new-york','Moscow':'moscow','Rio de Janeiro':'rio','Paris':'paris','Dubai':'dubai','Giza':'giza','Zanzibar':'zanzibar','Kigali':'kigali','Santorini':'santorini','Abuja':'abuja'};
@@ -2830,7 +2824,6 @@ var qrcode = function() {
     var hsurl = HOTSPOT_URL;
     var username = els.username.value.trim();
     var password = els.password.value.trim();
-    var wpass = els.wpass.value.trim();
 
     var meta = APT_META[roomFull];
     var cityName = '';
@@ -2884,10 +2877,10 @@ var qrcode = function() {
       collEl.appendChild(pill);
     });
 
-    // QR 1 — join the guest Wi-Fi network: open by default, or WPA when a network password is typed above
-    var wifiPayload = wpass ? ('WIFI:T:WPA;S:' + escapeWifi(ssid) + ';P:' + escapeWifi(wpass) + ';;') : ('WIFI:T:nopass;S:' + escapeWifi(ssid) + ';;');
+    // QR 1 — join the guest Wi-Fi network (assumed open, no password, ahead of the hotspot login)
+    var wifiPayload = 'WIFI:T:nopass;S:' + escapeWifi(ssid) + ';;';
     document.getElementById('qr-wifi').innerHTML = makeQrSvg(wifiPayload, 4, 2);
-    document.getElementById('pv-wifi-creds').innerHTML = 'Network: <b>' + escH(ssid) + '</b>' + (wpass ? '<br>Password: <b>' + escH(wpass) + '</b>' : '');
+    document.getElementById('pv-wifi-creds').innerHTML = 'Network: <b>' + escH(ssid) + '</b>';
 
     // QR 2 — hotspot login: links to the portal URL if given, otherwise carries the credentials as text
     var hotspotPayload = hsurl;
@@ -2905,14 +2898,11 @@ var qrcode = function() {
     if(ssid) params.set('ssid', ssid);
     if(username) params.set('huser', username);
     if(password) params.set('hpass', password);
-    if(wpass) params.set('wpass', wpass);
     var qStr = params.toString();
     var hubLink = HUB_URL + (qStr ? ('?' + qStr) : '');
     document.getElementById('qr-hub').innerHTML = makeQrSvg(hubLink, 4, 2);
   }
 
-  try { els.wpass.value = localStorage.getItem('pa_wpass') || ''; } catch(e) {}
-  els.wpass.addEventListener('input', function(){ try { localStorage.setItem('pa_wpass', els.wpass.value.trim()); } catch(e) {} });
   Object.keys(els).forEach(function(k){
     els[k].addEventListener('input', render);
     els[k].addEventListener('change', render);
