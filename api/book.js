@@ -1,6 +1,16 @@
 const { cors, json, sb, paystack, SITE, E, bad, quote, crypto, buildRequests, buildGuestInfo, GUEST_COLS } = require('../lib/core');
 
 // POST /api/book -> saves a 15-minute hold, starts a Paystack payment, returns the payment link
+// Repeated attempts are limited: at most 5 per phone number or email, and 8 per visitor address, in any 15 minutes.
+const WINDOW_MIN = 15, MAX_PER_GUEST = 5, MAX_PER_IP = 8;
+const ipHits = new Map(); // best effort per server instance; the per-guest check below uses the database and holds across instances
+function tooMany(ip) {
+  const now = Date.now(), list = (ipHits.get(ip) || []).filter(t => now - t < WINDOW_MIN * 60000);
+  list.push(now); ipHits.set(ip, list);
+  if (ipHits.size > 2000) for (const [k, v] of ipHits) if (!v.some(t => now - t < WINDOW_MIN * 60000)) ipHits.delete(k);
+  return list.length > MAX_PER_IP;
+}
+const WAIT_MSG = 'Too many booking attempts. Please wait about 15 minutes and try again, or call the front desk to book.';
 module.exports = async (req, res) => {
   if (cors(req, res)) return;
   if (req.method !== 'POST') return json(res, 405, { error: 'POST only' });
@@ -15,6 +25,12 @@ module.exports = async (req, res) => {
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw bad('Please enter a valid email address');
     if (!/^\+?[0-9]{10,15}$/.test(phone)) throw bad('Please enter a valid phone number');
     if (guests < 1 || guests > 10) throw bad('Guests must be between 1 and 10');
+
+    const ip = String((req.headers && (req.headers['x-forwarded-for'] || req.headers['x-real-ip'])) || '').split(',')[0].trim() || 'unknown';
+    if (tooMany(ip)) throw bad(WAIT_MSG, 429);
+    const since = new Date(Date.now() - WINDOW_MIN * 60000).toISOString();
+    const recent = await sb(`bookings?select=id&created_at=gt.${since}&or=(guest_phone.eq.${encodeURIComponent(phone)},guest_email.eq.${encodeURIComponent(email)})&channel=is.null&limit=${MAX_PER_GUEST + 1}`);
+    if (recent.ok && Array.isArray(recent.data) && recent.data.length >= MAX_PER_GUEST) throw bad(WAIT_MSG, 429);
 
     const info = buildGuestInfo(b); // sex, NIN, address and children: validated here, never trusted from the browser
     const special = buildRequests(b); // only known options and trimmed text are kept

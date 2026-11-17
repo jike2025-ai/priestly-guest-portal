@@ -1,6 +1,6 @@
 const { cors, json, bad, sb, ROOMS, roomsView, today, quote, crypto, alertOwner, fd, naira } = require('../lib/core');
 const { authenticate, logAction, can, capsOf } = require('../lib/staff');
-const { missedWelcomes } = require('../lib/watch');
+const { missedWelcomes, autoDirty, markDirty } = require('../lib/watch');
 
 // POST /api/walkin  (staff page: receptionists and admin, PIN only)
 //   {pin, action:'login'}                         -> {role, name, shiftId}   (starts a tracked shift)
@@ -61,7 +61,7 @@ module.exports = async (req, res) => {
     }
 
     if (b.action === 'overview') {
-      await Promise.race([missedWelcomes(), new Promise(r => setTimeout(r, 3000))]);
+      await Promise.race([Promise.all([missedWelcomes(), autoDirty()]), new Promise(r => setTimeout(r, 3000))]);
       const now = new Date().toISOString();
       const from = new Date(Date.now() - 60 * 864e5).toISOString().slice(0, 10);
       const q = cols => `bookings?select=${cols}&check_out=gte.${from}&or=(status.eq.confirmed,and(status.eq.pending,hold_expires_at.gt.${now}))&order=check_in&limit=1000`;
@@ -182,6 +182,7 @@ module.exports = async (req, res) => {
       const r = await sb(`bookings?reference=eq.${encodeURIComponent(ref)}`, { method: 'PATCH', prefer: 'return=minimal', body });
       if (!r.ok) throw bad('The check-out tracking has not been set up yet. Ask the developer to run supabase/migration-checkout.sql in Supabase.', 503);
       await logAction(user, b.action === 'checkout' ? 'checked out' : (b.on === false ? 'late stay cleared' : 'late stay'), `${ref}: ${bk.guest_name}, ${ROOMS[bk.room] ? ROOMS[bk.room].name : bk.room}`);
+      if (b.action === 'checkout') await markDirty(bk.room, user.name, 'Guest checked out');   // the apartment now needs cleaning
       return json(res, 200, { ok: true });
     }
 
